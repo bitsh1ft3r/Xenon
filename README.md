@@ -6,4 +6,4 @@ several parts ofthe Xbox 360 bootchain, until it reaches **CD**.
 
 ## Showcase
 **1BL** Running on the emulated XCPU.  
-![1BL,running on an early stage](/Assets/images/1bl_boot.png)
+![1BL,running on an early stage](/Xenon/Assets/images/1bl_boot.png)
