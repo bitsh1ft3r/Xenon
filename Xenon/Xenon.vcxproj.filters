@@ -1,0 +1,142 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<Project ToolsVersion="4.0" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
+  <ItemGroup>
+    <ClCompile Include="Xe_Main.cpp" />
+    <ClCompile Include="Core\XCPU\XCPU.cpp">
+      <Filter>Core\XCPU</Filter>
+    </ClCompile>
+    <ClCompile Include="Core\NAND\NAND.cpp">
+      <Filter>Core\NAND</Filter>
+    </ClCompile>
+    <ClCompile Include="Core\Bus\Bus.cpp">
+      <Filter>Core\Bus</Filter>
+    </ClCompile>
+    <ClCompile Include="Core\RAM\RAM.cpp">
+      <Filter>Core\RAM</Filter>
+    </ClCompile>
+    <ClCompile Include="Core\XCPU\Interpreter\Interpreter_ALU.cpp">
+      <Filter>Core\XCPU\Interpreter</Filter>
+    </ClCompile>
+    <ClCompile Include="Core\XCPU\Interpreter\Interpreter_Helpers.cpp">
+      <Filter>Core\XCPU\Interpreter</Filter>
+    </ClCompile>
+    <ClCompile Include="Core\XCPU\Interpreter\PowerPC_Instruction.cpp">
+      <Filter>Core\XCPU\Interpreter</Filter>
+    </ClCompile>
+    <ClCompile Include="Core\XCPU\Interpreter\PowerPC_System.cpp">
+      <Filter>Core\XCPU\Interpreter</Filter>
+    </ClCompile>
+    <ClCompile Include="Core\XCPU\Interpreter\PowerPC_ProgramControl.cpp">
+      <Filter>Core\XCPU\Interpreter</Filter>
+    </ClCompile>
+    <ClCompile Include="Core\XCPU\Interpreter\MMU.cpp">
+      <Filter>Core\XCPU\Interpreter</Filter>
+    </ClCompile>
+    <ClCompile Include="Core\XCPU\Interpreter\PowerPC_Load_Store.cpp">
+      <Filter>Core\XCPU\Interpreter</Filter>
+    </ClCompile>
+    <ClCompile Include="Core\XCPU\Interpreter\PPCInterpreter.cpp">
+      <Filter>Core\XCPU\Interpreter</Filter>
+    </ClCompile>
+    <ClCompile Include="Core\UART\UART.cpp">
+      <Filter>Core\UART</Filter>
+    </ClCompile>
+    <ClCompile Include="Core\PostBus\PostBus.cpp">
+      <Filter>Core\Bus</Filter>
+    </ClCompile>
+    <ClCompile Include="Core\PCIBus\PCIBus.cpp">
+      <Filter>Core\PCIBus</Filter>
+    </ClCompile>
+    <ClCompile Include="Core\PCIBus\SMC\SMC.cpp">
+      <Filter>Core\PCIBus\SMC</Filter>
+    </ClCompile>
+  </ItemGroup>
+  <ItemGroup>
+    <Filter Include="Base">
+      <UniqueIdentifier>{2bee9b27-9a5b-4f99-aa23-7b4e87159d1a}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Core">
+      <UniqueIdentifier>{9a27fc1f-92d0-48b2-956b-6fd2640b7a73}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Core\XCPU">
+      <UniqueIdentifier>{d2bb3d28-f252-4888-9ee2-9f69929ebae2}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Core\NAND">
+      <UniqueIdentifier>{cc95a832-703f-44c9-8117-542dbc81ac25}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Core\Bus">
+      <UniqueIdentifier>{ea488c4b-00ec-48f6-8e78-31d3c88c1747}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Core\RAM">
+      <UniqueIdentifier>{66bf2a3b-096c-445d-ae45-55fcf1b22f54}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Core\XCPU\Interpreter">
+      <UniqueIdentifier>{c7c1f968-10b9-4130-a365-0dbf1985db7c}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Core\UART">
+      <UniqueIdentifier>{83832c29-c33d-4789-b166-ecc9bfc58e87}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Core\PCIBus">
+      <UniqueIdentifier>{4a18e6b8-342f-43d3-9333-e6e24d96d39f}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Core\PCIBus\SMC">
+      <UniqueIdentifier>{398a15b9-e7a1-4688-8f00-efa47b8bbdbb}</UniqueIdentifier>
+    </Filter>
+  </ItemGroup>
+  <ItemGroup>
+    <ClInclude Include="Base\TypeDefs.h">
+      <Filter>Base</Filter>
+    </ClInclude>
+    <ClInclude Include="Core\XCPU\XCPU.h">
+      <Filter>Core\XCPU</Filter>
+    </ClInclude>
+    <ClInclude Include="Core\XCPU\PowerPC.h">
+      <Filter>Core\XCPU</Filter>
+    </ClInclude>
+    <ClInclude Include="Core\XCPU\XCPU_SPRs.h">
+      <Filter>Core\XCPU</Filter>
+    </ClInclude>
+    <ClInclude Include="Core\NAND\NAND.h">
+      <Filter>Core\NAND</Filter>
+    </ClInclude>
+    <ClInclude Include="Core\Bus\Bus.h">
+      <Filter>Core\Bus</Filter>
+    </ClInclude>
+    <ClInclude Include="Base\SystemDevice.h">
+      <Filter>Base</Filter>
+    </ClInclude>
+    <ClInclude Include="Core\RAM\RAM.h">
+      <Filter>Core\RAM</Filter>
+    </ClInclude>
+    <ClInclude Include="Core\XCPU\Interpreter\PowerPCState.h">
+      <Filter>Core\XCPU\Interpreter</Filter>
+    </ClInclude>
+    <ClInclude Include="Core\XCPU\Interpreter\PPCInterpreter.h">
+      <Filter>Core\XCPU\Interpreter</Filter>
+    </ClInclude>
+    <ClInclude Include="Core\XCPU\Interpreter\PowerPCInternal.h">
+      <Filter>Core\XCPU\Interpreter</Filter>
+    </ClInclude>
+    <ClInclude Include="Core\XCPU\Interpreter\PowerPC_Instruction.h">
+      <Filter>Core\XCPU\Interpreter</Filter>
+    </ClInclude>
+    <ClInclude Include="Core\XCPU\XCPUContext.h">
+      <Filter>Core\XCPU</Filter>
+    </ClInclude>
+    <ClInclude Include="Core\UART\UART.h">
+      <Filter>Core\UART</Filter>
+    </ClInclude>
+    <ClInclude Include="Core\PostBus\PostBus.h">
+      <Filter>Core\Bus</Filter>
+    </ClInclude>
+    <ClInclude Include="Core\PCIBus\SMC\SMC.h">
+      <Filter>Core\PCIBus\SMC</Filter>
+    </ClInclude>
+    <ClInclude Include="Core\PCIBus\PCIBus.h">
+      <Filter>Core\PCIBus</Filter>
+    </ClInclude>
+    <ClInclude Include="Core\PCIBus\PCIDevice.h">
+      <Filter>Core\PCIBus</Filter>
+    </ClInclude>
+  </ItemGroup>
+</Project>
