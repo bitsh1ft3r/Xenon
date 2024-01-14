@@ -43,62 +43,43 @@ void PPCInterpreter::PPCInterpreter_tlbiel(PPCState* hCore)
 
         VPN = QGET(hCore->GPR[rB], 22, 63 - p);
 
-        std::cout << "TLB IL: Inval Selector = 0, VPN = 0x" << VPN << " p = " << (u16)p << std::endl;
+        std::cout << "TLB IL: Inval Selector = 0, VPN = 0x" << VPN << " p = " 
+            << (u16)p << std::endl;
 
         for (auto& tlbEntry : hCore->TLB.tlbSet0) {
-            if (tlbEntry.V)
+            if (tlbEntry.V && tlbEntry.VPN == VPN && tlbEntry.p == p)
             {
-                if (tlbEntry.VPN == VPN)
-                {
-                    if (tlbEntry.p == p)
-                    {
-                        tlbEntry.V = 0;
-                        std::cout << " *** TLB Set 0: Invalidated entry with RPN: 0x" << tlbEntry.RPN << " VPN = 0x" << tlbEntry.RPN << std::endl;
-                        break;
-                    }
-                }
+                tlbEntry.V = 0;
+                std::cout << " *** TLB Set 0: Invalidated entry with RPN: 0x"
+                    << tlbEntry.RPN << " VPN = 0x" << tlbEntry.RPN << std::endl;
+                break;
             }
         }
         for (auto& tlbEntry : hCore->TLB.tlbSet1) {
-            if (tlbEntry.V)
+            if (tlbEntry.V && tlbEntry.VPN == VPN && tlbEntry.p == p)
             {
-                if (tlbEntry.VPN == VPN)
-                {
-                    if (tlbEntry.p == p)
-                    {
-                        tlbEntry.V = 0;
-                        std::cout << " *** TLB Set 1: Invalidated entry with RPN: 0x" << tlbEntry.RPN << " VPN = 0x" << tlbEntry.RPN << std::endl;
-                        break;
-                    }
-                }
+                tlbEntry.V = 0;
+                std::cout << " *** TLB Set 1: Invalidated entry with RPN: 0x" 
+                    << tlbEntry.RPN << " VPN = 0x" << tlbEntry.RPN << std::endl;
+                break;
             }
         }
         for (auto& tlbEntry : hCore->TLB.tlbSet2) {
-            if (tlbEntry.V)
+            if (tlbEntry.V && tlbEntry.VPN == VPN && tlbEntry.p == p)
             {
-                if (tlbEntry.VPN == VPN)
-                {
-                    if (tlbEntry.p == p)
-                    {
-                        tlbEntry.V = 0;
-                        std::cout << " *** TLB Set 2: Invalidated entry with RPN: 0x" << tlbEntry.RPN << " VPN = 0x" << tlbEntry.RPN << std::endl;
-                        break;
-                    }
-                }
+                tlbEntry.V = 0;
+                std::cout << " *** TLB Set 2: Invalidated entry with RPN: 0x"
+                    << tlbEntry.RPN << " VPN = 0x" << tlbEntry.RPN << std::endl;
+                break;
             }
         }
         for (auto& tlbEntry : hCore->TLB.tlbSet3) {
-            if (tlbEntry.V)
+            if (tlbEntry.V && tlbEntry.VPN == VPN && tlbEntry.p == p)
             {
-                if (tlbEntry.VPN == VPN)
-                {
-                    if (tlbEntry.p == p)
-                    {
-                        tlbEntry.V = 0;
-                        std::cout << " *** TLB Set 3: Invalidated entry with RPN: 0x" << tlbEntry.RPN << " VPN = 0x" << tlbEntry.RPN << std::endl;
-                        break;
-                    }
-                }
+                tlbEntry.V = 0;
+                std::cout << " *** TLB Set 3: Invalidated entry with RPN: 0x"
+                    << tlbEntry.RPN << " VPN = 0x" << tlbEntry.RPN << std::endl;
+                break;
             }
         }
     }
@@ -581,7 +562,8 @@ bool PPCInterpreter::MMUTranslateAddress(u64* EA, PPCState *hCoreState)
         {
             // SLB Miss
             // Data or Inst Segment Exception
-            std::cout << "XCPU (MMU): SLB not hit. System Stopped." << std::endl;
+            std::cout << "XCPU (MMU): SLB not hit. System Stopped." 
+                << std::endl;
             system("pause");
             return false;
         }
@@ -723,7 +705,8 @@ u64 PPCInterpreter::MMURead(XCPUContext* cpuContext, u64 EA, s8 byteCount)
 }
 
 // MMU Write Routine, used by the CPU
-void PPCInterpreter::MMUWrite(XCPUContext* cpuContext, u64 data, u64 EA, s8 byteCount)
+void PPCInterpreter::MMUWrite(XCPUContext* cpuContext, u64 data, u64 EA, 
+    s8 byteCount)
 {
     s8 currentCore = cpuContext->currentCoreID;
 
@@ -733,7 +716,8 @@ void PPCInterpreter::MMUWrite(XCPUContext* cpuContext, u64 data, u64 EA, s8 byte
     // Check if writing to bootloader section
     if (EA >= SROM_ADDR && EA <= SROM_ADDR + SROM_SIZE)
     {
-        std::cout << "XCPU (MMU): WARNING: Tried to write to XCPU SROM!" << std::endl;
+        std::cout << "XCPU (MMU): WARNING: Tried to write to XCPU SROM!" 
+            << std::endl;
         return;
     }
 
@@ -751,52 +735,52 @@ void PPCInterpreter::MMUWrite(XCPUContext* cpuContext, u64 data, u64 EA, s8 byte
     }
 }
 
-// Read 1 Byte of memory
+// Reads 1 Byte of memory.
 u8 PPCInterpreter::MMURead8(u64 EA)
 {
     u8 data = 0;
     data = static_cast<u8>(MMURead(intXCPUContext, EA, 1));
     return data;
 }
-// Read 2 Byte of memory
+// Reads 2 Bytes of memory.
 u16 PPCInterpreter::MMURead16(u64 EA)
 {
     u16 data = 0;
     data = static_cast<u16>(MMURead(intXCPUContext, EA, 2));
     return _byteswap_ushort(data);
 }
-// Read 4 Byte of memory
+// Reads 4 Bytes of memory.
 u32 PPCInterpreter::MMURead32(u64 EA)
 {
     u32 data = 0;
     data = static_cast<u32>(MMURead(intXCPUContext, EA, 4));
     return _byteswap_ulong(data);
 }
-// Read 8 Byte of memory
+// Reads 8 Bytes of memory.
 u64 PPCInterpreter::MMURead64(u64 EA)
 {
     u64 data = 0;
     data = MMURead(intXCPUContext, EA, 8);
     return _byteswap_uint64(data);
 }
-// Write 1 Byte of memory
+// Writes 1 Byte to memory.
 void PPCInterpreter::MMUWrite8(u64 EA, u8 data)
 {
     MMUWrite(intXCPUContext, data, EA, 1);
 }
-// Write 2 Byte of memory
+// Writes 2 Bytes to memory.
 void PPCInterpreter::MMUWrite16(u64 EA, u16 data)
 {
     u16 dataBS = _byteswap_ushort(data);
     MMUWrite(intXCPUContext, dataBS, EA, 2);
 }
-// Write 4 Byte of memory
+// Writes 4 Bytes to memory.
 void PPCInterpreter::MMUWrite32(u64 EA, u32 data)
 {
     u32 dataBS = _byteswap_ulong(data);
     MMUWrite(intXCPUContext, dataBS, EA, 4);
 }
-// Write 8 Byte of memory
+// Writes 8 Bytes to memory.
 void PPCInterpreter::MMUWrite64(u64 EA, u64 data)
 {
     u64 dataBS = _byteswap_uint64(data);

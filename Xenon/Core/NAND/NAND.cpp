@@ -14,13 +14,15 @@ bool NAND::Load(std::string filePath)
     rawFileSize = ftell(inputFile);
     fseek(inputFile, 0, SEEK_SET);
 
-    std::cout << "NAND: File size = 0x" << rawFileSize << " bytes." << std::endl;
+    std::cout << "NAND: File size = 0x" << rawFileSize << " bytes." 
+        << std::endl;
 
     CheckMagic();
 
-    if (!validMagic)
+    if (!CheckMagic())
     {
-        std::cout << "NAND: wrong magic found, Xbox 360 Retail NAND magic is 0xFF4F | Devkit NAND magic 0x0F4F." << std::endl;
+        std::cout << "NAND: wrong magic found, Xbox 360 Retail NAND magic" 
+            << "is 0xFF4F and Devkit NAND magic 0x0F4F." << std::endl;
         return false;
     }
 
@@ -104,17 +106,19 @@ void NAND::CalculateECD(u8* data, int offset, u8 ret[])
     ret[3] = (val >> 18) & 0xFF;
 }
 
-void NAND::CheckMagic()
+bool NAND::CheckMagic()
 {
     u8 magic[2];
 
     fread(&magic, 1, 2, inputFile);
     fseek(inputFile, 0, SEEK_SET);
 
-    if ((magic[0] == 0xff || magic[0] == 0x0f) && (magic[1] == 0x3f || magic[1] == 0x4f))
+    if ((magic[0] == 0xff || magic[0] == 0x0f) && (magic[1] == 0x3f 
+        || magic[1] == 0x4f))
     {
-        validMagic = true;
+        return true;
     }
+    return false;
 }
 
 void NAND::CheckSpare()
