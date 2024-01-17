@@ -38,12 +38,11 @@ struct CACHE_WAY
 	u32 address = 0;
 };
 
-struct L2_CACHE
+struct L2_CACHE_BLOCK
 {
-	int cacheLoc = 0;
-	std::vector<CACHE_WAY> cacheWays;
-	// 1Mb L2 Cache
-	std::vector<u8> L2;
+	bool V = 0;
+	u64 address = 0;
+	u8* data = new(u8[128]);
 };
 
 struct XCPUContext {
@@ -64,5 +63,5 @@ struct XCPUContext {
 
 	u8* mainMem = new u8[25 * 1024 * 1240];
 
-	L2_CACHE L2;
+	L2_CACHE_BLOCK l2Cache[0x3000];
 };

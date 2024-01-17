@@ -230,7 +230,7 @@ void PPCInterpreter::PPCInterpreter_mftb(PPCState* hCore)
 	switch (spr)
 	{
 	case 268:
-		hCore->GPR[rD] = hCore->GPR[SPR_TBL];
+		hCore->GPR[rD] = hCore->SPR[SPR_TBL];
 		break;
 
 	case 269:

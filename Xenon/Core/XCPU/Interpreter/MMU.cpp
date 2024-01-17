@@ -3,15 +3,24 @@
 #include "Xenon/Core/XCPU/Interpreter/PPCInterpreter.h"
 
 //
-// Xbox 360 Memory map, as per docs.
+// Xbox 360 Memory map, info taken from various sources.
 //
 
-#define XMM_PHYSICAL_64KB_BASE  0xA0000000
-#define XMM_PHYSICAL_64KB_END   0xBFFFFFFF
-#define XMM_PHYSICAL_16MB_BASE  0xC0000000
-#define XMM_PHYSICAL_16MB_END   0xDFFFFFFF
-#define XMM_PHYSICAL_4KB_BASE   0xE0000000
-#define XMM_PHYSICAL_4KB_END    0xFFFFFFFF
+// Everything can fit on 32 bits on the 360, so MS uses upper bits of the 64 bit
+// EA to manage L2 cache, further research required on this.
+// 0x200 00000000 200 apparently is used for NONCACHED memory.
+// 0x100 00000000 100 apparently is used for CACHED/HASHED/ENCRYPTED
+// 0x100 - 1FF        is used, currently unknown of its effect. Maybe someone
+//                    can make this clearer.
+                 
+// 0x200 00000000 - 0x200 00008000                  32K SROM - 1BL Location.
+// 0x200 00010000 - 0x200 00020000                  64K SRAM.
+// 0x200 00050000 - 0x200 00056000                  Interrupt controller.
+// 0x200 C8000000 - 0x200 C9000000                  NAND Flash 1:1
+// 0x200 C9000000 - 0x200 CA000000                  Currently unknown, I 
+// suspect that maybe it is additional space for 512 MB NAND Flash images.
+// 0x200 EA000000 - 0x200 EA010000                  PCI Bridge
+// 0x200 EC800000 - 0x200 EC810000                  GPU
 
 #define MMU_PAGE_SIZE_4KB       12
 #define MMU_PAGE_SIZE_64KB      16
@@ -30,16 +39,17 @@ void PPCInterpreter::PPCInterpreter_tlbiel(PPCState* hCore)
 {
     X_FORM_L_rB;
     
-    u32 pSize = 0;
-    u8 p = 0;
-    bool LP = 0;
-    bool invalSelector = QGET(hCore->GPR[rB], 52, 52);
+    // The PPU adds two new fields to this instruction, them being LP abd IS.
+
+    bool LP = (hCore->GPR[rB] & 0x1000) >> 12;
+    bool invalSelector = (hCore->GPR[rB] & 0x800) >> 11;
+    u8 p = mmuGetPageSize(hCore, L, LP);
     u64 VPN = 0;
-    u8 LB = (u8)QGET(hCore->SPR[SPR_HID6], 16, 19);
 
     if (invalSelector == 0)
     {
-        p = mmuGetPageSize(hCore, L, LP);
+        // The TLB is as selective as possible when invalidating TLB entries.The
+        // invalidation match criteria is VPN[38:79 - p], L, LP, and LPID.
 
         VPN = QGET(hCore->GPR[rB], 22, 63 - p);
 
@@ -52,7 +62,6 @@ void PPCInterpreter::PPCInterpreter_tlbiel(PPCState* hCore)
                 tlbEntry.V = 0;
                 std::cout << " *** TLB Set 0: Invalidated entry with RPN: 0x"
                     << tlbEntry.RPN << " VPN = 0x" << tlbEntry.RPN << std::endl;
-                break;
             }
         }
         for (auto& tlbEntry : hCore->TLB.tlbSet1) {
@@ -61,7 +70,6 @@ void PPCInterpreter::PPCInterpreter_tlbiel(PPCState* hCore)
                 tlbEntry.V = 0;
                 std::cout << " *** TLB Set 1: Invalidated entry with RPN: 0x" 
                     << tlbEntry.RPN << " VPN = 0x" << tlbEntry.RPN << std::endl;
-                break;
             }
         }
         for (auto& tlbEntry : hCore->TLB.tlbSet2) {
@@ -70,7 +78,6 @@ void PPCInterpreter::PPCInterpreter_tlbiel(PPCState* hCore)
                 tlbEntry.V = 0;
                 std::cout << " *** TLB Set 2: Invalidated entry with RPN: 0x"
                     << tlbEntry.RPN << " VPN = 0x" << tlbEntry.RPN << std::endl;
-                break;
             }
         }
         for (auto& tlbEntry : hCore->TLB.tlbSet3) {
@@ -79,13 +86,122 @@ void PPCInterpreter::PPCInterpreter_tlbiel(PPCState* hCore)
                 tlbEntry.V = 0;
                 std::cout << " *** TLB Set 3: Invalidated entry with RPN: 0x"
                     << tlbEntry.RPN << " VPN = 0x" << tlbEntry.RPN << std::endl;
-                break;
             }
         }
     }
     else
     {
+        // Index to one of the 256 rows of the tlb.
+        u8 tlbCongruenceClass = 0;
+        u64 rb_44_51 = hCore->GPR[rB] & 0xFF000;
 
+        // 52-55 bits of 80 VA
+        u8 bits36_39 = static_cast<u8>(QGET(VPN, 36, 39));
+        // 56-59 bits of 80 VA
+        u8 bits40_43 = static_cast<u8>(QGET(VPN, 40, 43));
+        // 60-63 bits of 80 VA
+        u8 bits44_47 = static_cast<u8>(QGET(VPN, 44, 47));
+        // 64-67 bits of 80 VA
+        u8 bits48_51 = static_cast<u8>(QGET(VPN, 48, 51));
+        // 48-55 bits of 80 VA
+        u8 bits32_39 = static_cast<u8>(QGET(VPN, 32, 39));
+
+        for (auto& tlbEntry : hCore->TLB.tlbSet0)
+        {
+            if (tlbEntry.V)
+            {
+                switch (p)
+                {
+                case MMU_PAGE_SIZE_64KB:
+                    if (((QGET(VPN, 36, 39) / QGET(VPN, 40, 43)) 
+                        | QGET(VPN, 44, 47)) == rb_44_51)
+                        tlbEntry.V = false;
+                    break;
+                case MMU_PAGE_SIZE_16MB:
+                    if (QGET(tlbEntry.VPN, 32, 39) == rb_44_51)
+                        tlbEntry.V = false;
+                    break;
+                default:
+                    // 4Kb page size.
+                    if (((QGET(VPN, 36, 39) / QGET(VPN, 44, 47)) 
+                        | QGET(VPN, 48, 51)) == rb_44_51)
+                        tlbEntry.V = false;
+                    break;
+                }
+            }
+        }
+        for (auto& tlbEntry : hCore->TLB.tlbSet1)
+        {
+            if (tlbEntry.V)
+            {
+                switch (p)
+                {
+                case MMU_PAGE_SIZE_64KB:
+                    if (((QGET(VPN, 36, 39) / QGET(VPN, 40, 43)) 
+                        | QGET(VPN, 44, 47)) == rb_44_51)
+                        tlbEntry.V = false;
+                    break;
+                case MMU_PAGE_SIZE_16MB:
+                    if (QGET(tlbEntry.VPN, 32, 39) == rb_44_51)
+                        tlbEntry.V = false;
+                    break;
+                default:
+                    // 4Kb page size.
+                    if (((QGET(VPN, 36, 39) / QGET(VPN, 44, 47)) 
+                        | QGET(VPN, 48, 51)) == rb_44_51)
+                        tlbEntry.V = false;
+                    break;
+                }
+            }
+        }
+        for (auto& tlbEntry : hCore->TLB.tlbSet2)
+        {
+            if (tlbEntry.V)
+            {
+                switch (p)
+                {
+                case MMU_PAGE_SIZE_64KB:
+                    if (((QGET(VPN, 36, 39) / QGET(VPN, 40, 43)) 
+                        | QGET(VPN, 44, 47)) == rb_44_51)
+                        tlbEntry.V = false;
+                    break;
+                case MMU_PAGE_SIZE_16MB:
+                    if (QGET(tlbEntry.VPN, 32, 39) == rb_44_51)
+                        tlbEntry.V = false;
+                    break;
+                default:
+                    // 4Kb page size.
+                    if (((QGET(VPN, 36, 39) / QGET(VPN, 44, 47)) 
+                        | QGET(VPN, 48, 51)) == rb_44_51)
+                        tlbEntry.V = false;
+                    break;
+                }
+            }
+        }
+        for (auto& tlbEntry : hCore->TLB.tlbSet3)
+        {
+            if (tlbEntry.V)
+            {
+                switch (p)
+                {
+                case MMU_PAGE_SIZE_64KB:
+                    if (((QGET(VPN, 36, 39) / QGET(VPN, 40, 43)) | 
+                        QGET(VPN, 44, 47)) == rb_44_51)
+                        tlbEntry.V = false;
+                    break;
+                case MMU_PAGE_SIZE_16MB:
+                    if (QGET(tlbEntry.VPN, 32, 39) == rb_44_51)
+                        tlbEntry.V = false;
+                    break;
+                default:
+                    // 4Kb page size.
+                    if (((QGET(VPN, 36, 39) / QGET(VPN, 44, 47)) | 
+                        QGET(VPN, 48, 51)) == rb_44_51)
+                        tlbEntry.V = false;
+                    break;
+                }
+            }
+        }
     }
 
 }
@@ -588,6 +704,20 @@ u64 PPCInterpreter::MMURead(XCPUContext* cpuContext, u64 EA, s8 byteCount)
     if (MMUTranslateAddress(&EA, &cpuContext->cpuCores[currentCore]) == false)
         return 0;
 
+    // Check if there's a cache block with the current address
+    for (auto& cacheBlock : intXCPUContext->l2Cache)
+    {
+        if (cacheBlock.V)
+        {
+            if (EA >= cacheBlock.address && EA < (cacheBlock.address + 0x80))
+            {
+                u8 offset = static_cast<u8>(EA - cacheBlock.address);
+                memcpy(&data, &cacheBlock.data[offset], byteCount);
+                return data;
+            }
+        }
+    }
+
     // TODO: Investigate this values FSB_CONFIG_RX_STATE - Needed to Work!
     if (cpuContext->cpuCores[currentCore].CIA == 0x0000000001003598)
     {
@@ -706,12 +836,29 @@ u64 PPCInterpreter::MMURead(XCPUContext* cpuContext, u64 EA, s8 byteCount)
 
 // MMU Write Routine, used by the CPU
 void PPCInterpreter::MMUWrite(XCPUContext* cpuContext, u64 data, u64 EA, 
-    s8 byteCount)
+    s8 byteCount, bool cacheStore)
 {
     s8 currentCore = cpuContext->currentCoreID;
 
     if (MMUTranslateAddress(&EA, &cpuContext->cpuCores[currentCore]) == false)
         return;
+
+    // Check if there's a cache block with the current address
+    if (!cacheStore)
+    {
+        for (auto& cacheBlock : intXCPUContext->l2Cache)
+        {
+            if (cacheBlock.V)
+            {
+                if (EA >= cacheBlock.address && EA < (cacheBlock.address + 0x80))
+                {
+                    u8 offset = EA - cacheBlock.address;
+                    memcpy(&cacheBlock.data[offset], &data, byteCount);
+                    return;
+                }
+            }
+        }
+    }
 
     // Check if writing to bootloader section
     if (EA >= SROM_ADDR && EA <= SROM_ADDR + SROM_SIZE)

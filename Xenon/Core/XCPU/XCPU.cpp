@@ -53,8 +53,6 @@ namespace Xe
 				{
 					return;
 				}                 
-
-                cpuContext.L2.L2.resize(L2_CACHE_SIZE);
 			}
 
 			bool XCPU::Load1BL(std::string filePath)

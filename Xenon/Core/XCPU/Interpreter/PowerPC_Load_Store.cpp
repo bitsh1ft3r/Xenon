@@ -23,9 +23,27 @@ void PPCInterpreter::PPCInterpreter_dcbst(PPCState* hCore)
     u32 addrHigh, addrLow = 0;
     splitAddress(RA, &addrHigh, &addrLow);
     MMUTranslateAddress(&RA, hCore);
-
+    u8* dataBlock = new(u8[128]);
+    // Check if address has an existing cache block.
+    for (auto& cacheBlock : intXCPUContext->l2Cache)
+    {
+        if (cacheBlock.V)
+        {
+            if (cacheBlock.address == RA)
+            {
+                memcpy(dataBlock, cacheBlock.data, 128);
+                for (size_t offset = 0; offset < 128; offset += 8)
+                {
+                    u64 data = 0;
+                    memcpy(&data, &dataBlock[offset], 8);
+                    MMUWrite(intXCPUContext, data,EA + offset, 8, true);
+                }
+                break;
+            }
+        }
+    }
     std::cout << " * dcbst * EA = 0x" << EA 
-        << " RA 0x(" << addrHigh << ") " << addrLow << std::endl;
+        << " RA 0x(" << addrHigh << ")" << addrLow << std::endl;
 }
 
 void PPCInterpreter::PPCInterpreter_dcbz(PPCState* hCore)
@@ -43,9 +61,28 @@ void PPCInterpreter::PPCInterpreter_dcbz(PPCState* hCore)
     // As far as i can tell, XCPU does all the crypto, scrambling of
     // data on L2 cache, and DCBZ is used for creating cache blocks
     // and also erasing them.
-    // int n;
-    //for (n = 0; n < 128; n += sizeof(u64))
-    //    mmuL2CacheDCBZ(EA + n);
+    
+    // Check if address has an existing cache block.
+    for (auto& cacheBlock : intXCPUContext->l2Cache)
+    {
+        if (cacheBlock.V && cacheBlock.address == RA)
+        {
+            memset(cacheBlock.data, 0, 128);
+            return;
+        }
+    }
+    // No cache block exist for the target address.
+    for (auto& cacheBlock : intXCPUContext->l2Cache)
+    {
+        if (cacheBlock.V == false)
+        {
+            // This is it.
+            cacheBlock.V = true;
+            cacheBlock.address = RA;
+            memset(cacheBlock.data, 0, 128);
+            return;
+        }
+    }
 }
 
 void PPCInterpreter::PPCInterpreter_stb(PPCState* hCore)

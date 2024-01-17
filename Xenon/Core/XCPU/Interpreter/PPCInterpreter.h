@@ -37,10 +37,9 @@ namespace PPCInterpreter
 	u8 mmuGetPageSize(PPCState* hCore, bool L, u8 LP);
 	void mmuAddTlbEntry(PPCState* hCore);
 	bool mmuSearchTlbEntry(PPCState* hCore, u64* RPN, u64 VPN, u8 p, bool LP);
-	void mmuL2CacheDCBZ(u64 address);
 
 	u64 MMURead(XCPUContext* cpuContext, u64 EA, s8 byteCount);
-	void MMUWrite(XCPUContext* cpuContext, u64 data, u64 EA, s8 byteCount);
+	void MMUWrite(XCPUContext* cpuContext, u64 data, u64 EA, s8 byteCount, bool cacheStore = false);
 
 	u8	MMURead8(u64 EA);
 	u16 MMURead16(u64 EA);
