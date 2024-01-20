@@ -58,6 +58,12 @@ void PPCInterpreter::PPCInterpreter_dcbz(PPCState* hCore)
     splitAddress(RA, &addrHigh, &addrLow);
     std::cout << " * dcbz * EA = 0x" << EA 
         << " RA 0x(" << addrHigh << ") " << addrLow << std::endl;
+
+    // Temporarely diasable caching.
+    for (u8 n = 0; n < 128; n += sizeof(u64))
+        MMUWrite(intXCPUContext, 0, EA + n, sizeof(u64));
+    return;
+
     // As far as i can tell, XCPU does all the crypto, scrambling of
     // data on L2 cache, and DCBZ is used for creating cache blocks
     // and also erasing them.

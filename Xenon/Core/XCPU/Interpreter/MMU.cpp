@@ -705,17 +705,25 @@ u64 PPCInterpreter::MMURead(XCPUContext* cpuContext, u64 EA, s8 byteCount)
         return 0;
 
     // Check if there's a cache block with the current address
-    for (auto& cacheBlock : intXCPUContext->l2Cache)
+    if (EA >= 0x10000000000 && EA < 0x20000000000)
     {
-        if (cacheBlock.V)
+        // Completly ignore cache, see what happens.
+        EA = static_cast<u32>(EA);
+        /*
+        // Cached address
+        for (auto& cacheBlock : intXCPUContext->l2Cache)
         {
-            if (EA >= cacheBlock.address && EA < (cacheBlock.address + 0x80))
+            if (cacheBlock.V)
             {
-                u8 offset = static_cast<u8>(EA - cacheBlock.address);
-                memcpy(&data, &cacheBlock.data[offset], byteCount);
-                return data;
+                if (EA >= cacheBlock.address && EA < (cacheBlock.address + 0x80))
+                {
+                    u8 offset = static_cast<u8>(EA - cacheBlock.address);
+                    memcpy(&data, &cacheBlock.data[offset], byteCount);
+                    return data;
+                }
             }
         }
+        */
     }
 
     // TODO: Investigate this values FSB_CONFIG_RX_STATE - Needed to Work!
@@ -843,21 +851,29 @@ void PPCInterpreter::MMUWrite(XCPUContext* cpuContext, u64 data, u64 EA,
     if (MMUTranslateAddress(&EA, &cpuContext->cpuCores[currentCore]) == false)
         return;
 
-    // Check if there's a cache block with the current address
-    if (!cacheStore)
+    // Is Address Cached?
+    if (EA >= 0x10000000000 && EA < 0x20000000000)
     {
-        for (auto& cacheBlock : intXCPUContext->l2Cache)
+        // Completly ignore cache, see what happens.
+        EA = static_cast<u32>(EA);
+        /*
+        // Check if there's a cache block with the current address
+        if (!cacheStore)
         {
-            if (cacheBlock.V)
+            for (auto& cacheBlock : intXCPUContext->l2Cache)
             {
-                if (EA >= cacheBlock.address && EA < (cacheBlock.address + 0x80))
+                if (cacheBlock.V)
                 {
-                    u8 offset = EA - cacheBlock.address;
-                    memcpy(&cacheBlock.data[offset], &data, byteCount);
-                    return;
+                    if (EA >= cacheBlock.address && EA < (cacheBlock.address + 0x80))
+                    {
+                        u8 offset = EA - cacheBlock.address;
+                        memcpy(&cacheBlock.data[offset], &data, byteCount);
+                        return;
+                    }
                 }
             }
         }
+        */
     }
 
     // Check if writing to bootloader section

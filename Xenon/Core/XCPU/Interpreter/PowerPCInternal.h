@@ -155,3 +155,8 @@ static inline u64 ExtractBits64(uint32_t input, uint32_t begin, uint32_t end) {
 #define CR_GET(i)       BGET(hCore->CR.CR_Hex,32,i)
 #define CR_SET(i)       BSET(hCore->CR.CR_Hex,32,i)
 #define CR_CLR(i)       BCLR(hCore->CR.CR_Hex,32,i)
+
+#define CR_BIT_LT       0
+#define CR_BIT_GT       1
+#define CR_BIT_EQ       2
+#define CR_BIT_SO       3

@@ -15,9 +15,11 @@ void PPCInterpreter::PPCInterpreter_addx(PPCState* hCore)
 	}
 
 	if (RC)
-		ppcUpdateCR(hCore, 0, hCore->GPR[rD]);
+	{
+		u32 CR = CRCompS(hCore, hCore->GPR[rD], 0);
+		ppcUpdateCR(hCore, 0, CR);
+	}
 }
-
 
 void PPCInterpreter::PPCInterpreter_addi(PPCState* hCore)
 {
@@ -58,8 +60,11 @@ void PPCInterpreter::PPCInterpreter_and(PPCState* hCore)
 
 	hCore->GPR[rA] = hCore->GPR[rS] & hCore->GPR[rB];
 
-	if(RC)
-		ppcUpdateCR(hCore, 0, hCore->GPR[rA]);
+	if (RC)
+	{
+		u32 CR = CRCompS(hCore, hCore->GPR[rA], 0);
+		ppcUpdateCR(hCore, 0, CR);
+	}
 }
 
 void PPCInterpreter::PPCInterpreter_andc(PPCState* hCore)
@@ -69,7 +74,10 @@ void PPCInterpreter::PPCInterpreter_andc(PPCState* hCore)
 	hCore->GPR[rA] = hCore->GPR[rS] & ~hCore->GPR[rB];
 
 	if (RC)
-		ppcUpdateCR(hCore, 0, hCore->GPR[rA]);
+	{
+		u32 CR = CRCompS(hCore, hCore->GPR[rA], 0);
+		ppcUpdateCR(hCore, 0, CR);
+	}
 }
 
 void PPCInterpreter::PPCInterpreter_andi(PPCState* hCore)
@@ -77,7 +85,8 @@ void PPCInterpreter::PPCInterpreter_andi(PPCState* hCore)
 	D_FORM_rS_rA_UI;
 
 	hCore->GPR[rA] = hCore->GPR[rS] & UI;
-	ppcUpdateCR(hCore, 0, hCore->GPR[rA]);
+	u32 CR = CRCompS(hCore, hCore->GPR[rA], 0);
+	ppcUpdateCR(hCore, 0, CR);
 }
 
 void PPCInterpreter::PPCInterpreter_andis(PPCState* hCore)
@@ -92,14 +101,18 @@ void PPCInterpreter::PPCInterpreter_cmp(PPCState* hCore)
 {
 	X_FORM_BF_L_rA_rB;
 
+	u32 CR;
+
 	if (L)
 	{
-		ppcUpdateCR(hCore, BF, hCore->GPR[rA], hCore->GPR[rB]);
+		CR = CRCompS64(hCore, hCore->GPR[rA], hCore->GPR[rB]);
 	}
 	else
 	{
-		ppcUpdateCR(hCore, BF, (u32)hCore->GPR[rA], (u32)hCore->GPR[rB]);
+		CR = CRCompS32(hCore, hCore->GPR[rA], hCore->GPR[rB]);
 	}
+
+	ppcUpdateCR(hCore, BF, CR);
 }
 
 void PPCInterpreter::PPCInterpreter_cmpi(PPCState* hCore)
@@ -107,52 +120,54 @@ void PPCInterpreter::PPCInterpreter_cmpi(PPCState* hCore)
 	D_FORM_BF_L_rA_SI; 
 	SI = EXTS(SI, 16);
 
+	u32 CR;
+
 	if (L)
 	{
-		ppcUpdateCR(hCore, BF, hCore->GPR[rA], SI);
+		CR = CRCompS64(hCore, hCore->GPR[rA], SI);
 	}
 	else
 	{
-		ppcUpdateCR(hCore, BF, (u32)hCore->GPR[rA], (u32)SI);
+		CR = CRCompS32(hCore, (u32)hCore->GPR[rA], (u32)SI);
 	}
+
+	ppcUpdateCR(hCore, BF, CR);
 }
 
 void PPCInterpreter::PPCInterpreter_cmpl(PPCState* hCore)
 {
 	X_FORM_BF_L_rA_rB;
 
+	u32 CR;
+
 	if (L)
 	{
-		ppcUpdateCR(hCore, BF, hCore->GPR[rA], hCore->GPR[rB]);
+		CR = CRCompU(hCore, hCore->GPR[rA], hCore->GPR[rB]);
 	}
 	else
 	{
-		ppcUpdateCR(hCore, BF, (u32)hCore->GPR[rA], (u32)hCore->GPR[rB]);
+		CR = CRCompU(hCore, (u32)hCore->GPR[rA], (u32)hCore->GPR[rB]);
 	}
+
+	ppcUpdateCR(hCore, BF, CR);
 }
 
 void PPCInterpreter::PPCInterpreter_cmpli(PPCState* hCore)
 {
 	D_FORM_BF_L_rA_UI;
 
-	if (hCore->CIA == 0x3598)
-	{
-		hCore->GPR[0xB] = 0xe;
-	}
-
-	if (hCore->CIA == 0x3644)
-	{
-		hCore->GPR[0xB] = 0x2;
-	}
+	u32 CR;
 
 	if (L)
 	{
-		ppcUpdateCR(hCore, BF, hCore->GPR[rA], UI);
+		CR = CRCompU(hCore, hCore->GPR[rA], UI);
 	}
 	else
 	{
-		ppcUpdateCR(hCore, BF, (u32)hCore->GPR[rA], UI);
+		CR = CRCompU(hCore, (u32)hCore->GPR[rA], UI);
 	}
+
+	ppcUpdateCR(hCore, BF, CR);
 }
 
 void PPCInterpreter::PPCInterpreter_cntlzw(PPCState* hCore)
@@ -171,16 +186,19 @@ void PPCInterpreter::PPCInterpreter_cntlzw(PPCState* hCore)
 	hCore->GPR[rA] = regA;
 
 	if (RC)
-		ppcUpdateCR(hCore, 0, hCore->GPR[rA]);
+	{
+		u32 CR = CRCompS(hCore, hCore->GPR[rA], 0);
+		ppcUpdateCR(hCore, 0, CR);
+	}
 }
 
 void PPCInterpreter::PPCInterpreter_divdu(PPCState* hCore)
 {
 	XO_FORM_rD_rA_rB_OE_RC;
 
-	if (hCore->GPR[rD] != 0)
+	if (hCore->GPR[rB] != 0)
 	{
-		hCore->GPR[rD] = (u64)((u64)hCore->GPR[rA] / (u64)hCore->GPR[rD]);
+		hCore->GPR[rD] = (u64)((u64)hCore->GPR[rA] / (u64)hCore->GPR[rB]);
 	}
 
 	if (OE)
@@ -189,19 +207,25 @@ void PPCInterpreter::PPCInterpreter_divdu(PPCState* hCore)
 	}
 
 	if (RC)
-		ppcUpdateCR(hCore, 0, hCore->GPR[rA]);
+	{
+		u32 CR = CRCompS(hCore, hCore->GPR[rA], 0);
+		ppcUpdateCR(hCore, 0, CR);
+	}
 }
 
 void PPCInterpreter::PPCInterpreter_extsbx(PPCState* hCore)
 {
 	X_FORM_rS_rA_RC;
 
-	u8 extendedByte = (u8)hCore->GPR[rS];
+	u32 extendedByte = (u8)hCore->GPR[rS];
 
 	hCore->GPR[rA] = EXTS(extendedByte, 8);
 
 	if (RC)
-		ppcUpdateCR(hCore, 0, hCore->GPR[rA]);
+	{
+		u32 CR = CRCompS(hCore, hCore->GPR[rA], 0);
+		ppcUpdateCR(hCore, 0, CR);
+	}
 }
 
 void PPCInterpreter::PPCInterpreter_extswx(PPCState* hCore)
@@ -213,7 +237,10 @@ void PPCInterpreter::PPCInterpreter_extswx(PPCState* hCore)
 	hCore->GPR[rA] = EXTS(extendedWord, 32);
 
 	if (RC)
-		ppcUpdateCR(hCore, 0, hCore->GPR[rA]);
+	{
+		u32 CR = CRCompS(hCore, hCore->GPR[rA], 0);
+		ppcUpdateCR(hCore, 0, CR);
+	}
 }
 
 void PPCInterpreter::PPCInterpreter_mfcr(PPCState* hCore)
@@ -298,7 +325,10 @@ void PPCInterpreter::PPCInterpreter_mullw(PPCState* hCore)
 	}
 
 	if (RC)
-		ppcUpdateCR(hCore, 0, hCore->GPR[rD]);
+	{
+		u32 CR = CRCompS(hCore, hCore->GPR[rD], 0);
+		ppcUpdateCR(hCore, 0, CR);
+	}
 }
 
 void PPCInterpreter::PPCInterpreter_mulhdux(PPCState* hCore)
@@ -312,7 +342,10 @@ void PPCInterpreter::PPCInterpreter_mulhdux(PPCState* hCore)
 	hCore->GPR[rD] = qwH;
 
 	if (RC)
-		ppcUpdateCR(hCore, 0, hCore->GPR[rD]);
+	{
+		u32 CR = CRCompS(hCore, hCore->GPR[rD], 0);
+		ppcUpdateCR(hCore, 0, CR);
+	}
 }
 
 void PPCInterpreter::PPCInterpreter_norx(PPCState* hCore)
@@ -322,7 +355,10 @@ void PPCInterpreter::PPCInterpreter_norx(PPCState* hCore)
 	hCore->GPR[rA] = ~(hCore->GPR[rS] | hCore->GPR[rB]);
 
 	if (RC)
-		ppcUpdateCR(hCore, 0, hCore->GPR[rA]);
+	{
+		u32 CR = CRCompS(hCore, hCore->GPR[rA], 0);
+		ppcUpdateCR(hCore, 0, CR);
+	}
 }
 
 void PPCInterpreter::PPCInterpreter_ori(PPCState* hCore)
@@ -346,7 +382,10 @@ void PPCInterpreter::PPCInterpreter_orx(PPCState* hCore)
 	hCore->GPR[rA] = hCore->GPR[rS] | hCore->GPR[rB];
 
 	if (RC)
-		ppcUpdateCR(hCore, 0, hCore->GPR[rA]);
+	{
+		u32 CR = CRCompS(hCore, hCore->GPR[rA], 0);
+		ppcUpdateCR(hCore, 0, CR);
+	}
 }
 
 void PPCInterpreter::PPCInterpreter_rldcrx(PPCState* hCore)
@@ -361,7 +400,10 @@ void PPCInterpreter::PPCInterpreter_rldcrx(PPCState* hCore)
 	hCore->GPR[rA] = r & m;
 
 	if (RC)
-		ppcUpdateCR(hCore, 0, hCore->GPR[rA]);
+	{
+		u32 CR = CRCompS(hCore, hCore->GPR[rA], 0);
+		ppcUpdateCR(hCore, 0, CR);
+	}
 }
 
 void PPCInterpreter::PPCInterpreter_rldiclx(PPCState* hCore)
@@ -373,8 +415,11 @@ void PPCInterpreter::PPCInterpreter_rldiclx(PPCState* hCore)
 
 	hCore->GPR[rA] = r & m;
 
-	if(RC)
-		ppcUpdateCR(hCore, 0, hCore->GPR[rA]);
+	if (RC)
+	{
+		u32 CR = CRCompS(hCore, hCore->GPR[rA], 0);
+		ppcUpdateCR(hCore, 0, CR);
+	}
 }
 
 void PPCInterpreter::PPCInterpreter_rldicrx(PPCState* hCore)
@@ -386,7 +431,10 @@ void PPCInterpreter::PPCInterpreter_rldicrx(PPCState* hCore)
 	hCore->GPR[rA] = r & m;
 
 	if (RC)
-		ppcUpdateCR(hCore, 0, hCore->GPR[rA]);
+	{
+		u32 CR = CRCompS(hCore, hCore->GPR[rA], 0);
+		ppcUpdateCR(hCore, 0, CR);
+	}
 }
 
 void PPCInterpreter::PPCInterpreter_rldimix(PPCState* hCore)
@@ -399,8 +447,11 @@ void PPCInterpreter::PPCInterpreter_rldimix(PPCState* hCore)
 
 	hCore->GPR[rA] = (r & m) | (hCore->GPR[rA] & ~m);
 
-	if(RC)
-		ppcUpdateCR(hCore, 0, hCore->GPR[rA]);
+	if (RC)
+	{
+		u32 CR = CRCompS(hCore, hCore->GPR[rA], 0);
+		ppcUpdateCR(hCore, 0, CR);
+	}
 }
 
 void PPCInterpreter::PPCInterpreter_rlwimix(PPCState* hCore)
@@ -413,7 +464,10 @@ void PPCInterpreter::PPCInterpreter_rlwimix(PPCState* hCore)
 	hCore->GPR[rA] = (r & m) | ((u32)hCore->GPR[rA] & ~m);
 
 	if (RC)
-		ppcUpdateCR(hCore, 0, hCore->GPR[rA]);
+	{
+		u32 CR = CRCompS(hCore, hCore->GPR[rA], 0);
+		ppcUpdateCR(hCore, 0, CR);
+	}
 }
 
 void PPCInterpreter::PPCInterpreter_rlwnmx(PPCState* hCore)
@@ -425,7 +479,10 @@ void PPCInterpreter::PPCInterpreter_rlwnmx(PPCState* hCore)
 	hCore->GPR[rA] = _rotl((u32)hCore->GPR[rS], ((u32)hCore->GPR[rB]) & 31) & m;
 
 	if (RC)
-		ppcUpdateCR(hCore, 0, hCore->GPR[rA]);
+	{
+		u32 CR = CRCompS(hCore, hCore->GPR[rA], 0);
+		ppcUpdateCR(hCore, 0, CR);
+	}
 }
 
 void PPCInterpreter::PPCInterpreter_rlwinmx(PPCState* hCore)
@@ -437,7 +494,10 @@ void PPCInterpreter::PPCInterpreter_rlwinmx(PPCState* hCore)
 	hCore->GPR[rA] = _rotl((u32)hCore->GPR[rS], SH) & m;
 
 	if (RC)
-		ppcUpdateCR(hCore, 0, hCore->GPR[rA]);
+	{
+		u32 CR = CRCompS(hCore, hCore->GPR[rA], 0);
+		ppcUpdateCR(hCore, 0, CR);
+	}
 }
 
 void PPCInterpreter::PPCInterpreter_sldx(PPCState* hCore)
@@ -452,7 +512,10 @@ void PPCInterpreter::PPCInterpreter_sldx(PPCState* hCore)
 	hCore->GPR[rA] = r & m;
 
 	if (RC)
-		ppcUpdateCR(hCore, 0, hCore->GPR[rA]);
+	{
+		u32 CR = CRCompS(hCore, hCore->GPR[rA], 0);
+		ppcUpdateCR(hCore, 0, CR);
+	}
 }
 
 void PPCInterpreter::PPCInterpreter_slwx(PPCState* hCore)
@@ -464,7 +527,10 @@ void PPCInterpreter::PPCInterpreter_slwx(PPCState* hCore)
 	hCore->GPR[rA] = (n < 32) ? ((u32)(hCore->GPR[rS]) << n) : 0;
 
 	if (RC)
-		ppcUpdateCR(hCore, 0, hCore->GPR[rA]);
+	{
+		u32 CR = CRCompS(hCore, hCore->GPR[rA], 0);
+		ppcUpdateCR(hCore, 0, CR);
+	}
 }
 
 void PPCInterpreter::PPCInterpreter_srdx(PPCState* hCore)
@@ -480,7 +546,10 @@ void PPCInterpreter::PPCInterpreter_srdx(PPCState* hCore)
 	hCore->GPR[rA] = r & m;
 
 	if (RC)
-		ppcUpdateCR(hCore, 0, hCore->GPR[rA]);
+	{
+		u32 CR = CRCompS(hCore, hCore->GPR[rA], 0);
+		ppcUpdateCR(hCore, 0, CR);
+	}
 }
 
 void PPCInterpreter::PPCInterpreter_srwx(PPCState* hCore)
@@ -492,7 +561,10 @@ void PPCInterpreter::PPCInterpreter_srwx(PPCState* hCore)
 	hCore->GPR[rA] = (n < 32) ? (hCore->GPR[rS] >> n) : 0;
 
 	if (RC)
-		ppcUpdateCR(hCore, 0, hCore->GPR[rA]);
+	{
+		u32 CR = CRCompS(hCore, hCore->GPR[rA], 0);
+		ppcUpdateCR(hCore, 0, CR);
+	}
 }
 
 void PPCInterpreter::PPCInterpreter_subfcx(PPCState* hCore)
@@ -508,7 +580,10 @@ void PPCInterpreter::PPCInterpreter_subfcx(PPCState* hCore)
 	}
 
 	if (RC)
-		ppcUpdateCR(hCore, 0, hCore->GPR[rD]);
+	{
+		u32 CR = CRCompS(hCore, hCore->GPR[rD], 0);
+		ppcUpdateCR(hCore, 0, CR);
+	}
 }
 
 void PPCInterpreter::PPCInterpreter_subfx(PPCState* hCore)
@@ -523,7 +598,10 @@ void PPCInterpreter::PPCInterpreter_subfx(PPCState* hCore)
 	}
 
 	if (RC)
-		ppcUpdateCR(hCore, 0, hCore->GPR[rD]);
+	{
+		u32 CR = CRCompS(hCore, hCore->GPR[rD], 0);
+		ppcUpdateCR(hCore, 0, CR);
+	}
 }
 
 void PPCInterpreter::PPCInterpreter_subfex(PPCState* hCore)
@@ -538,7 +616,10 @@ void PPCInterpreter::PPCInterpreter_subfex(PPCState* hCore)
 	}
 
 	if (RC)
-		ppcUpdateCR(hCore, 0, hCore->GPR[rD]);
+	{
+		u32 CR = CRCompS(hCore, hCore->GPR[rD], 0);
+		ppcUpdateCR(hCore, 0, CR);
+	}
 }
 
 void PPCInterpreter::PPCInterpreter_subfic(PPCState* hCore)
@@ -565,5 +646,8 @@ void PPCInterpreter::PPCInterpreter_xorx(PPCState* hCore)
 	hCore->GPR[rA] = hCore->GPR[rS] ^ hCore->GPR[rB];
 
 	if (RC)
-		ppcUpdateCR(hCore, 0, hCore->GPR[rA]);
+	{
+		u32 CR = CRCompS(hCore, hCore->GPR[rA], 0);
+		ppcUpdateCR(hCore, 0, CR);
+	}
 }

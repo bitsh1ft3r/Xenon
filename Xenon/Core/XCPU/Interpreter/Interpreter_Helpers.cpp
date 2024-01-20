@@ -1,56 +1,93 @@
 #include "Xenon/Core/XCPU/Interpreter/PPCInterpreter.h"
 
-void PPCInterpreter::ppcUpdateCR(PPCState* hCore, s8 crNum, u64 input0, u64 input1) {
-    u8 crFlag = 0;
-
-    if (input0 < input1)
-    {
-        // LT
-        crFlag |= 0b1000;
-    }
-    if (input0 > input1)
-    {
-        // GT
-        crFlag |= 0b0100;
-    }
-    if (input0 == input1)
-    {
-        // EQ
-        crFlag |= 0b0010;
-    }
-
-    if (hCore->XER.SO)
-    {
-        crFlag |= 0b0001;
-    }
+void PPCInterpreter::ppcUpdateCR(PPCState* hCore, s8 crNum, u32 crValue) {
 
     switch (crNum)
     {
     case 0:
-        hCore->CR.CR0 = crFlag;
+        hCore->CR.CR0 = crValue;
         break;
     case 1:
-        hCore->CR.CR1 = crFlag;
+        hCore->CR.CR1 = crValue;
         break;
     case 2:
-        hCore->CR.CR2 = crFlag;
+        hCore->CR.CR2 = crValue;
         break;
     case 3:
-        hCore->CR.CR3 = crFlag;
+        hCore->CR.CR3 = crValue;
         break;
     case 4:
-        hCore->CR.CR4 = crFlag;
+        hCore->CR.CR4 = crValue;
         break;
     case 5:
-        hCore->CR.CR5 = crFlag;
+        hCore->CR.CR5 = crValue;
         break;
     case 6:
-        hCore->CR.CR6 = crFlag;
+        hCore->CR.CR6 = crValue;
         break;
     case 7:
-        hCore->CR.CR7 = crFlag;
+        hCore->CR.CR7 = crValue;
         break;
     }
+}
+
+u32 PPCInterpreter::CRCompU(PPCState* hCore, u64 num1, u64 num2)
+{
+    u32 CR = 0;
+
+    if (num1 < num2)
+        BSET(CR, 4, CR_BIT_LT);
+    else if (num1 > num2)
+        BSET(CR, 4, CR_BIT_GT);
+    else
+        BSET(CR, 4, CR_BIT_EQ);
+
+    if (hCore->XER.SO)
+        BSET(CR, 4, CR_BIT_SO);
+
+    return(CR);
+}
+
+u32 PPCInterpreter::CRCompS32(PPCState* hCore, u32 num1, u32 num2)
+{
+    u32 CR = 0;
+
+    if ((long)num1 < (long)num2)
+        BSET(CR, 4, CR_BIT_LT);
+    else if ((long)num1 > (long)num2)
+        BSET(CR, 4, CR_BIT_GT);
+    else
+        BSET(CR, 4, CR_BIT_EQ);
+
+    if (hCore->XER.SO)
+        BSET(CR, 4, CR_BIT_SO);
+
+    return(CR);
+}
+
+u32 PPCInterpreter::CRCompS64(PPCState* hCore, u64 num1, u64 num2)
+{
+    u32 CR = 0;
+
+    if ((s64)num1 < (s64)num2)
+        BSET(CR, 4, CR_BIT_LT);
+    else if ((s64)num1 > (s64)num2)
+        BSET(CR, 4, CR_BIT_GT);
+    else
+        BSET(CR, 4, CR_BIT_EQ);
+
+    if (hCore->XER.SO)
+        BSET(CR, 4, CR_BIT_SO);
+
+    return(CR);
+}
+
+u32 PPCInterpreter::CRCompS(PPCState* hCore, u64 num1, u64 num2)
+{
+    if(hCore->MSR.SF)
+        return(CRCompS64(hCore, num1, num2));
+    else
+        return(CRCompS32(hCore, (u32)num1, (u32)num2));
 }
 
 u64 PPCInterpreter::ppcAddCarrying(PPCState* hCore, u64 op1, u64 op2, u64 carryBit)

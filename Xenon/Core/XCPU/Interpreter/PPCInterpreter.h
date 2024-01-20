@@ -9,10 +9,24 @@ namespace PPCInterpreter
 	extern XCPUContext* intXCPUContext;
 
 	// Interpreter helpers
-	void ppcUpdateCR(PPCState* hCore, s8 crNum, u64 input0,u64 input1 = 0);
+	void ppcUpdateCR(PPCState* hCore, s8 crNum, u32 crValue);
 	u64 ppcAddCarrying(PPCState* hCore, u64 op1, u64 op2, u64 carryBit);
 	void ppcMul64(u64 operand0, u64 operand1, u64* u64High, u64* u64Low);
 	void ppcMul64Signed(u64 operand0, u64 operand1, u64* u64High, u64* u64Low);
+	
+	//
+	// Condition Register
+	//
+	
+	// Compare Unsigned
+	u32 CRCompU(PPCState* hCore, u64 num1, u64 num2);
+	// Compare Signed 32 bits
+	u32 CRCompS32(PPCState* hCore, u32 num1, u32 num2);
+	// Compare Signed 64 bits
+	u32 CRCompS64(PPCState* hCore, u64 num1, u64 num2);
+	// Compare Unsigned
+	u32 CRCompS(PPCState* hCore, u64 num1, u64 num2);
+
 
 	// Entry point
 	void ppcInterpreterExecute(XCPUContext* cpuContext);
