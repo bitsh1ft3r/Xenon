@@ -533,7 +533,6 @@ bool PPCInterpreter::MMUTranslateAddress(u64* EA, PPCState *hCoreState)
     // Software management of the TLB. 0 = Hardware, 1 = Software.
     bool tlbSoftwareManaged = ((LPCR & 0x400) >> 10);
 
-
     // Instruction relocate and instruction fetch
     if (_msr.IR && hCoreState->iFetch)
         realMode = false;
@@ -549,7 +548,7 @@ bool PPCInterpreter::MMUTranslateAddress(u64* EA, PPCState *hCoreState)
         {
             if (eaZeroBit)
             {
-                // Real adrees is bits 22-63 of Effective Address. 
+                // Real address is bits 22-63 of Effective Address. 
                 // RA = EA[22:63]
                 RA = (*EA & 0x3FFFFFFFFFF);
             }

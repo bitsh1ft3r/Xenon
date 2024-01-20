@@ -182,6 +182,18 @@ void PPCInterpreter::PPCInterpreter_mtspr(PPCState* hCore)
 		hCore->SPR[spr] = hCore->GPR[rD];
 		mmuAddTlbEntry(hCore);
 		break;
+	case SPR_TTR:
+		std::cout << "SPR_TTR = 0x" << std::hex << hCore->GPR[rD] << std::endl;
+		break;
+	case SPR_TSCR:
+		std::cout << "SPR_TSCR = 0x" << std::hex << hCore->GPR[rD] << std::endl;
+		break;
+	case SPR_HSPRG0:
+		std::cout << "SPR_HSPRG0 = 0x" << std::hex << hCore->GPR[rD] << std::endl;
+		break;
+	case SPR_HSPRG1:
+		std::cout << "SPR_HSPRG1 = 0x" << std::hex << hCore->GPR[rD] << std::endl;
+		break;
 	default:
 		std::cout << "SPR " << std::dec << spr << " = 0x" << std::hex << hCore->GPR[rD] << std::endl;
 		break;

@@ -19,13 +19,12 @@ namespace Xe
                 cpuContext.bus = busPointer;
                 memset(cpuContext.SROM, 0, SROM_SIZE);
                 memset(cpuContext.SRAM, 0, SRAM_SIZE);
-                memset(cpuContext.mainMem, 0, 25 * 1024 * 1240);
                 memset(cpuContext.cpuCores, 0, sizeof(cpuContext.cpuCores));
 
                 for (u8 core = 0; core < 6; core++)
                 {
-                    cpuContext.cpuCores[core].L1 = new u8[0x17FFFF];
-                    memset(cpuContext.cpuCores[core].L1, 0, 0x17FFFF);
+                    cpuContext.cpuCores[core].L1 = new u8[0x8000];
+                    memset(cpuContext.cpuCores[core].L1, 0, 0x8000);
                 }
 
                 // MSR on reset
@@ -43,7 +42,7 @@ namespace Xe
                 cpuContext.cpuCores[0].CPUFuses[4] = 0x8CBA33C6B70BF641; // CPU Key - First 32 bits copy
                 cpuContext.cpuCores[0].CPUFuses[5] = 0x2AC5A81E6B41BFE6; // CPU Key - Last 32 bits
                 cpuContext.cpuCores[0].CPUFuses[6] = 0x2AC5A81E6B41BFE6; // CPU Key - Last 32 bits copy
-                cpuContext.cpuCores[0].CPUFuses[7] = 0xF000000000000000; // From here starts the LDV, this prevents from downgrading console.
+                cpuContext.cpuCores[0].CPUFuses[7] = 0x0000000000000000; // From here starts the LDV, this prevents from downgrading console.
                 cpuContext.cpuCores[0].CPUFuses[8] = 0x0000000000000000; // each F statnds for an update, 
                 cpuContext.cpuCores[0].CPUFuses[9] = 0x0000000000000000;
                 cpuContext.cpuCores[0].CPUFuses[10] = 0x0000000000000000;

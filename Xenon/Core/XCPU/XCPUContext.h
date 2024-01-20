@@ -18,15 +18,6 @@
 #define FUSESET_LOC			0x20000020000ULL
 #define FUSESET_SIZE		0x17ff 
 
-// L1 Cache - 32 kb
-#define L1_CACHE_ADDR		0x15000280000ULL
-#define L1_CACHE_END_ADDR	0x178003fffffULL
-
-// L2 Cache 1MB
-#define L2_CACHE_ADDR		0x10000000000ULL
-#define L2_CACHE_END_ADDR	0x1220011ffffULL
-#define L2_CACHE_SIZE		0x120000
-
 #define XCPU_START_ADDR		0x20000000100ULL
 
 // Cache Entry used for L2
@@ -61,7 +52,6 @@ struct XCPUContext {
 	u8* SROM = new u8[SROM_SIZE];
 	u8* SRAM = new u8[SRAM_SIZE];
 
-	u8* mainMem = new u8[25 * 1024 * 1240];
-
-	L2_CACHE_BLOCK l2Cache[0x3000];
+	// 0x2000 cache blocks * 0x80 bytes CACHELINE_SIZE = 1Mb Cache. 
+	L2_CACHE_BLOCK l2Cache[0x2000];
 };

@@ -557,6 +557,12 @@ PPCInstruction PPCInterpreter::getOpcode(u32 instrData)
     case 41: // lhzu
         return PPCInstruction::lhzu;
         break;
+    case 42: // lha
+        return PPCInstruction::lha;
+        break;
+    case 43: // lhau
+        return PPCInstruction::lhau;
+        break;
     case 44: // sth
         return PPCInstruction::sth;
         break;

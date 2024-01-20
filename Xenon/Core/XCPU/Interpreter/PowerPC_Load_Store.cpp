@@ -42,8 +42,6 @@ void PPCInterpreter::PPCInterpreter_dcbst(PPCState* hCore)
             }
         }
     }
-    std::cout << " * dcbst * EA = 0x" << EA 
-        << " RA 0x(" << addrHigh << ")" << addrLow << std::endl;
 }
 
 void PPCInterpreter::PPCInterpreter_dcbz(PPCState* hCore)
@@ -56,8 +54,6 @@ void PPCInterpreter::PPCInterpreter_dcbz(PPCState* hCore)
     MMUTranslateAddress(&RA, hCore);
     u32 addrHigh, addrLow = 0;
     splitAddress(RA, &addrHigh, &addrLow);
-    std::cout << " * dcbz * EA = 0x" << EA 
-        << " RA 0x(" << addrHigh << ") " << addrLow << std::endl;
 
     // Temporarely diasable caching.
     for (u8 n = 0; n < 128; n += sizeof(u64))
@@ -417,6 +413,25 @@ void PPCInterpreter::PPCInterpreter_lbzx(PPCState* hCore)
 //
 // Load Halfword
 //
+
+void PPCInterpreter::PPCInterpreter_lha(PPCState* hCore)
+{
+    D_FORM_rD_rA_D;
+    D = EXTS(D, 16);
+    u64 EA = (rA ? hCore->GPR[rA] : 0) + D;
+    u16 unsignedWord = MMURead16(EA);
+    hCore->GPR[rD] = EXTS(unsignedWord, 16);
+    DBG_PRINT_LOAD(<< "lha: Addr = 0x" << std::hex << EA << " data =  0x" << (u16)hCore->GPR[rD] << std::endl);
+}
+
+void PPCInterpreter::PPCInterpreter_lhax(PPCState* hCore)
+{
+    X_FORM_rD_rA_rB;
+    u64 EA = (rA ? hCore->GPR[rA] : 0) + hCore->GPR[rB];
+    u16 unsignedWord = MMURead16(EA);
+    hCore->GPR[rD] = EXTS(unsignedWord, 16);
+    DBG_PRINT_LOAD(<< "lhax: Addr = 0x" << std::hex << EA << " data =  0x" << (u16)hCore->GPR[rD] << std::endl);
+}
 
 void PPCInterpreter::PPCInterpreter_lhbrx(PPCState* hCore)
 {

@@ -205,18 +205,20 @@ void PPCInterpreter::ppcExecuteSingleInstruction(PPCState* hCore) {
 		break;
 	case PPCInstruction::ecowx:
 		break;
+		*/
 	case PPCInstruction::eieio:
+		std::cout << "XCPU: eieio" << std::endl;
 		break;
+		/*
 	case PPCInstruction::eqvx:
 		break;
 		*/
 	case PPCInstruction::extsbx:
 		PPCInterpreter_extsbx(hCore);
 		break;
-		/*
 	case PPCInstruction::extshx:
+		PPCInterpreter_extshx(hCore);
 		break;
-		*/
 	case PPCInstruction::extswx:
 		PPCInterpreter_extswx(hCore);
 		break;
@@ -340,15 +342,19 @@ void PPCInterpreter::ppcExecuteSingleInstruction(PPCState* hCore) {
 		break;
 	case PPCInstruction::lfsx:
 		break;
+		*/
 	case PPCInstruction::lha:
+		PPCInterpreter_lha(hCore);
 		break;
+		/*
 	case PPCInstruction::lhau:
 		break;
 	case PPCInstruction::lhaux:
 		break;
-	case PPCInstruction::lhax:
-		break;
 		*/
+	case PPCInstruction::lhax:
+		PPCInterpreter_lhax(hCore);
+		break;
 	case PPCInstruction::lhbrx:
 		PPCInterpreter_lhbrx(hCore);
 		break;
@@ -454,23 +460,23 @@ void PPCInterpreter::ppcExecuteSingleInstruction(PPCState* hCore) {
 	case PPCInstruction::mtspr:
 		PPCInterpreter_mtspr(hCore);
 		break;
+	/*
+	case PPCInstruction::mtsr:
+		break;
+	case PPCInstruction::mtsrin:
+		break;
+		*/
+	case PPCInstruction::mulhdux:
+		PPCInterpreter_mulhdux(hCore);
+		break;
 		/*
-		case PPCInstruction::mtsr:
-			break;
-		case PPCInstruction::mtsrin:
-			break;
-			*/
-		case PPCInstruction::mulhdux:
-			PPCInterpreter_mulhdux(hCore);
-			break;
-			/*
-		case PPCInstruction::mulhdx:
-			break;
-		case PPCInstruction::mulhwux:
-			break;
-		case PPCInstruction::mulhwx:
-			break;
-			*/
+	case PPCInstruction::mulhdx:
+		break;
+	case PPCInstruction::mulhwux:
+		break;
+	case PPCInstruction::mulhwx:
+		break;
+		*/
 	case PPCInstruction::mulldx:
 		PPCInterpreter_mulldx(hCore);
 		break;
@@ -480,19 +486,20 @@ void PPCInterpreter::ppcExecuteSingleInstruction(PPCState* hCore) {
 	case PPCInstruction::mullwx:
 		PPCInterpreter_mullw(hCore);
 		break;
-			/*
-		case PPCInstruction::nandx:
-			break;
-		case PPCInstruction::negx:
-			break;
-			*/
+		/*
+	case PPCInstruction::nandx:
+		break;
+		*/
+	case PPCInstruction::negx:
+		PPCInterpreter_negx(hCore);
+		break;
 	case PPCInstruction::norx:
 		PPCInterpreter_norx(hCore);
 		break;
-			/*
-		case PPCInstruction::orcx:
-			break;
-			*/
+		/*
+	case PPCInstruction::orcx:
+		break;
+		*/
 	case PPCInstruction::ori:
 		PPCInterpreter_ori(hCore);
 		break;
@@ -563,8 +570,11 @@ void PPCInterpreter::ppcExecuteSingleInstruction(PPCState* hCore) {
 		break;
 	case PPCInstruction::sradx:
 		break;
+		*/
 	case PPCInstruction::srawix:
+		PPCInterpreter_srawix(hCore);
 		break;
+		/*
 	case PPCInstruction::srawx:
 		break;
 		*/
@@ -721,7 +731,6 @@ void PPCInterpreter::ppcExecuteSingleInstruction(PPCState* hCore) {
 		PPCInterpreter_xorx(hCore);
 		break;
 	default:
-
 		std::cout << "PPC Interpreter: Unknown or unimplemented instruction found: data 0x"
 			<< hCore->CI << " addr 0x" << hCore->CIA << std::endl;
 		break;

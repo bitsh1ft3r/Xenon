@@ -5,8 +5,8 @@
 
 #include "Xenon/Base/SystemDevice.h"
 
-#define NAND_START_ADDR 0x80000200C8000000
-#define NAND_END_ADDR	0x80000200c9000000 // 16 Mb region
+#define NAND_START_ADDR 0xC8000000
+#define NAND_END_ADDR	0xc9000000 // 16 Mb region
 
 enum MetaType
 {

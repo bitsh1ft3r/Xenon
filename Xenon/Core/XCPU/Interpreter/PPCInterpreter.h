@@ -9,7 +9,6 @@ namespace PPCInterpreter
 	extern XCPUContext* intXCPUContext;
 
 	// Interpreter helpers
-	void ppcUpdateCR(PPCState* hCore, s8 crNum, u32 crValue);
 	u64 ppcAddCarrying(PPCState* hCore, u64 op1, u64 op2, u64 carryBit);
 	void ppcMul64(u64 operand0, u64 operand1, u64* u64High, u64* u64Low);
 	void ppcMul64Signed(u64 operand0, u64 operand1, u64* u64High, u64* u64Low);
@@ -26,7 +25,8 @@ namespace PPCInterpreter
 	u32 CRCompS64(PPCState* hCore, u64 num1, u64 num2);
 	// Compare Unsigned
 	u32 CRCompS(PPCState* hCore, u64 num1, u64 num2);
-
+	// Condition register Update
+	void ppcUpdateCR(PPCState* hCore, s8 crNum, u32 crValue);
 
 	// Entry point
 	void ppcInterpreterExecute(XCPUContext* cpuContext);
@@ -65,6 +65,10 @@ namespace PPCInterpreter
 	void MMUWrite32(u64 EA, u32 data);
 	void MMUWrite64(u64 EA, u64 data);
 
+	//
+	// Instruction definitions
+	//
+
 	// ALU
 	void PPCInterpreter_addx(PPCState* hCore);
 	void PPCInterpreter_addc(PPCState* hCore);
@@ -99,6 +103,7 @@ namespace PPCInterpreter
 	void PPCInterpreter_divwu(PPCState* hCore, u32 instrData);
 	void PPCInterpreter_isync(PPCState* hCore);
 	void PPCInterpreter_extsbx(PPCState* hCore);
+	void PPCInterpreter_extshx(PPCState* hCore);
 	void PPCInterpreter_extswx(PPCState* hCore);
 	void PPCInterpreter_mfcr(PPCState* hCore);
 	void PPCInterpreter_mftb(PPCState* hCore);
@@ -107,6 +112,7 @@ namespace PPCInterpreter
 	void PPCInterpreter_mulldx(PPCState* hCore);
 	void PPCInterpreter_mullw(PPCState* hCore);
 	void PPCInterpreter_mulhdux(PPCState* hCore);
+	void PPCInterpreter_negx(PPCState* hCore);
 	void PPCInterpreter_norx(PPCState* hCore);
 	void PPCInterpreter_ori(PPCState* hCore);
 	void PPCInterpreter_oris(PPCState* hCore);
@@ -121,6 +127,7 @@ namespace PPCInterpreter
 	void PPCInterpreter_slbia(PPCState* hCore);
 	void PPCInterpreter_sldx(PPCState* hCore);
 	void PPCInterpreter_slwx(PPCState* hCore);
+	void PPCInterpreter_srawix(PPCState* hCore);
 	void PPCInterpreter_srdx(PPCState* hCore);
 	void PPCInterpreter_srwx(PPCState* hCore);
 	void PPCInterpreter_subfcx(PPCState* hCore);
@@ -195,6 +202,8 @@ namespace PPCInterpreter
 	void PPCInterpreter_lbzx(PPCState* hCore);
 
 	// Load Halfword
+	void PPCInterpreter_lha(PPCState* hCore);
+	void PPCInterpreter_lhax(PPCState* hCore);
 	void PPCInterpreter_lhbrx(PPCState* hCore);
 	void PPCInterpreter_lhz(PPCState* hCore);
 	void PPCInterpreter_lhzu(PPCState* hCore);
