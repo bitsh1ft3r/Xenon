@@ -560,6 +560,173 @@ void PostBus::POST(u64 postCode)
             break;
         }
     }
+    /* CE/CF PANICS */
+    else if (postCode >= 0xC1 && postCode <= 0xC8)
+    {
+        std::cout << "CE/F > ";
+        SetConsoleTextAttribute(hConsole, 4);
+        switch (postCode)
+        {
+        case 0xC1:
+            std::cout << "PANIC - LZX_EXPAND_1 - 	Panic - LDICreateDecompression" << std::endl;
+            system("PAUSE");
+            break;
+        case 0xC2:
+            std::cout << "PANIC - LZX_EXPAND_2 - 7BL Size Verification" << std::endl;
+            system("PAUSE");
+            break;
+        case 0xC3:
+            std::cout << "PANIC - LZX_EXPAND_3 - Header/Patch Fragment Info" << std::endl;
+            system("PAUSE");
+            break;
+        case 0xC4:
+            std::cout << "PANIC - LZX_EXPAND_4 - Unexpected LDI Fragment" << std::endl;
+            system("PAUSE");
+            break;
+        case 0xC5:
+            std::cout << "PANIC - LZX_EXPAND_5 - LDISetWindowData" << std::endl;
+            system("PAUSE");
+            break;
+        case 0xC6:
+            std::cout << "PANIC - LZX_EXPAND_6 - LDIDecompress" << std::endl;
+            system("PAUSE");
+            break;
+        case 0xC7:
+            std::cout << "PANIC - LZX_EXPAND_7 - LDIResetDecompression" << std::endl;
+            system("PAUSE");
+            break;
+        case 0xC8:
+            std::cout << "PANIC - SHA_VERIFY - 7BL Signature Verify" << std::endl;
+            system("PAUSE");
+            break;
+        }
+    }
+    /* HYPERVISOR */
+    else if (postCode >= 0x58 && postCode <= 0x5E)
+    {
+        std::cout << "HV > ";
+        SetConsoleTextAttribute(hConsole, 15);
+
+        switch (postCode)
+        {
+        case 0x58:
+            std::cout << "INIT_HYPERVISOR - Hypervisor Initialization begin" << std::endl;
+            break;
+        case 0x59:
+            std::cout << "INIT_SOC_MMIO - Initialize SoC MMIO" << std::endl;
+            break;
+        case 0x5a:
+            std::cout << "INIT_XEX_TRAINING - Initialize XEX training" << std::endl;
+            break;
+        case 0x5b:
+            std::cout << "INIT_KEYRING - Initialize key ring" << std::endl;
+            break;
+        case 0x5c:
+            std::cout << "INIT_KEYS - Initialize keys" << std::endl;
+            break;
+        case 0x5d:
+            std::cout << "INIT_SOC_INT - Initialize SoC Interrupts" << std::endl;
+            break;
+        case 0x5e:
+            std::cout << "INIT_SOC_INT_COMPLETE - Initialization complete" << std::endl;
+            break;
+        }
+    }
+    /* HYPERVISOR PANICS */
+    else if (postCode == 0xFF)
+    {
+        std::cout << "HV > ";
+        SetConsoleTextAttribute(hConsole, 4);
+        std::cout << "PANIC - FATAL!" << std::endl;
+    }
+    /* KERNEL */
+    else if (postCode >= 0x60 && postCode <= 0x79)
+    {
+        std::cout << "KENREL > ";
+        SetConsoleTextAttribute(hConsole, 15);
+
+        switch (postCode)
+        {
+        case 0x60:
+            std::cout << "INIT_KERNEL - Initialize kernel" << std::endl;
+            break;
+        case 0x61:
+            std::cout << "INITIAL_HAL_PHASE_0 - Initialize HAL phase 0" << std::endl;
+            break;
+        case 0x62:
+            std::cout << "INIT_PROCESS_OBJECTS - Initialize process objects" << std::endl;
+            break;
+        case 0x63:
+            std::cout << "INIT_KERNEL_DEBUGGER - Initialize kernel debugger" << std::endl;
+            break;
+        case 0x64:
+            std::cout << "INIT_MEMORY_MANAGER - Initialize memory manager" << std::endl;
+            break;
+        case 0x65:
+            std::cout << "INIT_STACKS - Initialize stacks" << std::endl;
+            break;
+        case 0x66:
+            std::cout << "INIT_OBJECT_SYSTEM - Initialize object system" << std::endl;
+            break;
+        case 0x67:
+            std::cout << "INIT_PHASE1_THREAD - Initialize phase 1 thread" << std::endl;
+            break;
+        case 0x68:
+            std::cout << "INIT_PROCESSORS - Initialize processors" << std::endl;
+            break;
+        case 0x69:
+            std::cout << "INIT_KEYVAULT - Initialize keyvault" << std::endl;
+            break;
+        case 0x6A:
+            std::cout << "INIT_HAL_PHASE_1 - Initialize HAL phase 1" << std::endl;
+            break;
+        case 0x6B:
+            std::cout << "INIT_SFC_DRIVER - Initialize flash controller" << std::endl;
+            break;
+        case 0x6C:
+            std::cout << "INIT_SECURITY - Initialize security" << std::endl;
+            break;
+        case 0x6D:
+            std::cout << "INIT_KEY_EX_VAULT - Initialize extended keyvault" << std::endl;
+            break;
+        case 0x6E:
+            std::cout << "INIT_SETTINGS - Initialize settings" << std::endl;
+            break;
+        case 0x6F:
+            std::cout << "INIT_POWER_MODE - Initialize power mode" << std::endl;
+            break;
+        case 0x70:
+            std::cout << "INIT_VIDEO_DRIVER - Initialize video driver" << std::endl;
+            break;
+        case 0x71:
+            std::cout << "INIT_AUDIO_DRIVER - Initialize audio driver" << std::endl;
+            break;
+        case 0x72:
+            std::cout << "INIT_BOOT_ANIMATION - Initialize bootanim.xex, XMADecoder, XAudioRender" << std::endl;
+            break;
+        case 0x73:
+            std::cout << "INIT_SATA_DRIVER - Initialize SATA driver" << std::endl;
+            break;
+        case 0x74:
+            std::cout << "INIT_SHADOWBOOT - Initialize shadowboot" << std::endl;
+            break;
+        case 0x75:
+            std::cout << "INIT_DUMP_SYSTEM - Initialize dump system" << std::endl;
+            break;
+        case 0x76:
+            std::cout << "INIT_SYSTEM_ROOT - Initialize system root" << std::endl;
+            break;
+        case 0x77:
+            std::cout << "INIT_OTHER_DRIVERS - Initialize other drivers" << std::endl;
+            break;
+        case 0x78:
+            std::cout << "INIT_STFS_DRIVER - Initialize STFS driver" << std::endl;
+            break;
+        case 0x79:
+            std::cout << "LOAD_XAM - Initialize xam.xex" << std::endl;
+            break;
+        }
+        }
     else
     {
         std::cout << "POST: Unrecognized post code: " << std::hex << postCode << std::endl;
