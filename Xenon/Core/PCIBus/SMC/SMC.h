@@ -17,8 +17,22 @@ public:
 private:
 	void smcProcessRead(u64 readAddress, u64* data, u8 byteCount);
 	void smcProcessWrite(u64 writeAddress, u64 data, u8 byteCount);
+	
+	//
+	// FIFO Queue
+	//
+	void smcFIFOProcessRead(u64 readAddress, u64* data, u8 byteCount);
+	void smcFIFOProcessWrite(u64 writeAddress, u64 data, u8 byteCount);
+	u8 fifoWriteReg = 0x4;
+	u8 fifoReadReg = 0;
+	u8 fifoWrittenMsg[16] = { 0 };
+	u8 currentWritePos = 0;
+	u8 fifoReadedMsg[16] = { 0 };
+	u8 currentReadPos = 0;
 
+	//
 	// UART stuff.
+	//
 	void uartWrite(u64 writeAddress, u64 data, u8 byteCount);
 	void uartRead(u64 readAddress, u64* data, u8 byteCount);
 	// UART Status Register.
