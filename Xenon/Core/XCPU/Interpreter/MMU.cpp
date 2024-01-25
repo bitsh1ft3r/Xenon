@@ -519,6 +519,11 @@ bool PPCInterpreter::MMUTranslateAddress(u64* EA, PPCState *hCoreState)
     // Real Mode Offset Register.
     u64 RMOR = hCoreState->SPR[SPR_RMOR];
 
+    // On 32-Bit mode of opertaion MSR[SF] = 0, high order 32 bits of the EA
+    // are truncated, effectively clearing them.
+    if (!_msr.SF)
+        *EA = static_cast<u32>(*EA);
+
     // Real Adress, this is what we want.
     u64 RA = 0;
     // Holds whether the cpu thread issuing the fetch is running in Real or
