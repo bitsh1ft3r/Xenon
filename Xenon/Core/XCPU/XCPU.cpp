@@ -23,9 +23,15 @@ namespace Xe
 
                 for (u8 core = 0; core < 6; core++)
                 {
+                    // Set core ID via PIR Reg
+                    cpuContext.cpuCores[core].SPR[SPR_PIR] = core;
+                    // Memset L1 DCache
                     cpuContext.cpuCores[core].L1 = new u8[0x8000];
                     memset(cpuContext.cpuCores[core].L1, 0, 0x8000);
                 }
+
+                // Thread Timeout Register on CPU0
+                cpuContext.cpuCores[0].SPR[SPR_TTR] = 0x1000;
 
                 // MSR on reset
                 cpuContext.cpuCores[0].MSR.SF = 1;

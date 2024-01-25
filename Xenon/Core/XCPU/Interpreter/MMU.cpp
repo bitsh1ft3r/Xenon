@@ -122,6 +122,7 @@ void PPCInterpreter::PPCInterpreter_tlbiel(PPCState* hCore)
                         tlbEntry.V = false;
                     break;
                 default:
+                    return; // for now, FIX THIS!
                     // 4Kb page size.
                     if (((QGET(VPN, 36, 39) / QGET(VPN, 44, 47)) 
                         | QGET(VPN, 48, 51)) == rb_44_51)

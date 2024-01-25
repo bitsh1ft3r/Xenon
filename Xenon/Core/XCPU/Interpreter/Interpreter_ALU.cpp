@@ -585,6 +585,62 @@ void PPCInterpreter::PPCInterpreter_slwx(PPCState* hCore)
 	}
 }
 
+void PPCInterpreter::PPCInterpreter_sradx(PPCState* hCore)
+{
+	X_FORM_rS_rA_rB_RC;
+
+	u64 regRS = hCore->GPR[rS];
+	u32 n = (u32)hCore->GPR[rB] & 127;
+	u64 r = _rotl64(regRS, 64 - (n & 63));
+	u64 m = (n & 0x40) ? 0 : QMASK(n, 63);
+	u64 s = BGET(regRS, 64, 0) ? QMASK(0, 63) : 0;
+
+	hCore->GPR[rA] = (r & m) | (s & ~m);
+
+	if (s && ((r & ~m) != 0))
+		hCore->XER.CA = 1;
+	else
+		hCore->XER.CA = 0;
+
+	if (RC)
+	{
+		u32 CR = CRCompS(hCore, hCore->GPR[rA], 0);
+		ppcUpdateCR(hCore, 0, CR);
+	}
+}
+
+void PPCInterpreter::PPCInterpreter_sradix(PPCState* hCore)
+{
+	X_FORM_rS_rA_SH_XO_RC;
+
+	SH |= (XO & 1) << 5;
+
+	if (SH == 0)
+	{
+		hCore->GPR[rA] = hCore->GPR[rS];
+		hCore->XER.CA = 0;
+	}
+	else
+	{
+		u64 r = _rotl64(hCore->GPR[rS], 64 - SH);
+		u64 m = QMASK(SH, 63);
+		u64 s = BGET(hCore->GPR[rS], 64, 0);
+
+		hCore->GPR[rA] = (r & m) | (((u64)(-(long long)s)) & ~m);
+
+		if (s && (r & ~m) != 0)
+			hCore->XER.CA = 1;
+		else
+			hCore->XER.CA = 0;
+	}
+
+	if (RC)
+	{
+		u32 CR = CRCompS(hCore, hCore->GPR[rA], 0);
+		ppcUpdateCR(hCore, 0, CR);
+	}
+}
+
 void PPCInterpreter::PPCInterpreter_srawix(PPCState* hCore)
 {
 	X_FORM_rS_rA_SH_RC;
@@ -709,9 +765,14 @@ void PPCInterpreter::PPCInterpreter_xori(PPCState* hCore)
 {
 	D_FORM_rS_rA_UI;
 
-	//("xori", "r%d,r%d,0x%04X", RA, RS, UI);
-
 	hCore->GPR[rA] = hCore->GPR[rS] ^ UI;
+}
+
+void PPCInterpreter::PPCInterpreter_xoris(PPCState* hCore)
+{
+	D_FORM_rS_rA_UI;
+
+	hCore->GPR[rA] = hCore->GPR[rS] ^ (UI << 16);
 }
 
 void PPCInterpreter::PPCInterpreter_xorx(PPCState* hCore)

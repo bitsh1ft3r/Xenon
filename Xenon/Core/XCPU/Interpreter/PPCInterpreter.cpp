@@ -17,7 +17,7 @@ void PPCInterpreter::ppcInterpreterExecute(XCPUContext* cpuContext)
 			// If CPU Core is running
 			if (cpuContext->cpuCores[currentCore].coreRunning) {
 				// Execute 10000 instructions
-				for (int cycleCount = 0; cycleCount <= 10000; cycleCount++) {
+				for (int cycleCount = 0; cycleCount <= cpuContext->cpuCores[currentCore].SPR[SPR_TTR]; cycleCount++) {
 					// Increase PC
 					cpuContext->cpuCores[currentCore].CIA = cpuContext->cpuCores[currentCore].NIA;
 					cpuContext->cpuCores[currentCore].NIA += 4;
@@ -82,6 +82,10 @@ void PPCInterpreter::ppcExecuteSingleInstruction(PPCState* hCore) {
 	{
 		std::cout << "( 0x" << hCore->CIA << ") " << getOpcodeName(hCore->CI) << std::endl;
 	}
+
+	// CPU's online patch
+	if (hCore->CIA == 0x800000001c000c74)
+		hCore->GPR[0x3] = 0x3f;
 
 	switch (currentInstr)
 	{
@@ -346,9 +350,11 @@ void PPCInterpreter::ppcExecuteSingleInstruction(PPCState* hCore) {
 	case PPCInstruction::lha:
 		PPCInterpreter_lha(hCore);
 		break;
-		/*
+
 	case PPCInstruction::lhau:
+		PPCInterpreter_lhau(hCore);
 		break;
+		/*
 	case PPCInstruction::lhaux:
 		break;
 		*/
@@ -377,15 +383,19 @@ void PPCInterpreter::ppcExecuteSingleInstruction(PPCState* hCore) {
 		break;
 	case PPCInstruction::lswx:
 		break;
+		*/
 	case PPCInstruction::lwa:
+		PPCInterpreter_lwa(hCore);
 		break;
+		/*
 	case PPCInstruction::lwarx:
 		break;
 	case PPCInstruction::lwaux:
 		break;
-	case PPCInstruction::lwax:
-		break;
 		*/
+	case PPCInstruction::lwax:
+		PPCInterpreter_lwax(hCore);
+		break;
 	case PPCInstruction::lwbrx:
 		PPCInterpreter_lwbrx(hCore);
 		break;
@@ -564,12 +574,12 @@ void PPCInterpreter::ppcExecuteSingleInstruction(PPCState* hCore) {
 	case PPCInstruction::slwx:
 		PPCInterpreter_slwx(hCore);
 		break;
-		/*
 	case PPCInstruction::sradix:
+		PPCInterpreter_sradix(hCore);
 		break;
 	case PPCInstruction::sradx:
+		PPCInterpreter_sradx(hCore);
 		break;
-		*/
 	case PPCInstruction::srawix:
 		PPCInterpreter_srawix(hCore);
 		break;
@@ -722,10 +732,9 @@ void PPCInterpreter::ppcExecuteSingleInstruction(PPCState* hCore) {
 	case PPCInstruction::xori:
 		PPCInterpreter_xori(hCore);
 		break;
-		/*
 	case PPCInstruction::xoris:
+		PPCInterpreter_xoris(hCore);
 		break;
-		*/
 	case PPCInstruction::xorx:
 		PPCInterpreter_xorx(hCore);
 		break;

@@ -424,6 +424,17 @@ void PPCInterpreter::PPCInterpreter_lha(PPCState* hCore)
     DBG_PRINT_LOAD(<< "lha: Addr = 0x" << std::hex << EA << " data =  0x" << (u16)hCore->GPR[rD] << std::endl);
 }
 
+void PPCInterpreter::PPCInterpreter_lhau(PPCState* hCore)
+{
+    D_FORM_rD_rA_D; 
+    D = EXTS(D, 16);
+
+    u64 EA = hCore->GPR[rA] + D;
+    u16 unsignedWord = MMURead16(EA);
+    hCore->GPR[rD] = EXTS(unsignedWord, 16);
+    hCore->GPR[rA] = EA;
+}
+
 void PPCInterpreter::PPCInterpreter_lhax(PPCState* hCore)
 {
     X_FORM_rD_rA_rB;
@@ -489,6 +500,27 @@ void PPCInterpreter::PPCInterpreter_lhzx(PPCState* hCore)
 //
 // Load Word
 // 
+
+void PPCInterpreter::PPCInterpreter_lwa(PPCState* hCore)
+{
+    DS_FORM_rD_rA_DS;
+    DS = EXTS(DS, 14) << 2;
+
+    u64 EA = (rA ? hCore->GPR[rA] : 0) + DS;
+    u32 unsignedWord = MMURead32(EA);
+    hCore->GPR[rD] = EXTS(unsignedWord, 32);
+    DBG_PRINT_LOAD(<< "lwa: Addr = 0x" << std::hex << EA << " data =  0x" << (u32)hCore->GPR[rD] << std::endl);
+}
+
+void PPCInterpreter::PPCInterpreter_lwax(PPCState* hCore)
+{
+    X_FORM_rD_rA_rB;
+
+    u64 EA = (rA ? hCore->GPR[rA] : 0) + hCore->GPR[rB];
+    u32 unsignedWord = MMURead32(EA);
+    hCore->GPR[rD] = EXTS(unsignedWord, 32);
+    DBG_PRINT_LOAD(<< "lwax: Addr = 0x" << std::hex << EA << " data =  0x" << (u16)hCore->GPR[rD] << std::endl);
+}
 
 void PPCInterpreter::PPCInterpreter_lwbrx(PPCState* hCore)
 {

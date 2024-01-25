@@ -194,6 +194,19 @@ void PPCInterpreter::PPCInterpreter_mtspr(PPCState* hCore)
 	case SPR_HSPRG1:
 		std::cout << "SPR_HSPRG1 = 0x" << std::hex << hCore->GPR[rD] << std::endl;
 		break;
+	case SPR_CTRLWR:
+		std::cout<< "SPR_CTRL = 0x" << std::hex << hCore->GPR[rD] << std::endl;
+		hCore->SPR[SPR_CTRLRD] = hCore->GPR[rD]; // Also do the write on SPR_CTRLRD
+		break;
+	case SPR_RMOR:
+		std::cout << "SPR_RMOR = 0x" << std::hex << hCore->GPR[rD] << std::endl;
+		break;
+	case SPR_LPIDR:
+		std::cout << "SPR_LPIDR = 0x" << std::hex << hCore->GPR[rD] << std::endl;
+		break;
+	case SPR_SPRG1:
+		std::cout << "SPR_SPRG1 = 0x" << std::hex << hCore->GPR[rD] << std::endl;
+		break;
 	default:
 		std::cout << "SPR " << std::dec << spr << " = 0x" << std::hex << hCore->GPR[rD] << std::endl;
 		break;

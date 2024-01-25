@@ -566,6 +566,9 @@ PPCInstruction PPCInterpreter::getOpcode(u32 instrData)
     case 44: // sth
         return PPCInstruction::sth;
         break;
+    case 45: // sthu
+        return PPCInstruction::sthu;
+        break;
     case 58:
         switch (XO_30to31)
         {
@@ -574,6 +577,9 @@ PPCInstruction PPCInterpreter::getOpcode(u32 instrData)
             break;
         case 1: // ldu
             return PPCInstruction::ldu;
+            break;
+        case 2: // lwa
+            return PPCInstruction::lwa;
             break;
         default:
             std::cout << "PPC Decoder: Unimplemented instruction found, SUBGROUP 58!" << std::endl;

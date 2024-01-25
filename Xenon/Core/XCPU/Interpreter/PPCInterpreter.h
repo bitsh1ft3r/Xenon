@@ -128,6 +128,8 @@ namespace PPCInterpreter
 	void PPCInterpreter_slbia(PPCState* hCore);
 	void PPCInterpreter_sldx(PPCState* hCore);
 	void PPCInterpreter_slwx(PPCState* hCore);
+	void PPCInterpreter_sradx(PPCState* hCore);
+	void PPCInterpreter_sradix(PPCState* hCore);
 	void PPCInterpreter_srawix(PPCState* hCore);
 	void PPCInterpreter_srdx(PPCState* hCore);
 	void PPCInterpreter_srwx(PPCState* hCore);
@@ -136,6 +138,7 @@ namespace PPCInterpreter
 	void PPCInterpreter_subfex(PPCState* hCore);
 	void PPCInterpreter_subfic(PPCState* hCore);
 	void PPCInterpreter_xori(PPCState* hCore);
+	void PPCInterpreter_xoris(PPCState* hCore);
 	void PPCInterpreter_xorx(PPCState* hCore);
 
 	// Program control
@@ -204,6 +207,7 @@ namespace PPCInterpreter
 
 	// Load Halfword
 	void PPCInterpreter_lha(PPCState* hCore);
+	void PPCInterpreter_lhau(PPCState* hCore);
 	void PPCInterpreter_lhax(PPCState* hCore);
 	void PPCInterpreter_lhbrx(PPCState* hCore);
 	void PPCInterpreter_lhz(PPCState* hCore);
@@ -212,6 +216,8 @@ namespace PPCInterpreter
 	void PPCInterpreter_lhzx(PPCState* hCore);
 
 	// Load Word
+	void PPCInterpreter_lwa(PPCState* hCore);
+	void PPCInterpreter_lwax(PPCState* hCore);
 	void PPCInterpreter_lwbrx(PPCState* hCore);
 	void PPCInterpreter_lwz(PPCState* hCore);
 	void PPCInterpreter_lwzu(PPCState* hCore);
