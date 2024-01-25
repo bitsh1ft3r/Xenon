@@ -38,9 +38,6 @@
     <ClCompile Include="Core\XCPU\Interpreter\PPCInterpreter.cpp">
       <Filter>Core\XCPU\Interpreter</Filter>
     </ClCompile>
-    <ClCompile Include="Core\UART\UART.cpp">
-      <Filter>Core\UART</Filter>
-    </ClCompile>
     <ClCompile Include="Core\PostBus\PostBus.cpp">
       <Filter>Core\Bus</Filter>
     </ClCompile>
@@ -72,9 +69,6 @@
     </Filter>
     <Filter Include="Core\XCPU\Interpreter">
       <UniqueIdentifier>{c7c1f968-10b9-4130-a365-0dbf1985db7c}</UniqueIdentifier>
-    </Filter>
-    <Filter Include="Core\UART">
-      <UniqueIdentifier>{83832c29-c33d-4789-b166-ecc9bfc58e87}</UniqueIdentifier>
     </Filter>
     <Filter Include="Core\PCIBus">
       <UniqueIdentifier>{4a18e6b8-342f-43d3-9333-e6e24d96d39f}</UniqueIdentifier>
@@ -122,9 +116,6 @@
     </ClInclude>
     <ClInclude Include="Core\XCPU\XCPUContext.h">
       <Filter>Core\XCPU</Filter>
-    </ClInclude>
-    <ClInclude Include="Core\UART\UART.h">
-      <Filter>Core\UART</Filter>
     </ClInclude>
     <ClInclude Include="Core\PostBus\PostBus.h">
       <Filter>Core\Bus</Filter>

@@ -5,8 +5,8 @@
 #define PCI_CONFIG_SPACE_BEGIN 0xD0000000
 #define PCI_CONFIG_SPACE_END 0XD1000000
 
-#define PCI_BUS_START_ADDR 0xEA000000
-#define PCI_BUS_END_ADDR 0xEA010000
+#define PCI_BUS_START_ADDR	0x200EA000000
+#define PCI_BUS_END_ADDR	0x200EA010000
 
 void Bus::Init()
 {
@@ -34,8 +34,17 @@ void Bus::Read(u64 readAddress, u64* data, u8 byteCount)
 {
 	for (auto& device : conectedDevices)
 	{
+		// Special case, shouldn't happen.
 		if (device->GetDeviceName() == "NAND")
-			readAddress = static_cast<u32>(readAddress);
+		{
+			u64 nandAddress = static_cast<u32>(readAddress);
+			if (nandAddress >= device->GetStartAddress() && nandAddress <= device->GetEndAddress())
+			{
+				// Hit
+				device->Read(readAddress, data, byteCount);
+				return;
+			}
+		}
 		if (readAddress >= device->GetStartAddress() && readAddress <= device->GetEndAddress())
 		{
 			// Hit
@@ -59,6 +68,7 @@ void Bus::Read(u64 readAddress, u64* data, u8 byteCount)
 	{
 		// PCI Device, ask PCI Bus for it.
 		_PCIBus->Read(readAddress, data, byteCount);
+		return;
 	}
 	
 	// Device not found
@@ -74,8 +84,17 @@ void Bus::Write(u64 writeAddress, u64 data, u8 byteCount)
 	cfg.u.AsUINT32 = (u32)writeAddress;
 	for (auto& device : conectedDevices)
 	{
+		// Special case, shouldn't happen.
 		if (device->GetDeviceName() == "NAND")
-			writeAddress = static_cast<u32>(writeAddress);
+		{
+			u64 nandAddress = static_cast<u32>(writeAddress);
+			if (nandAddress >= device->GetStartAddress() && nandAddress <= device->GetEndAddress())
+			{
+				// Hit
+				device->Write(writeAddress, data, byteCount);
+				return;
+			}
+		}
 		if (writeAddress >= device->GetStartAddress() && writeAddress <= device->GetEndAddress())
 		{
 			// Hit
@@ -96,6 +115,7 @@ void Bus::Write(u64 writeAddress, u64 data, u8 byteCount)
 	{
 		// PCI Device, ask PCI Bus for it.
 		_PCIBus->Write(writeAddress, data, byteCount);
+		return;
 	}
 
 	// Device not found

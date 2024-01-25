@@ -13,7 +13,7 @@ void PCIBus::Read(u64 readAddress, u64* data, u8 byteCount)
 {
 	for (auto& device : connectedPCIDevices)
 	{
-		if ((u32)readAddress >= (u32)device->GetStartAddress() && (u32)readAddress <= (u32)device->GetEndAddress())
+		if (readAddress >= device->GetStartAddress() && readAddress <= device->GetEndAddress())
 		{
 			// Hit
 			device->Read(readAddress, data, byteCount);
@@ -33,7 +33,7 @@ void PCIBus::Write(u64 writeAddress, u64 data, u8 byteCount)
 		return;
 	for (auto& device : connectedPCIDevices)
 	{
-		if ((u32)writeAddress >= (u32)device->GetStartAddress() && (u32)writeAddress <= (u32)device->GetEndAddress())
+		if (writeAddress >= device->GetStartAddress() && writeAddress <= device->GetEndAddress())
 		{
 			// Hit
 			device->Write(writeAddress, data, byteCount);
