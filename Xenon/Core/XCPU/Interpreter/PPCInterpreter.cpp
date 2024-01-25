@@ -525,10 +525,9 @@ void PPCInterpreter::ppcExecuteSingleInstruction(PPCState* hCore) {
 	case PPCInstruction::rldicrx:
 		PPCInterpreter_rldicrx(hCore);
 		break;
-		/*
 	case PPCInstruction::rldicx:
+		PPCInterpreter_rldicx(hCore);
 		break;
-		*/
 	case PPCInstruction::rldimix:
 		PPCInterpreter_rldimix(hCore);
 		break;

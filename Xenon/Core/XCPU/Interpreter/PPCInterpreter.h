@@ -117,6 +117,7 @@ namespace PPCInterpreter
 	void PPCInterpreter_ori(PPCState* hCore);
 	void PPCInterpreter_oris(PPCState* hCore);
 	void PPCInterpreter_orx(PPCState* hCore);
+	void PPCInterpreter_rldicx(PPCState* hCore);
 	void PPCInterpreter_rldcrx(PPCState* hCore);
 	void PPCInterpreter_rldiclx(PPCState* hCore);
 	void PPCInterpreter_rldicrx(PPCState* hCore);

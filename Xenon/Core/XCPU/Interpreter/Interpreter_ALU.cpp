@@ -43,7 +43,8 @@ void PPCInterpreter::PPCInterpreter_addic_rc(PPCState* hCore)
 	SI = EXTS(SI, 16);
 
 	hCore->GPR[rD] = ppcAddCarrying(hCore, hCore->GPR[rA], SI, 0);
-	ppcUpdateCR(hCore, 0, static_cast<u32>(hCore->GPR[rD]));
+	u32 CR = CRCompS(hCore, hCore->GPR[rD], 0);
+	ppcUpdateCR(hCore, 0, CR);
 }
 
 void PPCInterpreter::PPCInterpreter_addis(PPCState* hCore)
@@ -414,6 +415,23 @@ void PPCInterpreter::PPCInterpreter_orx(PPCState* hCore)
 	X_FORM_rS_rA_rB_RC;
 
 	hCore->GPR[rA] = hCore->GPR[rS] | hCore->GPR[rB];
+
+	if (RC)
+	{
+		u32 CR = CRCompS(hCore, hCore->GPR[rA], 0);
+		ppcUpdateCR(hCore, 0, CR);
+	}
+}
+
+void PPCInterpreter::PPCInterpreter_rldicx(PPCState* hCore)
+{
+	MD_FORM_rS_rA_sh_mb_RC;
+
+	u64 r = _rotl64(hCore->GPR[rS], sh);
+	u32 e = 63 - sh;
+	u64 m = QMASK(mb, e);
+
+	hCore->GPR[rA] = r & m;
 
 	if (RC)
 	{
