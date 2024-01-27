@@ -154,6 +154,77 @@ void PPCInterpreter::PPCInterpreter_mfspr(PPCState* hCore)
 	PPC_OPC_TEMPL_XFX(hCore->CI, rS, crm);
 	u32 sprNum = ExtractBits(hCore->CI, 11, 20);
 	sprNum = ((sprNum & 0x1f) << 5) | ((sprNum >> 5) & 0x1F);
+	switch (sprNum)
+	{
+	case SPR_LR:
+	case SPR_CTR:
+	case SPR_XER:
+		break;
+	case SPR_HRMOR:
+		std::cout << "mfspr [SPR_HRMOR], value = 0x" << hCore->SPR[sprNum] 
+			<< std::endl;
+		break;
+	case SPR_PIR:
+		std::cout << "mfspr [SPR_PIR], value = 0x" << hCore->SPR[sprNum]
+			<< std::endl;
+		break;
+	case SPR_HID0:
+		std::cout << "mfspr [SPR_HID0], value = 0x" << hCore->SPR[sprNum]
+			<< std::endl;
+		break;
+	case SPR_HID1:
+		std::cout << "mfspr [SPR_HID1], value = 0x" << hCore->SPR[sprNum]
+			<< std::endl;
+		break;
+	case SPR_HID4:
+		std::cout << "mfspr [SPR_HID4], value = 0x" << hCore->SPR[sprNum]
+			<< std::endl;
+		break;
+	case SPR_HID6:
+		std::cout << "mfspr [SPR_HID6], value = 0x" << hCore->SPR[sprNum]
+			<< std::endl;
+		break;
+	case SPR_LPCR:
+		std::cout << "mfspr [SPR_LPCR], value = 0x" << hCore->SPR[sprNum]
+			<< std::endl;
+		break;
+	case SPR_PVR:
+		std::cout << "mfspr [SPR_PVR], value = 0x" << hCore->SPR[sprNum]
+			<< std::endl;
+		break;
+	case SPR_SPRG0:
+		std::cout << "mfspr [SPR_SPRG0], value = 0x" << hCore->SPR[sprNum]
+			<< std::endl;
+		break;
+	case SPR_SPRG1:
+		std::cout << "mfspr [SPR_SPRG1], value = 0x" << hCore->SPR[sprNum]
+			<< std::endl;
+		break;
+	case SPR_SRR0:
+		std::cout << "mfspr [SPR_SRR0], value = 0x" << hCore->SPR[sprNum]
+			<< std::endl;
+		break;
+	case SPR_SRR1:
+		std::cout << "mfspr [SPR_SRR1], value = 0x" << hCore->SPR[sprNum]
+			<< std::endl;
+		break;
+	case SPR_PpeTlbIndexHint:
+		std::cout << "mfspr [SPR_PpeTlbIndexHint], value = 0x" << hCore->SPR[sprNum]
+			<< std::endl;
+		break;
+	case SPR_DSISR:
+		std::cout << "mfspr [SPR_DSISR], value = 0x" << hCore->SPR[sprNum]
+			<< std::endl;
+	case SPR_DAR:
+		std::cout << "mfspr [SPR_DAR], value = 0x" << hCore->SPR[sprNum]
+			<< std::endl;
+		break;
+	default:
+		std::cout << "mfspr: r" << rS << " << SPR[" << sprNum
+			<< "] value = 0x" << hCore->SPR[sprNum] << std::endl;
+		break;
+	}
+
 	hCore->GPR[rS] = hCore->SPR[sprNum];
 }
 
@@ -163,74 +234,77 @@ void PPCInterpreter::PPCInterpreter_mtspr(PPCState* hCore)
 	switch (spr)
 	{
 	case SPR_SDR1:
-		std::cout << "SPR_SDR1 = 0x" << std::hex << hCore->GPR[rD] << std::endl;
+		std::cout << "mtspr [SPR_SDR1] = 0x" << std::hex << hCore->GPR[rD] << std::endl;
 		break;
 	case SPR_DAR:
-		std::cout << "SPR_DAR = 0x" << std::hex << hCore->GPR[rD] << std::endl;
+		std::cout << "mtspr [SPR_DAR] = 0x" << std::hex << hCore->GPR[rD] << std::endl;
 		break;
 	case SPR_DSISR:
-		std::cout << "SPR_DSISR = 0x" << std::hex << hCore->GPR[rD] << std::endl;
+		std::cout << "mtspr [SPR_DSISR] = 0x" << std::hex << hCore->GPR[rD] << std::endl;
 		break;
 	case SPR_CTR:
 		break;
 	case SPR_LR:
 		break;
 	case SPR_LPCR:
-		std::cout << "SPR_LPCR = 0x" << std::hex << hCore->GPR[rD] << std::endl;
+		std::cout << "mtspr [SPR_LPCR] = 0x" << std::hex << hCore->GPR[rD] << std::endl;
 		break;
 	case SPR_HID1:
-		std::cout << "SPR_HID1 = 0x" << std::hex << hCore->GPR[rD] << std::endl;
+		std::cout << "mtspr [SPR_HID1] = 0x" << std::hex << hCore->GPR[rD] << std::endl;
 		break;
 	case SPR_HID4:
-		std::cout << "SPR_HID4 = 0x" << std::hex << hCore->GPR[rD] << std::endl;
+		std::cout << "mtspr [SPR_HID4] = 0x" << std::hex << hCore->GPR[rD] << std::endl;
 		break;
 	case SPR_HID6:
-		std::cout << "SPR_HID6 = 0x" << std::hex << hCore->GPR[rD] << std::endl;
+		std::cout << "mtspr [SPR_HID6] = 0x" << std::hex << hCore->GPR[rD] << std::endl;
 		break;
 	case SPR_SRR0:
-		std::cout << "SPR_SRR0 = 0x" << std::hex << hCore->GPR[rD] << std::endl;
+		std::cout << "mtspr [SPR_SRR0] = 0x" << std::hex << hCore->GPR[rD] << std::endl;
 		break;
 	case SPR_SRR1:
-		std::cout << "SPR_SRR1 = 0x" << std::hex << hCore->GPR[rD] << std::endl;
+		std::cout << "mtspr [SPR_SRR1] = 0x" << std::hex << hCore->GPR[rD] << std::endl;
 		break;
 	case SPR_HRMOR:
-		std::cout << "SPR_HRMOR = 0x" << std::hex << hCore->GPR[rD] << std::endl;
+		std::cout << "mtspr [SPR_HRMOR] = 0x" << std::hex << hCore->GPR[rD] << std::endl;
 		break;
 	case SPR_PpeTlbIndex:
-		std::cout << "SPR_PpeTlbIndex = 0x" << std::hex << hCore->GPR[rD] << std::endl;
+		std::cout << "mtspr [SPR_PpeTlbIndex] = 0x" << std::hex << hCore->GPR[rD] << std::endl;
 		break;
 	case SPR_PpeTlbRpn:
-		std::cout << "SPR_PpeTlbRpn = 0x" << std::hex << hCore->GPR[rD] << std::endl;
+		std::cout << "mtspr [SPR_PpeTlbRpn] = 0x" << std::hex << hCore->GPR[rD] << std::endl;
 		break;
 	case SPR_PpeTlbVpn:
-		std::cout << "SPR_PpeTlbVpn = 0x" << std::hex << hCore->GPR[rD] << std::endl;
+		std::cout << "mtspr [SPR_PpeTlbVpn] = 0x" << std::hex << hCore->GPR[rD] << std::endl;
 		hCore->SPR[spr] = hCore->GPR[rD];
 		mmuAddTlbEntry(hCore);
 		break;
 	case SPR_TTR:
-		std::cout << "SPR_TTR = 0x" << std::hex << hCore->GPR[rD] << std::endl;
+		std::cout << "mtspr [SPR_TTR] = 0x" << std::hex << hCore->GPR[rD] << std::endl;
 		break;
 	case SPR_TSCR:
-		std::cout << "SPR_TSCR = 0x" << std::hex << hCore->GPR[rD] << std::endl;
+		std::cout << "mtspr [SPR_TSCR] = 0x" << std::hex << hCore->GPR[rD] << std::endl;
 		break;
 	case SPR_HSPRG0:
-		std::cout << "SPR_HSPRG0 = 0x" << std::hex << hCore->GPR[rD] << std::endl;
+		std::cout << "mtspr [SPR_HSPRG0] = 0x" << std::hex << hCore->GPR[rD] << std::endl;
 		break;
 	case SPR_HSPRG1:
-		std::cout << "SPR_HSPRG1 = 0x" << std::hex << hCore->GPR[rD] << std::endl;
+		std::cout << "mtspr [SPR_HSPRG1] = 0x" << std::hex << hCore->GPR[rD] << std::endl;
 		break;
 	case SPR_CTRLWR:
-		std::cout<< "SPR_CTRL = 0x" << std::hex << hCore->GPR[rD] << std::endl;
+		std::cout << "mtspr [SPR_CTRL] = 0x" << std::hex << hCore->GPR[rD] << std::endl;
 		hCore->SPR[SPR_CTRLRD] = hCore->GPR[rD]; // Also do the write on SPR_CTRLRD
 		break;
 	case SPR_RMOR:
-		std::cout << "SPR_RMOR = 0x" << std::hex << hCore->GPR[rD] << std::endl;
+		std::cout << "mtspr [SPR_RMOR] = 0x" << std::hex << hCore->GPR[rD] << std::endl;
 		break;
 	case SPR_LPIDR:
-		std::cout << "SPR_LPIDR = 0x" << std::hex << hCore->GPR[rD] << std::endl;
+		std::cout << "mtspr [SPR_LPIDR] = 0x" << std::hex << hCore->GPR[rD] << std::endl;
+		break;
+	case SPR_SPRG0:
+		std::cout << "mtspr [SPR_SPRG0] = 0x" << std::hex << hCore->GPR[rD] << std::endl;
 		break;
 	case SPR_SPRG1:
-		std::cout << "SPR_SPRG1 = 0x" << std::hex << hCore->GPR[rD] << std::endl;
+		std::cout << "mtspr [SPR_SPRG1] = 0x" << std::hex << hCore->GPR[rD] << std::endl;
 		break;
 	default:
 		std::cout << "SPR " << std::dec << spr << " = 0x" << std::hex << hCore->GPR[rD] << std::endl;
