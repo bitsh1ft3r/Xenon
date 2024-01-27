@@ -53,7 +53,7 @@ void PPCInterpreter::ppcExecuteSingleInstruction(PPCState* hCore) {
 	// RGH 2 for CB 6752
 	if (hCore->CIA == 0x000000000200c8d0)
 	{
-		//hCore->GPR[0x5] = 0;
+		hCore->GPR[0x5] = 0;
 	}
 
 	// HW_INIT Success CB_6752
@@ -75,7 +75,7 @@ void PPCInterpreter::ppcExecuteSingleInstruction(PPCState* hCore) {
 	// CPU's online patch for Xell
 	if (hCore->CIA == 0x800000001c000c74)
 	{
-		hCore->GPR[0x3] = 0x3f;
+		//hCore->GPR[0x3] = 0x3f;
 	}
 
 	switch (currentInstr)

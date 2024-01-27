@@ -197,5 +197,5 @@ void PCIBus::ConfigWrite(u64 writeAddress, u64 data, u8 byteCount)
 		}
 	}
 	std::cout << "PCI Write to unimplemented device: " 
-		<< currentDevName.c_str() << std::endl;
+		<< currentDevName.c_str() << " data = 0x" << data << std::endl;
 }

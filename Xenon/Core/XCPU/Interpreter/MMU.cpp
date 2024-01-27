@@ -743,7 +743,7 @@ bool PPCInterpreter::MMUTranslateAddress(u64* EA, PPCState *hCoreState)
                 {
                     hCoreState->exceptionOcurred = true;
                     // Page Table lookup TODO.
-                    std::cout << "XCPU (MMU) TLB Miss in Softwarre Managed "
+                    std::cout << "XCPU (MMU) TLB Miss in Software Managed "
                         << "Mode. Generating Interrupt." << std::endl;
                     if (hCoreState->iFetch)
                         ppcInstStorageException(hCoreState, QMASK(33, 33));
