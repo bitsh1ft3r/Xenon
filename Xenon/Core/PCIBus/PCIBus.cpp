@@ -27,23 +27,8 @@
 #define FAST_ETH_DEV_NUM	0x7
 #define SFC_DEV_NUM			0x8
 #define _580C_DEV_NUM		0x9
-#define SMC_DEV_NUM			0xA
+#define SMC_DEV_NUM			0xa
 #define _5841_DEV_NUM		0xF
-
-typedef struct PCI_TYPE1_CFG_BITS {
-	union {
-		struct {
-			u32 regOffset : 8;
-			u32 functNumber : 3;
-			u32 devNumber : 5;
-			u32 busNumber : 8;
-			u32 : 7;
-			u32 enableBit : 1;
-		};
-
-		u32   hexData;
-	};
-};
 
 void PCIBus::addPCIDevice(PCIDevice* device)
 {
@@ -87,18 +72,20 @@ void PCIBus::Write(u64 writeAddress, u64 data, u8 byteCount)
 	}
 
 	// Device not found
-	std::cout << "PCI Bus: Write failed at address 0x" << std::hex << writeAddress << std::endl;
+	std::cout << "PCI Bus: Write failed at address 0x" << std::hex 
+		<< writeAddress << " data = 0x" << data << std::endl;
 }
 
 void PCIBus::ConfigRead(u64 readAddress, u64* data, u8 byteCount)
 {
-	PCI_TYPE1_CFG_BITS config;
-	config.hexData = readAddress;
+	u16 bus = (readAddress >> 20) & 0xF;
+	u16 device = (readAddress >> 15) & 0x1F;
+	u16 reg = readAddress & 0xFFF;
 
 	// Current device Name
 	std::string currentDevName = "";
 
-	switch (config.devNumber)
+	switch (device)
 	{
 	case XMA_DEV_NUM:
 		currentDevName = "XMA";
@@ -132,8 +119,7 @@ void PCIBus::ConfigRead(u64 readAddress, u64* data, u8 byteCount)
 		break;
 	default:
 		std::cout << "PCI Config Space Read: Unknown device accessed: Dev 0x"
-			<< config.devNumber << " Func 0x" << config.functNumber << " Reg 0x"
-			<< config.regOffset << std::endl;
+			<< device << " Reg 0x" << reg << std::endl;
 		return;
 		break;
 	}
@@ -154,14 +140,14 @@ void PCIBus::ConfigRead(u64 readAddress, u64* data, u8 byteCount)
 
 void PCIBus::ConfigWrite(u64 writeAddress, u64 data, u8 byteCount)
 {
-	PCI_TYPE1_CFG_BITS config;
-
-	config.hexData = writeAddress;
+	u16 bus = (writeAddress >> 20) & 0xF;
+	u16 device = (writeAddress >> 15) & 0x1F;
+	u16 reg = writeAddress & 0xFFF;
 
 	// Current device Name
 	std::string currentDevName = "";
 
-	switch (config.devNumber)
+	switch (device)
 	{
 	case XMA_DEV_NUM:
 		currentDevName = "XMA";
@@ -195,8 +181,8 @@ void PCIBus::ConfigWrite(u64 writeAddress, u64 data, u8 byteCount)
 		break;
 	default:
 		std::cout << "PCI Config Space Write: Unknown device accessed: Dev 0x"
-			<< config.devNumber << " Func 0x" << config.functNumber << " Reg 0x"
-			<< config.regOffset << std::endl;
+			<< device << " Func 0x" << " Reg 0x" << reg << " data = 0x"
+			<< data << std::endl;
 		return;
 		break;
 	}

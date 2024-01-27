@@ -50,6 +50,12 @@
     <ClCompile Include="Core\PCIBus\XMA\XMA.cpp">
       <Filter>Core\PCIBus\XMA</Filter>
     </ClCompile>
+    <ClCompile Include="Core\PCIBus\HDD\HDD.cpp">
+      <Filter>Core\PCIBus\HDD</Filter>
+    </ClCompile>
+    <ClCompile Include="Core\PCIBus\CDROM\CDROM.cpp">
+      <Filter>Core\PCIBus\CDROM</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <Filter Include="Base">
@@ -81,6 +87,12 @@
     </Filter>
     <Filter Include="Core\PCIBus\XMA">
       <UniqueIdentifier>{32334413-c7ac-400a-809c-534a6ab5b441}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Core\PCIBus\HDD">
+      <UniqueIdentifier>{c2b004e2-9b40-4342-98bc-c2f57653d8cd}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Core\PCIBus\CDROM">
+      <UniqueIdentifier>{434eae92-db91-4999-8ea8-4f2ef73e33dc}</UniqueIdentifier>
     </Filter>
   </ItemGroup>
   <ItemGroup>
@@ -137,6 +149,12 @@
     </ClInclude>
     <ClInclude Include="Core\PCIBus\XMA\XMA.h">
       <Filter>Core\PCIBus\XMA</Filter>
+    </ClInclude>
+    <ClInclude Include="Core\PCIBus\HDD\HDD.h">
+      <Filter>Core\PCIBus\HDD</Filter>
+    </ClInclude>
+    <ClInclude Include="Core\PCIBus\CDROM\CDROM.h">
+      <Filter>Core\PCIBus\CDROM</Filter>
     </ClInclude>
   </ItemGroup>
 </Project>

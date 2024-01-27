@@ -43,8 +43,18 @@ void SMC::Read(u64 readAddress, u64* data, u8 byteCount)
 }
 
 void SMC::Write(u64 writeAddress, u64 data, u8 byteCount)
-{	
+{
 	smcProcessWrite(writeAddress, data, byteCount);
+}
+
+void SMC::ConfigRead(u64 readAddress, u64* data, u8 byteCount)
+{
+	memcpy(data, &configReg[static_cast<u8>(readAddress)], byteCount);
+}
+
+void SMC::ConfigWrite(u64 writeAddress, u64 data, u8 byteCount)
+{
+	memcpy(&configReg[static_cast<u8>(writeAddress)], &data, byteCount);
 }
 
 void SMC::smcProcessRead(u64 readAddress, u64* data, u8 byteCount)
@@ -240,7 +250,7 @@ void SMC::smcFIFOProcessWrite(u64 writeAddress, u64 data, u8 byteCount)
 		case SMC_QUERY_PWRON_TYPE:
 			// Cahange here to not enter Xell!
 			fifoReadedMsg[0] = SMC_QUERY_PWRON_TYPE;
-			fifoReadedMsg[1] = 0x11; // Eject button.
+			fifoReadedMsg[1] = 0x12; // Eject button.
 			fifoReadReg = SMC_FIFO_READY;
 			break;
 		case SMC_QUERY_SMC_VER:

@@ -130,6 +130,24 @@ void PPCInterpreter::PPCInterpreter_rfid(PPCState* hCore)
 	hCore->NIA = hCore->SPR[SPR_SRR0] & ~3;
 }
 
+void PPCInterpreter::PPCInterpreter_tdi(PPCState* hCore)
+{
+	D_FORM_TO_rA_SI; 
+	SI = EXTS(SI, 16);
+
+	s64 rAReg = (s64)hCore->GPR[rA];
+
+	if ((rAReg < (s64)SI && BGET(TO, 5, 0))
+		|| (rAReg > (s64)SI && BGET(TO, 5, 1))
+		|| (rAReg == (s64)SI && BGET(TO, 5, 2))
+		|| ((u64)rAReg < SI && BGET(TO, 5, 3))
+		|| ((u64)rAReg > SI && BGET(TO, 5, 4)))
+	{
+		// Trap!
+		u32 trapCode = (u32)SI;
+	}
+}
+
 void PPCInterpreter::PPCInterpreter_mfspr(PPCState* hCore)
 {
 	u64 rS, crm = 0;

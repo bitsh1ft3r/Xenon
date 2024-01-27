@@ -151,6 +151,7 @@ namespace PPCInterpreter
 	void PPCInterpreter_sc(PPCState* hCore);
 	void PPCInterpreter_slbmte(PPCState* hCore);
 	void PPCInterpreter_rfid(PPCState* hCore);
+	void PPCInterpreter_tdi(PPCState* hCore);
 	void PPCInterpreter_tlbiel(PPCState* hCore);
 	void PPCInterpreter_mfspr(PPCState* hCore);
 	void PPCInterpreter_mtspr(PPCState* hCore);

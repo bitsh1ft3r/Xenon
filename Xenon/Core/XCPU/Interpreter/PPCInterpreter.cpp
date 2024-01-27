@@ -53,18 +53,18 @@ void PPCInterpreter::ppcExecuteSingleInstruction(PPCState* hCore) {
 	// RGH 2 for CB 6752
 	if (hCore->CIA == 0x000000000200c8d0)
 	{
-		hCore->GPR[0x5] = 0;
+		//hCore->GPR[0x5] = 0;
 	}
 
 	// HW_INIT Success CB_6752
 	if (hCore->CIA == 0x0000000003003dd0)
 	{
-		hCore->GPR[0x5] = 0;
+		//hCore->GPR[0x5] = 0;
 	}
 	// RGH 2 for CB_A 9188
 	if (hCore->CIA == 0x000000000200c870)
 	{
-		//hCore->GPR[0x5] = 0;
+		hCore->GPR[0x5] = 0;
 	}
 
 	if (0)
@@ -169,8 +169,11 @@ void PPCInterpreter::ppcExecuteSingleInstruction(PPCState* hCore) {
 		break;
 	case PPCInstruction::crxor:
 		break;
+		*/
 	case PPCInstruction::dcbf:
+		std::cout << "dcbf" << std::endl;
 		break;
+		/*
 	case PPCInstruction::dcbi:
 		break;
 		*/
@@ -700,9 +703,12 @@ void PPCInterpreter::ppcExecuteSingleInstruction(PPCState* hCore) {
 		/*
 	case PPCInstruction::td:
 		break;
+		*/
 	case PPCInstruction::tdi:
+		PPCInterpreter_tdi(hCore);
 		break;
-	case PPCInstruction::tlbia:
+		/*
+		case PPCInstruction::tlbia:
 		break;
 		*/
 	case PPCInstruction::tlbie:

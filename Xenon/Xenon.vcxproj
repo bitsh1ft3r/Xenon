@@ -145,6 +145,8 @@
   <ItemGroup>
     <ClCompile Include="Core\Bus\Bus.cpp" />
     <ClCompile Include="Core\NAND\NAND.cpp" />
+    <ClCompile Include="Core\PCIBus\CDROM\CDROM.cpp" />
+    <ClCompile Include="Core\PCIBus\HDD\HDD.cpp" />
     <ClCompile Include="Core\PCIBus\PCIBus.cpp" />
     <ClCompile Include="Core\PCIBus\SMC\SMC.cpp" />
     <ClCompile Include="Core\PCIBus\XMA\XMA.cpp" />
@@ -166,6 +168,8 @@
     <ClInclude Include="Base\TypeDefs.h" />
     <ClInclude Include="Core\Bus\Bus.h" />
     <ClInclude Include="Core\NAND\NAND.h" />
+    <ClInclude Include="Core\PCIBus\CDROM\CDROM.h" />
+    <ClInclude Include="Core\PCIBus\HDD\HDD.h" />
     <ClInclude Include="Core\PCIBus\PCIBus.h" />
     <ClInclude Include="Core\PCIBus\PCIDevice.h" />
     <ClInclude Include="Core\PCIBus\SMC\SMC.h" />

@@ -49,10 +49,10 @@ namespace Xe
                 cpuContext.cpuCores[0].CPUFuses[1] = 0x0f0f0f0f0f0f0ff0; // Retail console      Devkit console 
                                                                          // 0x0f0f0f0f0f0f0ff0  0x0f0f0f0f0f0f0f0f0
                 cpuContext.cpuCores[0].CPUFuses[2] = 0x0000000000000000; // Lockdown counter for 2BL/CB
-                cpuContext.cpuCores[0].CPUFuses[3] = 0xF98C9725B2052FE2; // CPU Key - First 32 bits
-                cpuContext.cpuCores[0].CPUFuses[4] = 0xF98C9725B2052FE2; // CPU Key - First 32 bits copy
-                cpuContext.cpuCores[0].CPUFuses[5] = 0x08EE3C57932DCACA; // CPU Key - Last 32 bits
-                cpuContext.cpuCores[0].CPUFuses[6] = 0x08EE3C57932DCACA; // CPU Key - Last 32 bits copy
+                cpuContext.cpuCores[0].CPUFuses[3] = 0x8CBA33C6B70BF641; // CPU Key - First 32 bits
+                cpuContext.cpuCores[0].CPUFuses[4] = 0x8CBA33C6B70BF641; // CPU Key - First 32 bits copy
+                cpuContext.cpuCores[0].CPUFuses[5] = 0x2AC5A81E6B41BFE6; // CPU Key - Last 32 bits
+                cpuContext.cpuCores[0].CPUFuses[6] = 0x2AC5A81E6B41BFE6; // CPU Key - Last 32 bits copy
                 cpuContext.cpuCores[0].CPUFuses[7] = 0x0000000000000000; // From here starts the LDV, this prevents from downgrading console.
                 cpuContext.cpuCores[0].CPUFuses[8] = 0x0000000000000000; // each F statnds for an update, 
                 cpuContext.cpuCores[0].CPUFuses[9] = 0x0000000000000000;

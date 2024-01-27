@@ -12,9 +12,14 @@ class SMC : public PCIDevice
 {
 public:
 	void Read(u64 readAddress, u64* data, u8 byteCount) override;
+	void ConfigRead(u64 readAddress, u64* data, u8 byteCount) override;
 	void Write(u64 writeAddress, u64 data, u8 byteCount) override;
+	void ConfigWrite(u64 writeAddress, u64 data, u8 byteCount) override;
 
 private:
+	// Configuration Ring.
+	u8 configReg[256] = { 0x14,0x14,0x0d,0x58 };
+
 	void smcProcessRead(u64 readAddress, u64* data, u8 byteCount);
 	void smcProcessWrite(u64 writeAddress, u64 data, u8 byteCount);
 	
