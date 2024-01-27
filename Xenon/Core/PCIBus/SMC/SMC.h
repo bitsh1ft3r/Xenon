@@ -28,8 +28,7 @@ private:
 	//
 	void smcFIFOProcessRead(u64 readAddress, u64* data, u8 byteCount);
 	void smcFIFOProcessWrite(u64 writeAddress, u64 data, u8 byteCount);
-	u8 fifoWriteReg = 0x4;
-	u8 fifoReadReg = 0x4;
+	u8 fifoStatusReg = 0x4;
 	u8 fifoWrittenMsg[16] = { 0 };
 	u8 currentWritePos = 0;
 	u8 fifoReadedMsg[16] = { 0 };

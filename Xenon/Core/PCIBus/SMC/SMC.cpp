@@ -11,12 +11,12 @@
 
 // Comunication between kernel/software happens on a FIFO queue, at address
 // 0x200EA001084 for writes and 0x200EA001094 for reads.
-#define SMC_FIFO_WRITE  			0x200EA001084
-#define SMC_FIFO_WRITE_MSG			0x200EA001080
-#define SMC_FIFO_READ				0x200EA001094
-#define SMC_FIFO_READ_MSG			0x200EA001090
-#define SMC_FIFO_READY				0x4
-#define SMC_FIFO_NOT_READY			0x0
+#define SMC_FIFO_WRITE_STATUS_REG  			0x200EA001084
+#define SMC_FIFO_WRITE_MSG_REG				0x200EA001080
+#define SMC_FIFO_READ_STATUS_REG			0x200EA001094
+#define SMC_FIFO_READ_MSG_REG				0x200EA001090
+#define SMC_FIFO_STATUS_READY				0x4
+#define SMC_FIFO_STATUS_NOT_READY			0x0
 
 // UART Adresses
 #define UART_CONFIG_ADDR			0x200EA00101C
@@ -24,18 +24,80 @@
 #define UART_BYTE_IN_ADDR			0x200EA001010
 #define UART_BYTE_OUT_ADDR			0x200EA001014
 
+// SMC DVD Tray State
+typedef enum SMC_TRAY_STATE {
+	SMC_TRAY_OPEN =			0x60,
+	SMC_TRAY_OPEN_REQUEST = 0x61,
+	SMC_TRAY_CLOSE =		0x62,
+	SMC_TRAY_OPENING =		0x63,
+	SMC_TRAY_CLOSING =		0x64,
+	SMC_TRAY_UNKNOWN =		0x65,
+	SMC_TRAY_SPINUP =		0x66,
+};
+
 // FIFO Queue Querys/Commands
-#define SMC_QUERY_PWRON_TYPE		0x1
-#define SMC_QUERY_REALTIME_CLK		0x4
-#define SMC_QUERY_TEMP_READ			0x7
-#define SMC_QUERY_TRAY_STATE		0xA
-#define SMC_QUERY_AVPACK_TYPE		0xF
-#define SMC_QUERY_READ_ANA			0x11
-#define SMC_QUERY_SMC_VER			0x12
-#define SMC_QUERY_IR_ACCESS			0x16
-#define SMC_QUERY_TILT_STATE		0x17
-#define SMC_COMMAND_SET_STBY		0x83
-#define SMC_COMMAND_SET_PWRLED		0x8C
+typedef enum SMC_CMD {
+	SMC_PWRON_TYPE =			0x1,
+	SMC_QUERY_RTC =				0x4,
+	SMC_QUERY_TEMP_SENS =		0x7,
+	SMC_QUERY_TRAY_STATE =		0xA,
+	SMC_QUERY_AVPACK =			0xF,
+	SMC_I2C_READ_WRITE =		0x11,
+	SMC_QUERY_VERSION =			0x12,
+	SMC_FIFO_TEST =				0x13,
+	SMC_QUERY_IR_ADDRESS =		0x16,
+	SMC_QUERY_TILT_SENSOR =		0x17,
+	SMC_READ_82_INT =			0x1e,
+	SMC_READ_8E_INT =			0x20,
+	SMC_SET_STANDBY =			0x82,
+	SMC_SET_TIME =				0x85,
+	SMC_SET_FAN_ALGORITHM =		0x88,
+	SMC_SET_FAN_SPEED_CPU =		0x89,
+	SMC_SET_DVD_TRAY =			0x8b,
+	SMC_SET_POWER_LED =			0x8c,
+	SMC_SET_AUDIO_MUTE =		0x8d,
+	SMC_ARGON_RELATED =			0x90,
+	SMC_SET_FAN_SPEED_GPU =		0x94, // Not present on slim, not used/respected on newer fat.
+	SMC_SET_IR_ADDRESS =		0x95,
+	SMC_SET_DVD_TRAY_SECURE =	0x98,
+	SMC_SET_FP_LEDS =			0x99,
+	SMC_SET_RTC_WAKE =			0x9a,
+	SMC_ANA_RELATED =			0x9b,
+	SMC_SET_ASYNC_OPERATION =	0x9c,
+	SMC_SET_82_INT =			0x9d,
+	SMC_SET_9F_INT =			0x9f,
+};
+
+// SMC Power On Reason
+typedef enum SMC_PWR_REAS {
+	SMC_PWR_REAS_PWRBTN = 0x11, // xss5 power button pushed
+	SMC_PWR_REAS_EJECT = 0x12, // xss6 eject button pushed
+	SMC_PWR_REAS_ALARM = 0x15, // xss guess ~ should be the wake alarm ~
+	SMC_PWR_REAS_REMOPWR = 0x20, // xss2 power button on 3rd party remote/ xbox universal remote
+	SMC_PWR_REAS_REMOEJC = 0x21, // eject button on xbox universal remote
+	SMC_PWR_REAS_REMOX = 0x22, // xss3 xbox universal media remote X button
+	SMC_PWR_REAS_WINBTN = 0x24, // xss4 windows button pushed IR remote
+	SMC_PWR_REAS_RESET = 0x30, // xss HalReturnToFirmware(1 or 2 or 3) = hard reset by smc
+	SMC_PWR_REAS_RECHARGE_RESET = 0x31, // after leaving pnc charge mode via power button
+	SMC_PWR_REAS_KIOSK = 0x41, // xss7 console powered on by kiosk pin
+	SMC_PWR_REAS_WIRELESS = 0x55, // xss8 wireless controller middle button/start button pushed to power on controller and console
+	SMC_PWR_REAS_WIRED_F1 = 0x56, // xss9 wired guide button; fat front top USB port, slim front left USB port
+	SMC_PWR_REAS_WIRED_F2 = 0x57, // xssA wired guide button; fat front botton USB port, slim front right USB port
+	SMC_PWR_REAS_WIRED_R2 = 0x58, // xssB wired guide button; slim back middle USB port
+	SMC_PWR_REAS_WIRED_R3 = 0x59, // xssC wired guide button; slim back top USB port
+	SMC_PWR_REAS_WIRED_R1 = 0x5A, // xssD wired guide button; fat back USB port, slim back bottom USB port
+	// possibles/reboot reasons  0x23, 0x2A, 0x42, 0x61, 0x64
+
+	// slim with wired controller when horozontal, 3 back usb ports top to bottom 0x59, 0x58, 0x5A front left 0x56, right 0x57
+	// slim with wireless controller w/pnc when horozontal, 3 back usb ports top to bottom 0x55, 0x58, 0x5A front left 0x56, right 0x57
+	// fat with wired controller when horozontal, 1 back usb port 0x5A front top 0x56, bottom 0x57
+	// fat with wireless controller w/pnc when horozontal, 1 back usb port 0x5A front top 0x56, bottom 0x57
+	// Using Microsoft Wireless Controller: 0x55
+	// Using Madcatz Wireless Keyboard (Rockband 3 Keyboard - Item Number 98161): 0x55
+	// Using Activision Wireless Turntable Controller (DJ Hero Turntable): 0x55
+	// Using Drums Controller from Activision Guitar Hero Warriors of Rock: 0x55
+	// Using Guitar controller from Activision Guitar Hero 5: 0x55
+};
 
 void SMC::Read(u64 readAddress, u64* data, u8 byteCount)
 {
@@ -100,8 +162,8 @@ void SMC::smcProcessRead(u64 readAddress, u64* data, u8 byteCount)
 		std::cout << "SMC: SMI Read, addr 0x" << std::hex <<
 			readAddress << std::endl;
 	}
-	else if (readAddress == SMC_FIFO_READ || readAddress == SMC_FIFO_READ_MSG
-		|| readAddress == SMC_FIFO_WRITE)
+	else if (readAddress == SMC_FIFO_READ_STATUS_REG || readAddress == SMC_FIFO_READ_MSG_REG
+		|| readAddress == SMC_FIFO_WRITE_STATUS_REG)
 	{
 		// FIFO Queue Read
 		smcFIFOProcessRead(readAddress, data, byteCount);
@@ -157,8 +219,8 @@ void SMC::smcProcessWrite(u64 writeAddress, u64 data, u8 byteCount)
 		std::cout << "SMC: SMI Write, addr 0x" << std::hex <<
 			writeAddress << std::endl;
 	}
-	else if (writeAddress == SMC_FIFO_WRITE || writeAddress == SMC_FIFO_WRITE_MSG
-		|| writeAddress == SMC_FIFO_READ)
+	else if (writeAddress == SMC_FIFO_WRITE_STATUS_REG || writeAddress == SMC_FIFO_WRITE_MSG_REG
+		|| writeAddress == SMC_FIFO_READ_STATUS_REG)
 	{
 		// FIFO Queue Write
 		smcFIFOProcessWrite(writeAddress, data, byteCount);
@@ -195,15 +257,15 @@ void SMC::uartRead(u64 readAddress, u64* data, u8 byteCount)
 void SMC::smcFIFOProcessRead(u64 readAddress, u64* data, u8 byteCount)
 {
 	
-	// If there's a begin read message and we have a message ready.
-	if (readAddress == SMC_FIFO_READ || readAddress == SMC_FIFO_WRITE)
+	// IS message ready for reading?
+	if (readAddress == SMC_FIFO_READ_STATUS_REG)
 	{
 		// Return message.
-		*data = fifoReadReg;
+		*data = fifoStatusReg;
 		return;
 	}
 
-	if (readAddress == SMC_FIFO_READ_MSG && fifoReadReg == SMC_FIFO_READY)
+	if (readAddress == SMC_FIFO_READ_MSG_REG)
 	{
 		// Begin message read.
 		if (currentReadPos == 16)
@@ -223,54 +285,182 @@ void SMC::smcFIFOProcessRead(u64 readAddress, u64* data, u8 byteCount)
 
 void SMC::smcFIFOProcessWrite(u64 writeAddress, u64 data, u8 byteCount)
 {
-	// If FIFO Ready and data is 0x4 the we are starting a message.
-	if (writeAddress == SMC_FIFO_WRITE && fifoWriteReg == SMC_FIFO_READY 
-		&& data == 4)
+	// Software tells us that it's about to receive a msg or that it has
+	// finished receiving it.
+	if (writeAddress == SMC_FIFO_READ_STATUS_REG)
 	{
-		fifoWriteReg = static_cast<u8>(data);
+		fifoStatusReg = static_cast<u8>(data);
+
+		// Finished sending a response.
+		if (fifoStatusReg == SMC_FIFO_STATUS_NOT_READY)
+		{
+			// Reset reply buffer.
+			memset(&fifoReadedMsg, 0, sizeof(fifoReadedMsg));
+
+			// Ready to reveice another message.
+			fifoStatusReg = SMC_FIFO_STATUS_READY;
+		}
 		return;
 	}
 
-	if (writeAddress == SMC_FIFO_WRITE_MSG && fifoWriteReg == SMC_FIFO_READY)
+	// Software tells us that it's about to send a msg or that it has
+	// finished sending it.
+	if (writeAddress == SMC_FIFO_WRITE_STATUS_REG)
+	{
+		fifoStatusReg = static_cast<u8>(data);
+
+		// finished receiving the message. Process it.
+		if (fifoStatusReg == SMC_FIFO_STATUS_NOT_READY)
+		{
+			// Begin Message Procesing!
+			switch (fifoWrittenMsg[0])
+			{
+			case SMC_PWRON_TYPE:
+				// Cahange here to not enter Xell!
+				fifoReadedMsg[0] = SMC_PWRON_TYPE;
+				fifoReadedMsg[1] = SMC_PWR_REAS_EJECT; // Eject button.
+				break;
+			case SMC_QUERY_RTC:
+				std::cout << "SMC Unimplemented SMC FIFO Command SMC_QUERY_RTC"
+					<< std::endl;
+				break;
+			case SMC_QUERY_TEMP_SENS:
+				std::cout << "SMC Unimplemented SMC FIFO Command SMC_QUERY_TEMP_SENS"
+					<< std::endl;
+				break;
+			case SMC_QUERY_TRAY_STATE:
+				std::cout << "SMC Unimplemented SMC FIFO Command SMC_QUERY_TRAY_STATE"
+					<< std::endl;
+				break;
+			case SMC_QUERY_AVPACK:
+				std::cout << "SMC Unimplemented SMC FIFO Command SMC_QUERY_AVPACK"
+					<< std::endl;
+				break;
+			case SMC_I2C_READ_WRITE:
+				std::cout << "SMC Unimplemented SMC FIFO Command SMC_I2C_READ_WRITE"
+					<< std::endl;
+				break;
+			case SMC_QUERY_VERSION:
+				fifoReadedMsg[0] = SMC_QUERY_VERSION;
+				fifoReadedMsg[1] = 0x41;
+				fifoReadedMsg[2] = 0x02;
+				fifoReadedMsg[3] = 0x03;
+				break;
+			case SMC_FIFO_TEST:
+				std::cout << "SMC Unimplemented SMC FIFO Command SMC_FIFO_TEST"
+					<< std::endl;
+				break;
+			case SMC_QUERY_IR_ADDRESS:
+				std::cout << "SMC Unimplemented SMC FIFO Command SMC_QUERY_IR_ADDRESS"
+					<< std::endl;
+				break;
+			case SMC_QUERY_TILT_SENSOR:
+				std::cout << "SMC Unimplemented SMC FIFO Command SMC_QUERY_TILT_SENSOR"
+					<< std::endl;
+				break;
+			case SMC_READ_82_INT:
+				std::cout << "SMC Unimplemented SMC FIFO Command SMC_READ_82_INT"
+					<< std::endl;
+				break;
+			case SMC_READ_8E_INT:
+				std::cout << "SMC Unimplemented SMC FIFO Command SMC_READ_8E_INT"
+					<< std::endl;
+				break;
+			case SMC_SET_STANDBY:
+				std::cout << "SMC Unimplemented SMC FIFO Command SMC_SET_STANDBY"
+					<< std::endl;
+				break;
+			case SMC_SET_TIME:
+				std::cout << "SMC Unimplemented SMC FIFO Command SMC_SET_TIME"
+					<< std::endl;
+				break;
+			case SMC_SET_FAN_ALGORITHM:
+				std::cout << "SMC Unimplemented SMC FIFO Command SMC_SET_FAN_ALGORITHM"
+					<< std::endl;
+				break;
+			case SMC_SET_FAN_SPEED_CPU:
+				std::cout << "SMC Unimplemented SMC FIFO Command SMC_SET_FAN_SPEED_CPU"
+					<< std::endl;
+				break;
+			case SMC_SET_DVD_TRAY:
+				std::cout << "SMC Unimplemented SMC FIFO Command SMC_SET_DVD_TRAY"
+					<< std::endl;
+				break;
+			case SMC_SET_POWER_LED:
+				std::cout << "SMC Unimplemented SMC FIFO Command SMC_SET_POWER_LED"
+					<< std::endl;
+				break;
+			case SMC_SET_AUDIO_MUTE:
+				std::cout << "SMC Unimplemented SMC FIFO Command SMC_SET_AUDIO_MUTE"
+					<< std::endl;
+				break;
+			case SMC_ARGON_RELATED:
+				std::cout << "SMC Unimplemented SMC FIFO Command SMC_ARGON_RELATED"
+					<< std::endl;
+				break;
+			case SMC_SET_FAN_SPEED_GPU:
+				std::cout << "SMC Unimplemented SMC FIFO Command SMC_SET_FAN_SPEED_GPU"
+					<< std::endl;
+				break;
+			case SMC_SET_IR_ADDRESS:
+				std::cout << "SMC Unimplemented SMC FIFO Command SMC_SET_IR_ADDRESS"
+					<< std::endl;
+				break;
+			case SMC_SET_DVD_TRAY_SECURE:
+				std::cout << "SMC Unimplemented SMC FIFO Command SMC_SET_DVD_TRAY_SECURE"
+					<< std::endl;
+				break;
+			case SMC_SET_FP_LEDS:
+				std::cout << "SMC Unimplemented SMC FIFO Command SMC_SET_FP_LEDS"
+					<< std::endl;
+				break;
+			case SMC_SET_RTC_WAKE:
+				std::cout << "SMC Unimplemented SMC FIFO Command SMC_SET_RTC_WAKE"
+					<< std::endl;
+				break;
+			case SMC_ANA_RELATED:
+				std::cout << "SMC Unimplemented SMC FIFO Command SMC_ANA_RELATED"
+					<< std::endl;
+				break;
+			case SMC_SET_ASYNC_OPERATION:
+				std::cout << "SMC Unimplemented SMC FIFO Command SMC_SET_ASYNC_OPERATION"
+					<< std::endl;
+				break;
+			case SMC_SET_82_INT:
+				std::cout << "SMC Unimplemented SMC FIFO Command SMC_SET_82_INT"
+					<< std::endl;
+				break;
+			case SMC_SET_9F_INT:
+				std::cout << "SMC Unimplemented SMC FIFO Command SMC_SET_9F_INT"
+					<< std::endl;
+				break;
+			default:
+				std::cout << "SMC Unimplemented SMC FIFO Command 0x"
+					<< (u16)fifoWrittenMsg[0] << std::endl;
+				break;
+			}
+
+			// Set status reg to signal the software that we're ready to 
+			// send a response.
+			fifoStatusReg = SMC_FIFO_STATUS_READY;
+			return;
+		}
+		return;
+	}
+
+	// Software sends 4 32-bit words to this address, this is our message.
+	if (writeAddress == SMC_FIFO_WRITE_MSG_REG)
 	{
 		if (currentWritePos == 16)
-			currentWritePos = 0; // New Message.
+		{
+			// New Message.
+			currentWritePos = 0;
+			// Reset query/command buffer.
+			memset(&fifoWrittenMsg, 0, sizeof(fifoWrittenMsg));
+		}
 		memcpy(&fifoWrittenMsg[currentWritePos], &data, byteCount);
 		currentWritePos += 4;
 		return;
-	}
-
-	// If FIFO Ready and data is 0, begin processing.
-	if (writeAddress == SMC_FIFO_WRITE && fifoWriteReg == SMC_FIFO_READY
-		&& data == 0)
-	{
-		// Begin Message Procesing!
-		switch (fifoWrittenMsg[0])
-		{
-		case SMC_QUERY_PWRON_TYPE:
-			// Cahange here to not enter Xell!
-			fifoReadedMsg[0] = SMC_QUERY_PWRON_TYPE;
-			fifoReadedMsg[1] = 0x12; // Eject button.
-			fifoReadReg = SMC_FIFO_READY;
-			break;
-		case SMC_QUERY_SMC_VER:
-			fifoReadedMsg[0] = SMC_QUERY_SMC_VER;
-			fifoReadedMsg[1] = 0x41;
-			fifoReadedMsg[2] = 0x02;
-			fifoReadedMsg[3] = 0x03;
-			break;
-		default:
-			std::cout << "SMC Unimplemented SMC FIFO Command 0x" 
-				<< (u16)fifoWrittenMsg[0] << std::endl;
-			break;
-		}
-		
-		return;
-	}
-
-	if (writeAddress == SMC_FIFO_READ && fifoReadReg == SMC_FIFO_READY)
-	{
-		fifoReadReg = static_cast<u8>(data);
 	}
 }
 
