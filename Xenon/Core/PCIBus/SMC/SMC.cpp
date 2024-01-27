@@ -90,7 +90,8 @@ void SMC::smcProcessRead(u64 readAddress, u64* data, u8 byteCount)
 		std::cout << "SMC: SMI Read, addr 0x" << std::hex <<
 			readAddress << std::endl;
 	}
-	else if (readAddress == SMC_FIFO_READ || readAddress == SMC_FIFO_READ_MSG)
+	else if (readAddress == SMC_FIFO_READ || readAddress == SMC_FIFO_READ_MSG
+		|| readAddress == SMC_FIFO_WRITE)
 	{
 		// FIFO Queue Read
 		smcFIFOProcessRead(readAddress, data, byteCount);
@@ -171,6 +172,9 @@ void SMC::uartRead(u64 readAddress, u64* data, u8 byteCount)
 	case UART_BYTE_IN_ADDR:
 		// Future input, for now we don't return nothing.
 		break;
+	case UART_BYTE_OUT_ADDR:
+		// Further research required.
+		break;
 	default:
 		std::cout << "SMC > UART: Read to unknown address!" << std::endl;
 		*data = 0;
@@ -182,7 +186,7 @@ void SMC::smcFIFOProcessRead(u64 readAddress, u64* data, u8 byteCount)
 {
 	
 	// If there's a begin read message and we have a message ready.
-	if (readAddress == SMC_FIFO_READ && fifoReadReg == SMC_FIFO_READY)
+	if (readAddress == SMC_FIFO_READ || readAddress == SMC_FIFO_WRITE)
 	{
 		// Return message.
 		*data = fifoReadReg;
@@ -204,6 +208,7 @@ void SMC::smcFIFOProcessRead(u64 readAddress, u64* data, u8 byteCount)
 		currentReadPos += 4;
 		return;
 	}
+	
 }
 
 void SMC::smcFIFOProcessWrite(u64 writeAddress, u64 data, u8 byteCount)
@@ -235,10 +240,21 @@ void SMC::smcFIFOProcessWrite(u64 writeAddress, u64 data, u8 byteCount)
 		case SMC_QUERY_PWRON_TYPE:
 			// Cahange here to not enter Xell!
 			fifoReadedMsg[0] = SMC_QUERY_PWRON_TYPE;
-			fifoReadedMsg[1] = 0x12; // Eject button.
+			fifoReadedMsg[1] = 0x11; // Eject button.
 			fifoReadReg = SMC_FIFO_READY;
 			break;
+		case SMC_QUERY_SMC_VER:
+			fifoReadedMsg[0] = SMC_QUERY_SMC_VER;
+			fifoReadedMsg[1] = 0x41;
+			fifoReadedMsg[2] = 0x02;
+			fifoReadedMsg[3] = 0x03;
+			break;
+		default:
+			std::cout << "SMC Unimplemented SMC FIFO Command 0x" 
+				<< (u16)fifoWrittenMsg[0] << std::endl;
+			break;
 		}
+		
 		return;
 	}
 
@@ -264,7 +280,8 @@ void SMC::uartWrite(u64 writeAddress, u64 data, u8 byteCount)
 		if ((char)writtenData == '\r')
 		{
 			// End of line, output string and reset buffer.
-			std::cout << "SMC > UART:" << uartDataStr.c_str() << std::endl;
+			//std::cout << "SMC > UART: " << std::endl;
+			std::cout << uartDataStr.c_str() << std::endl;
 			uartDataStr.resize(0);
 		}
 		else

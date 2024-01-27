@@ -47,6 +47,9 @@
     <ClCompile Include="Core\PCIBus\SMC\SMC.cpp">
       <Filter>Core\PCIBus\SMC</Filter>
     </ClCompile>
+    <ClCompile Include="Core\PCIBus\XMA\XMA.cpp">
+      <Filter>Core\PCIBus\XMA</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <Filter Include="Base">
@@ -75,6 +78,9 @@
     </Filter>
     <Filter Include="Core\PCIBus\SMC">
       <UniqueIdentifier>{398a15b9-e7a1-4688-8f00-efa47b8bbdbb}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Core\PCIBus\XMA">
+      <UniqueIdentifier>{32334413-c7ac-400a-809c-534a6ab5b441}</UniqueIdentifier>
     </Filter>
   </ItemGroup>
   <ItemGroup>
@@ -128,6 +134,9 @@
     </ClInclude>
     <ClInclude Include="Core\PCIBus\PCIDevice.h">
       <Filter>Core\PCIBus</Filter>
+    </ClInclude>
+    <ClInclude Include="Core\PCIBus\XMA\XMA.h">
+      <Filter>Core\PCIBus\XMA</Filter>
     </ClInclude>
   </ItemGroup>
 </Project>

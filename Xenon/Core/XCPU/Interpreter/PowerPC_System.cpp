@@ -8,6 +8,13 @@ void PPCInterpreter::PPCInterpreter_isync(PPCState* hCore)
 	// Do nothing :)
 }
 
+void PPCInterpreter::PPCInterpreter_sc(PPCState* hCore)
+{
+	SC_FORM_LEV;
+
+	ppcSystemCallException(hCore, LEV & 1);
+}
+
 void PPCInterpreter::PPCInterpreter_slbmte(PPCState* hCore)
 {
 	X_FORM_rS_rB;

@@ -37,11 +37,11 @@ namespace PPCInterpreter
 	//
 	// Exceptions
 	//
-
+	void ppcInstStorageException(PPCState* hCore, u64 SRR1);
+	void ppcDataStorageException(PPCState* hCore, u64 EA, u64 ISR);
 	void ppcDataSegmentException(PPCState* hCore, u64 EA);
 	void ppcInstSegmentException(PPCState* hCore);
-	void ppcISIException(PPCState* hCore, u64 SSR1);
-	void ppcDSIException(PPCState* hCore, u64 EA, u32 ISR);
+	void ppcSystemCallException(PPCState* hCore, bool isHypervisorCall);
 
 	//
 	// MMU
@@ -148,6 +148,7 @@ namespace PPCInterpreter
 	void PPCInterpreter_bclr(PPCState* hCore);
 
 	// System instructions
+	void PPCInterpreter_sc(PPCState* hCore);
 	void PPCInterpreter_slbmte(PPCState* hCore);
 	void PPCInterpreter_rfid(PPCState* hCore);
 	void PPCInterpreter_tlbiel(PPCState* hCore);
@@ -218,6 +219,7 @@ namespace PPCInterpreter
 	// Load Word
 	void PPCInterpreter_lwa(PPCState* hCore);
 	void PPCInterpreter_lwax(PPCState* hCore);
+	void PPCInterpreter_lwarx(PPCState* hCore);
 	void PPCInterpreter_lwbrx(PPCState* hCore);
 	void PPCInterpreter_lwz(PPCState* hCore);
 	void PPCInterpreter_lwzu(PPCState* hCore);

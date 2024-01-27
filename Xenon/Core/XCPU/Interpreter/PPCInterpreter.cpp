@@ -50,32 +50,21 @@ void PPCInterpreter::ppcExecuteSingleInstruction(PPCState* hCore) {
 
 	PPCInstruction currentInstr = getOpcode(hCore->CI);
 
-	// Hardware Init bypass
-	// if (hCore->CIA == 0x300a1a8)
-	//	return;
-	// same for CB 6723
-	if (hCore->CIA == 0x300a3a0)
-		return;
-	
-	//if (hCore->CIA == 0x0000000003009db8)
-	//	return;
-	// pci init cb 5775
-	//if (hCore->CIA == 0x000000000300a208)
-	//	return;
-	
 	// RGH 2 for CB 6752
 	if (hCore->CIA == 0x000000000200c8d0)
+	{
 		hCore->GPR[0x5] = 0;
-	// HW_INIT Skip 6752
-	if (hCore->CIA == 0x0000000003009e00)
-		return;
-	// PCI_INIT Skip 6752
-	if (hCore->CIA == 0x000000000300a250)
-		return;
+	}
 
-	// CB_B verification skip aka RGH2
-	if (hCore->CIA == 0x000000000200c820) {
-		//hCore->GPR[0x3] = 0;
+	// HW_INIT Success CB_6752
+	if (hCore->CIA == 0x0000000003003dd0)
+	{
+		hCore->GPR[0x5] = 0;
+	}
+	// RGH 2 for CB_A 9188
+	if (hCore->CIA == 0x000000000200c870)
+	{
+		//hCore->GPR[0x5] = 0;
 	}
 
 	if (0)
@@ -83,9 +72,11 @@ void PPCInterpreter::ppcExecuteSingleInstruction(PPCState* hCore) {
 		std::cout << "( 0x" << hCore->CIA << ") " << getOpcodeName(hCore->CI) << std::endl;
 	}
 
-	// CPU's online patch
+	// CPU's online patch for Xell
 	if (hCore->CIA == 0x800000001c000c74)
+	{
 		hCore->GPR[0x3] = 0x3f;
+	}
 
 	switch (currentInstr)
 	{
@@ -387,9 +378,10 @@ void PPCInterpreter::ppcExecuteSingleInstruction(PPCState* hCore) {
 	case PPCInstruction::lwa:
 		PPCInterpreter_lwa(hCore);
 		break;
-		/*
 	case PPCInstruction::lwarx:
+		PPCInterpreter_lwarx(hCore);
 		break;
+		/*
 	case PPCInstruction::lwaux:
 		break;
 		*/
@@ -550,10 +542,9 @@ void PPCInterpreter::ppcExecuteSingleInstruction(PPCState* hCore) {
 	case PPCInstruction::rlwnmx:
 		PPCInterpreter_rlwnmx(hCore);
 		break;
-		/*
 	case PPCInstruction::sc:
+		PPCInterpreter_sc(hCore);
 		break;
-		*/
 	case PPCInstruction::slbia:
 		PPCInterpreter_slbia(hCore);
 		break;
@@ -672,10 +663,9 @@ void PPCInterpreter::ppcExecuteSingleInstruction(PPCState* hCore) {
 	case PPCInstruction::stwbrx:
 		PPCInterpreter_stwbrx(hCore);
 		break;
-		/*
 	case PPCInstruction::stwcx:
+		PPCInterpreter_stwcx(hCore);
 		break;
-		*/
 	case PPCInstruction::stwu:
 		PPCInterpreter_stwu(hCore);
 		break;
@@ -745,33 +735,33 @@ void PPCInterpreter::ppcExecuteSingleInstruction(PPCState* hCore) {
 	}
 }
 
-void PPCInterpreter::ppcDataSegmentException(PPCState* hCore, u64 EA)
-{
-	std::cout << " *** Data Segment Exception." << std::endl;
-	hCore->SPR[SPR_SRR0] = hCore->CIA;
-	hCore->SPR[SPR_SRR1] = hCore->MSR.MSR_Hex & (QMASK(0, 32) | QMASK(37, 41) | QMASK(48, 63));
-	hCore->SPR[SPR_DSISR] = 0;
-	hCore->SPR[SPR_DAR] = EA;
-	hCore->MSR.MSR_Hex = hCore->MSR.MSR_Hex & ~(QMASK(48, 50) | QMASK(52, 55) | QMASK(58, 59) | QMASK(61, 63));
-	hCore->MSR.MSR_Hex = hCore->MSR.MSR_Hex | (QMASK(0, 0) | QMASK(3, 3));
-	hCore->NIA = hCore->SPR[SPR_HIOR] + 0x380;
-}
-
 void PPCInterpreter::ppcInstSegmentException(PPCState* hCore)
 {
-	std::cout << "*** Instruction Segment Exception." << std::endl;
 	hCore->SPR[SPR_SRR0] = hCore->CIA;
 	hCore->SPR[SPR_SRR1] = hCore->MSR.MSR_Hex & (QMASK(0, 32) | QMASK(37, 41) | QMASK(48, 63));
 	hCore->MSR.MSR_Hex = hCore->MSR.MSR_Hex & ~(QMASK(48, 50) | QMASK(52, 55) | QMASK(58, 59) | QMASK(61, 63));
 	hCore->MSR.MSR_Hex = hCore->MSR.MSR_Hex | (QMASK(0, 0) | QMASK(3, 3));
 	hCore->NIA = hCore->SPR[SPR_HIOR] + 0x480;
+	hCore->MSR.DR = 0;
+	hCore->MSR.IR = 0;
 }
 
-void PPCInterpreter::ppcISIException(PPCState* hCore, u64 SSR1)
+void PPCInterpreter::ppcSystemCallException(PPCState* hCore, bool isHypervisorCall)
+{
+	hCore->SPR[SPR_SRR0] = hCore->NIA;
+	hCore->SPR[SPR_SRR1] = hCore->MSR.MSR_Hex & (QMASK(0, 32) | QMASK(37, 41) | QMASK(48, 63));
+	hCore->MSR.MSR_Hex = hCore->MSR.MSR_Hex & ~(QMASK(48, 50) | QMASK(52, 55) | QMASK(58, 59) | QMASK(61, 63));
+	hCore->MSR.MSR_Hex = hCore->MSR.MSR_Hex | QMASK(0, 0) | (isHypervisorCall ? 0 : QMASK(3, 3));
+	hCore->NIA = hCore->SPR[SPR_HIOR] + + 0xc00;
+	hCore->MSR.DR = 0;
+	hCore->MSR.IR = 0;
+}
+
+void PPCInterpreter::ppcInstStorageException(PPCState* hCore, u64 SRR1)
 {
 	hCore->SPR[SPR_SRR0] = hCore->CIA;
 	hCore->SPR[SPR_SRR1] = hCore->MSR.MSR_Hex & (QMASK(0, 32) | QMASK(37, 41) | QMASK(48, 63));
-	hCore->SPR[SPR_SRR1] |= SSR1;
+	hCore->SPR[SPR_SRR1] |= SRR1;
 	hCore->MSR.MSR_Hex = hCore->MSR.MSR_Hex & ~(QMASK(48, 50) | QMASK(52, 55) | QMASK(58, 59) | QMASK(61, 63));
 	hCore->MSR.MSR_Hex = hCore->MSR.MSR_Hex | (QMASK(0, 0) | QMASK(3, 3));
 	hCore->NIA = hCore->SPR[SPR_HIOR] + 0x400;
@@ -779,16 +769,28 @@ void PPCInterpreter::ppcISIException(PPCState* hCore, u64 SSR1)
 	hCore->MSR.IR = 0;
 }
 
-void PPCInterpreter::ppcDSIException(PPCState* hCore, u64 EA, u32 ISR)
+void PPCInterpreter::ppcDataStorageException(PPCState* hCore, u64 EA, u64 ISR)
 {
 	hCore->SPR[SPR_SRR0] = hCore->CIA;
 	hCore->SPR[SPR_SRR1] = hCore->MSR.MSR_Hex & (QMASK(0, 32) | QMASK(37, 41) | QMASK(48, 63));
-	hCore->SPR[SPR_DSISR] = ISR; // Set bit 33 of this register for a page fault or a tlb miss in software managed tlb mode.
+	hCore->SPR[SPR_DSISR] = ISR;
 	hCore->SPR[SPR_DAR] = EA;
 	hCore->MSR.MSR_Hex = hCore->MSR.MSR_Hex & ~(QMASK(48, 50) | QMASK(52, 55) | QMASK(58, 59) | QMASK(61, 63));
 	hCore->MSR.MSR_Hex = hCore->MSR.MSR_Hex | (QMASK(0, 0) | QMASK(3, 3));
-	hCore->NIA = hCore->SPR[SPR_HRMOR] + 0x300;
+	hCore->NIA = hCore->SPR[SPR_HIOR] + 0x300;
 	hCore->MSR.DR = 0;
 	hCore->MSR.IR = 0;
-	u64 hrmor = (hCore->SPR[SPR_HRMOR] & 0x3FFFFF00000);
+}
+
+void PPCInterpreter::ppcDataSegmentException(PPCState* hCore, u64 EA)
+{
+	hCore->SPR[SPR_SRR0] = hCore->CIA;
+	hCore->SPR[SPR_SRR1] = hCore->MSR.MSR_Hex & (QMASK(0, 32) | QMASK(37, 41) | QMASK(48, 63));
+	hCore->SPR[SPR_DSISR] = 0; 
+	hCore->SPR[SPR_DAR] = EA;
+	hCore->MSR.MSR_Hex = hCore->MSR.MSR_Hex & ~(QMASK(48, 50) | QMASK(52, 55) | QMASK(58, 59) | QMASK(61, 63));
+	hCore->MSR.MSR_Hex = hCore->MSR.MSR_Hex | (QMASK(0, 0) | QMASK(3, 3));
+	hCore->NIA = hCore->SPR[SPR_HRMOR] + 0x380;
+	hCore->MSR.DR = 0;
+	hCore->MSR.IR = 0;
 }

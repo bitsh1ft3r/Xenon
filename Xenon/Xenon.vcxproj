@@ -147,6 +147,7 @@
     <ClCompile Include="Core\NAND\NAND.cpp" />
     <ClCompile Include="Core\PCIBus\PCIBus.cpp" />
     <ClCompile Include="Core\PCIBus\SMC\SMC.cpp" />
+    <ClCompile Include="Core\PCIBus\XMA\XMA.cpp" />
     <ClCompile Include="Core\PostBus\PostBus.cpp" />
     <ClCompile Include="Core\RAM\RAM.cpp" />
     <ClCompile Include="Core\XCPU\Interpreter\Interpreter_ALU.cpp" />
@@ -168,6 +169,7 @@
     <ClInclude Include="Core\PCIBus\PCIBus.h" />
     <ClInclude Include="Core\PCIBus\PCIDevice.h" />
     <ClInclude Include="Core\PCIBus\SMC\SMC.h" />
+    <ClInclude Include="Core\PCIBus\XMA\XMA.h" />
     <ClInclude Include="Core\PostBus\PostBus.h" />
     <ClInclude Include="Core\RAM\RAM.h" />
     <ClInclude Include="Core\XCPU\Interpreter\PowerPCInternal.h" />

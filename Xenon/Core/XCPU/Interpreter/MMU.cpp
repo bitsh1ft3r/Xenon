@@ -399,7 +399,7 @@ bool PPCInterpreter::mmuSearchTlbEntry(PPCState* hCore, u64* RPN, u64 VPN,
     u8 p, bool LP)
 {
     // Index to choose from the 256 ways of the TLB
-    u8 tlbIndex = 0;
+    u16 tlbIndex = 0;
 
     // 4 Kb - (VA[52:55] xor VA[60:63]) || VA[64:67]
     // 64 Kb - (VA[52:55] xor VA[56:59]) || VA[60:63]
@@ -436,53 +436,130 @@ bool PPCInterpreter::mmuSearchTlbEntry(PPCState* hCore, u64* RPN, u64 VPN,
     {
         // Check to see if its this entry!
         // Need to have a tag
-        if (hCore->TLB.tlbSet0[tlbIndex].LP == LP &&
-            hCore->TLB.tlbSet0[tlbIndex].p == p &&
-            hCore->TLB.tlbSet0[tlbIndex].L)
+        if (hCore->TLB.tlbSet0[tlbIndex].p == p)
         {
-            // Probably It!
-            *RPN = hCore->TLB.tlbSet0[tlbIndex].RPN;
-            return true;
+            if (hCore->TLB.tlbSet0[tlbIndex].L)
+            {
+                if (hCore->TLB.tlbSet0[tlbIndex].LP == LP)
+                {
+                    // Probably It!
+                    *RPN = hCore->TLB.tlbSet0[tlbIndex].RPN;
+                    return true;
+                }
+            }
+            else
+            {
+                // Probably It!
+                *RPN = hCore->TLB.tlbSet0[tlbIndex].RPN;
+                return true;
+            }
+
         }
     }
     if (hCore->TLB.tlbSet1[tlbIndex].V)
     {
         // Check to see if its this entry!
         // Need to have a tag
-        if (hCore->TLB.tlbSet1[tlbIndex].LP == LP &&
-            hCore->TLB.tlbSet1[tlbIndex].p == p &&
-            hCore->TLB.tlbSet1[tlbIndex].L)
+        if (hCore->TLB.tlbSet1[tlbIndex].p == p)
         {
-            // Probably It!
-            *RPN = hCore->TLB.tlbSet1[tlbIndex].RPN;
-            return true;
+            if (hCore->TLB.tlbSet1[tlbIndex].L)
+            {
+                if (hCore->TLB.tlbSet1[tlbIndex].LP == LP)
+                {
+                    // Probably It!
+                    *RPN = hCore->TLB.tlbSet1[tlbIndex].RPN;
+                    return true;
+                }
+            }
+            else
+            {
+                // Probably It!
+                *RPN = hCore->TLB.tlbSet1[tlbIndex].RPN;
+                return true;
+            }
+
         }
     }
     if (hCore->TLB.tlbSet2[tlbIndex].V)
     {
         // Check to see if its this entry!
         // Need to have a tag
-        if (hCore->TLB.tlbSet2[tlbIndex].LP == LP &&
-            hCore->TLB.tlbSet2[tlbIndex].p == p &&
-            hCore->TLB.tlbSet2[tlbIndex].L)
+        if (hCore->TLB.tlbSet2[tlbIndex].p == p)
         {
-            // Probably It!
-            *RPN = hCore->TLB.tlbSet2[tlbIndex].RPN;
-            return true;
+            if (hCore->TLB.tlbSet2[tlbIndex].L)
+            {
+                if (hCore->TLB.tlbSet2[tlbIndex].LP == LP)
+                {
+                    // Probably It!
+                    *RPN = hCore->TLB.tlbSet2[tlbIndex].RPN;
+                    return true;
+                }
+            }
+            else
+            {
+                // Probably It!
+                *RPN = hCore->TLB.tlbSet2[tlbIndex].RPN;
+                return true;
+            }
+
         }
     }
     if (hCore->TLB.tlbSet3[tlbIndex].V)
     {
         // Check to see if its this entry!
         // Need to have a tag
-        if (hCore->TLB.tlbSet3[tlbIndex].LP == LP &&
-            hCore->TLB.tlbSet3[tlbIndex].p == p &&
-            hCore->TLB.tlbSet3[tlbIndex].L)
+        if (hCore->TLB.tlbSet3[tlbIndex].p == p)
         {
-            // Probably It!
-            *RPN = hCore->TLB.tlbSet3[tlbIndex].RPN;
-            return true;
+            if (hCore->TLB.tlbSet3[tlbIndex].L)
+            {
+                if (hCore->TLB.tlbSet3[tlbIndex].LP == LP)
+                {
+                    // Probably It!
+                    *RPN = hCore->TLB.tlbSet3[tlbIndex].RPN;
+                    return true;
+                }
+            }
+            else
+            {
+                // Probably It!
+                *RPN = hCore->TLB.tlbSet3[tlbIndex].RPN;
+                return true;
+            }
+
         }
+    }
+   
+    // If the PPE is running on TLB Software managed mode, then this SPR
+    // is updated every time a Data or Instr Storage Exception occurs. This
+    // ensures that the next time that the tlb software updates via an 
+    // interrupt, the index for replacement is not conflictive.
+    // On normal conditions this is done for the LRU index of the TLB, but
+    // I haven't seen the Tlb Set 3 used at all, so I figured that it must've
+    // been lefted for this particular purpose.
+
+    // Software management of the TLB. 0 = Hardware, 1 = Software.
+    bool tlbSoftwareManaged = ((hCore->SPR[SPR_LPCR] & 0x400) >> 10);
+
+    if (tlbSoftwareManaged)
+    {
+        u64 tlbIndexHint = hCore->SPR[SPR_PpeTlbIndexHint];
+        u8 currentTlbSet = tlbIndexHint & 0xF;
+        u8 currentTlbIndex = (tlbIndexHint & 0xFF0) >> 4;
+        if (currentTlbIndex == 0xFF)
+        {
+            if (currentTlbSet == 8)
+            {
+                currentTlbSet = 1;
+            }
+            else
+            {
+                currentTlbSet = currentTlbSet << 1;
+            }
+        }
+
+        tlbIndex = tlbIndex << 4;
+        tlbIndexHint = tlbIndex |= currentTlbSet;
+        hCore->SPR[SPR_PpeTlbIndexHint] = tlbIndexHint;
     }
     return false;
 }
@@ -667,8 +744,12 @@ bool PPCInterpreter::MMUTranslateAddress(u64* EA, PPCState *hCoreState)
                     hCoreState->exceptionOcurred = true;
                     // Page Table lookup TODO.
                     std::cout << "XCPU (MMU) TLB Miss in Softwarre Managed "
-                        << "Mode. System Stopped." << std::endl;
-                    system("PAUSE");
+                        << "Mode. Generating Interrupt." << std::endl;
+                    if (hCoreState->iFetch)
+                        ppcInstStorageException(hCoreState, QMASK(33, 33));
+                    else
+                        ppcDataStorageException(hCoreState, *EA, DMASK(1, 1));
+                    return false;
                 }
                 else
                 {
@@ -683,9 +764,13 @@ bool PPCInterpreter::MMUTranslateAddress(u64* EA, PPCState *hCoreState)
         {
             // SLB Miss
             // Data or Inst Segment Exception
-            std::cout << "XCPU (MMU): SLB not hit. System Stopped." 
+            std::cout << "XCPU (MMU): SLB not hit. Generating Interrupt." 
                 << std::endl;
-            system("pause");
+            if (hCoreState->iFetch)
+                ppcInstSegmentException(hCoreState);
+            else
+                ppcDataSegmentException(hCoreState, *EA);
+            return false;
             return false;
         }
 
@@ -710,7 +795,8 @@ u64 PPCInterpreter::MMURead(XCPUContext* cpuContext, u64 EA, s8 byteCount)
         return 0;
 
     // Check if there's a cache block with the current address
-    if (EA >= 0x10000000000 && EA < 0x20000000000)
+    if (EA >= 0x10000000000 && EA < 0x20000000000 ||
+        EA >= 0x30000000000 && EA < 0x40000000000)
     {
         // Completly ignore cache, see what happens.
         EA = static_cast<u32>(EA);
@@ -840,15 +926,32 @@ u64 PPCInterpreter::MMURead(XCPUContext* cpuContext, u64 EA, s8 byteCount)
 
     else
     {
+        // This shouldn't happen??
+        
+        // Fix NAND Addressing.
+        if (EA >= 0xC8000000 && EA < 0xC9000000)
+            EA |= 0x20000000000;
+
+        // Fix PCI Bridge Addressing.
+        if (EA >= 0xEA000000 && EA < 0xEA010000)
+            EA |= 0x20000000000;
+
+        // Fix PCI Config Space addressing.
+        if (EA >= 0xD0000000 && EA < 0xD1000000)
+            EA |= 0x20000000000;
+
+        // Fix GPU addressing.
+        if (EA >= 0xEC800000 && EA < 0xEC810000)
+            EA |= 0x20000000000;
+
         // External Read
         cpuContext->bus->Read(EA, &data, byteCount);
     }
-
     return data;
 }
 
 // MMU Write Routine, used by the CPU
-void PPCInterpreter::MMUWrite(XCPUContext* cpuContext, u64 data, u64 EA, 
+void PPCInterpreter::MMUWrite(XCPUContext* cpuContext, u64 data, u64 EA,
     s8 byteCount, bool cacheStore)
 {
     s8 currentCore = cpuContext->currentCoreID;
@@ -857,7 +960,8 @@ void PPCInterpreter::MMUWrite(XCPUContext* cpuContext, u64 data, u64 EA,
         return;
 
     // Is Address Cached?
-    if (EA >= 0x10000000000 && EA < 0x20000000000)
+    if (EA >= 0x10000000000 && EA < 0x20000000000 || 
+        EA >= 0x30000000000 && EA < 0x40000000000)
     {
         // Completly ignore cache, see what happens.
         EA = static_cast<u32>(EA);
@@ -898,6 +1002,22 @@ void PPCInterpreter::MMUWrite(XCPUContext* cpuContext, u64 data, u64 EA,
     }
     else
     {
+        // Fix NAND Addressing.
+        if (EA >= 0xC8000000 && EA < 0xC9000000)
+            EA |= 0x20000000000;
+
+        // Fix PCI Bridge Addressing.
+        if (EA >= 0xEA000000 && EA < 0xEA010000)
+            EA |= 0x20000000000;
+
+        // Fix PCI Config Space addressing.
+        if (EA >= 0xD0000000 && EA < 0xD1000000)
+            EA |= 0x20000000000;
+
+        // Fix GPU addressing.
+        if (EA >= 0xEC800000 && EA < 0xEC810000)
+            EA |= 0x20000000000;
+
         // External Write
         cpuContext->bus->Write(EA, data, byteCount);
     }

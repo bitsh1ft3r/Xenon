@@ -2,8 +2,8 @@
 
 #include "Xenon/Core/XCPU/Interpreter/PPCInterpreter.h"
 
-#define DBG_PRINT_LOAD(txt) //std::cout txt
-#define DBG_PRINT_STORE(txt) //std::cout txt
+#define DBG_PRINT_LOAD(txt)     // std::cout txt
+#define DBG_PRINT_STORE(txt)    // std::cout txt
 
 void splitAddress(u64 data, u32 *addressHigh, u32* addressLow)
 {
@@ -255,6 +255,26 @@ void PPCInterpreter::PPCInterpreter_stwbrx(PPCState* hCore)
         << addrHigh << ") " << addrLow << " data =  0x" << (u32)hCore->GPR[rS] << std::endl);
     
     MMUWrite32(EA, _byteswap_ulong(static_cast<u32>(hCore->GPR[rS])));
+}
+
+void PPCInterpreter::PPCInterpreter_stwcx(PPCState* hCore)
+{
+    X_FORM_rS_rA_rB;
+
+    u64 EA = (rA ? hCore->GPR[rA] : 0) + hCore->GPR[rB];
+    u64 REA = EA;
+    u32 CR = 0;
+
+    // If address is not aligned by 4, the we must issue a trap.
+    // Need to check for a reservation.
+
+    if (hCore->XER.SO)
+        BSET(CR, 4, CR_BIT_SO);
+
+    MMUWrite32(EA, (u32)hCore->GPR[rS]);
+    BSET(CR, 4, CR_BIT_EQ);
+
+    ppcUpdateCR(hCore, 0, CR);
 }
 
 void PPCInterpreter::PPCInterpreter_stwu(PPCState* hCore)
@@ -520,6 +540,18 @@ void PPCInterpreter::PPCInterpreter_lwax(PPCState* hCore)
     u32 unsignedWord = MMURead32(EA);
     hCore->GPR[rD] = EXTS(unsignedWord, 32);
     DBG_PRINT_LOAD(<< "lwax: Addr = 0x" << std::hex << EA << " data =  0x" << (u16)hCore->GPR[rD] << std::endl);
+}
+
+void PPCInterpreter::PPCInterpreter_lwarx(PPCState* hCore)
+{
+    X_FORM_rD_rA_rB;
+
+    u64 EA = (rA ? hCore->GPR[rA] : 0) + hCore->GPR[rB];
+
+    // If address is not aligned by 4, the we must issue a trap.
+    // Need to make a reservation.
+
+    hCore->GPR[rD] = MMURead32(EA);
 }
 
 void PPCInterpreter::PPCInterpreter_lwbrx(PPCState* hCore)
