@@ -2,14 +2,14 @@
 
 #include <iostream>
 
-#include "Xenon/Core/PCIBus/PCIDevice.h"
+#include "Xenon/Core/PCIBridge/PCIDevice.h"
 
-#define XMA_DEV_SIZE	0x400
+#define CDROM_DEV_SIZE	0x30
 
-class XMA : public PCIDevice
+class CDROM : public PCIDevice
 {
 public:
-	XMA();
+	CDROM();
 	void Read(u64 readAddress, u64* data, u8 byteCount) override;
 	void ConfigRead(u64 readAddress, u64* data, u8 byteCount) override;
 	void Write(u64 writeAddress, u64 data, u8 byteCount) override;

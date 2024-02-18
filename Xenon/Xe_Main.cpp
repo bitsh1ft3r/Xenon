@@ -5,17 +5,19 @@
 
 
 #include "Xenon/Core/Bus/Bus.h"
-#include "Xenon/Core/PCIBus/PCIBridge.h"
+#include "Xenon/Core/PCIBridge/PCIBridge.h"
 #include "Xenon/Core/PostBus/PostBus.h"
 
 #include "Xenon/Core/XCPU/Xenon.h"
 
 #include "Xenon/Core/RAM/RAM.h"
 #include "Xenon/Core/NAND/NAND.h"
-#include "Xenon/Core/PCIBus/XMA/XMA.h"
-#include "Xenon/Core/PCIBus/HDD/HDD.h"
-#include "Xenon/Core/PCIBus/SMC/SMC.h"
-#include "Xenon/Core/PCIBus/CDROM/CDROM.h"
+
+#include "Xenon/Core/PCIBridge/SFCX/SFCX.h"
+#include "Xenon/Core/PCIBridge/XMA/XMA.h"
+#include "Xenon/Core/PCIBridge/HDD/HDD.h"
+#include "Xenon/Core/PCIBridge/SMC/SMC.h"
+#include "Xenon/Core/PCIBridge/CDROM/CDROM.h"
 
 int main(int argc, char* argv[])
 {
@@ -50,6 +52,7 @@ int main(int argc, char* argv[])
 	Bus Bus;
 	PCIBridge pciBridge;
 	
+	SFCX sfcx;
 	XMA xma;
 	CDROM cdrom;
 	HDD hdd;
@@ -61,11 +64,13 @@ int main(int argc, char* argv[])
 
 	Bus.Init();
 
+	sfcx.Initialize("SFCX", SFCX_DEV_SIZE);
 	xma.Initialize("XMA", XMA_DEV_SIZE);
 	cdrom.Initialize("CDROM", CDROM_DEV_SIZE);
 	hdd.Initialize("HDD", HDD_DEV_SIZE);
 	smc.Initialize("SMC", SMC_DEV_SIZE);
 
+	pciBridge.addPCIDevice(&sfcx);
 	pciBridge.addPCIDevice(&xma);
 	pciBridge.addPCIDevice(&cdrom);
 	pciBridge.addPCIDevice(&hdd);

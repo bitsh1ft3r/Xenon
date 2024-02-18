@@ -3,7 +3,7 @@
 #include <iostream>
 #include <vector>
 
-#include "Xenon/Core/PCIBus/PCIDevice.h"
+#include "Xenon/Core/PCIBridge/PCIDevice.h"
 
 #define PCI_BRIDGE_CONFIG_SPACE_ADDRESS_BASE 0xD0000000
 #define PCI_BRIDGE_CONFIG_SPACE_SIZE		 0x1000

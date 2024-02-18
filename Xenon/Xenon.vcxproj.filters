@@ -38,21 +38,6 @@
     <ClCompile Include="Core\PostBus\PostBus.cpp">
       <Filter>Core\Bus</Filter>
     </ClCompile>
-    <ClCompile Include="Core\PCIBus\PCIBridge.cpp">
-      <Filter>Core\PCIBus</Filter>
-    </ClCompile>
-    <ClCompile Include="Core\PCIBus\SMC\SMC.cpp">
-      <Filter>Core\PCIBus\SMC</Filter>
-    </ClCompile>
-    <ClCompile Include="Core\PCIBus\XMA\XMA.cpp">
-      <Filter>Core\PCIBus\XMA</Filter>
-    </ClCompile>
-    <ClCompile Include="Core\PCIBus\HDD\HDD.cpp">
-      <Filter>Core\PCIBus\HDD</Filter>
-    </ClCompile>
-    <ClCompile Include="Core\PCIBus\CDROM\CDROM.cpp">
-      <Filter>Core\PCIBus\CDROM</Filter>
-    </ClCompile>
     <ClCompile Include="Core\XCPU\PPU\PPU.cpp">
       <Filter>Core\XCPU\PPU</Filter>
     </ClCompile>
@@ -61,6 +46,24 @@
     </ClCompile>
     <ClCompile Include="Core\XCPU\XenonReservations.cpp">
       <Filter>Core\XCPU</Filter>
+    </ClCompile>
+    <ClCompile Include="Core\PCIBridge\PCIBridge.cpp">
+      <Filter>Core\PCIBridge</Filter>
+    </ClCompile>
+    <ClCompile Include="Core\PCIBridge\SMC\SMC.cpp">
+      <Filter>Core\PCIBridge\SMC</Filter>
+    </ClCompile>
+    <ClCompile Include="Core\PCIBridge\CDROM\CDROM.cpp">
+      <Filter>Core\PCIBridge\CDROM</Filter>
+    </ClCompile>
+    <ClCompile Include="Core\PCIBridge\HDD\HDD.cpp">
+      <Filter>Core\PCIBridge\HDD</Filter>
+    </ClCompile>
+    <ClCompile Include="Core\PCIBridge\XMA\XMA.cpp">
+      <Filter>Core\PCIBridge\XMA</Filter>
+    </ClCompile>
+    <ClCompile Include="Core\PCIBridge\SFCX\SFCX.cpp">
+      <Filter>Core\PCIBridge\SFCX</Filter>
     </ClCompile>
   </ItemGroup>
   <ItemGroup>
@@ -85,23 +88,26 @@
     <Filter Include="Core\XCPU\Interpreter">
       <UniqueIdentifier>{c7c1f968-10b9-4130-a365-0dbf1985db7c}</UniqueIdentifier>
     </Filter>
-    <Filter Include="Core\PCIBus">
-      <UniqueIdentifier>{4a18e6b8-342f-43d3-9333-e6e24d96d39f}</UniqueIdentifier>
-    </Filter>
-    <Filter Include="Core\PCIBus\SMC">
-      <UniqueIdentifier>{398a15b9-e7a1-4688-8f00-efa47b8bbdbb}</UniqueIdentifier>
-    </Filter>
-    <Filter Include="Core\PCIBus\XMA">
-      <UniqueIdentifier>{32334413-c7ac-400a-809c-534a6ab5b441}</UniqueIdentifier>
-    </Filter>
-    <Filter Include="Core\PCIBus\HDD">
-      <UniqueIdentifier>{c2b004e2-9b40-4342-98bc-c2f57653d8cd}</UniqueIdentifier>
-    </Filter>
-    <Filter Include="Core\PCIBus\CDROM">
-      <UniqueIdentifier>{434eae92-db91-4999-8ea8-4f2ef73e33dc}</UniqueIdentifier>
-    </Filter>
     <Filter Include="Core\XCPU\PPU">
       <UniqueIdentifier>{748ba388-e417-4af6-819e-b9abf824ad47}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Core\PCIBridge">
+      <UniqueIdentifier>{cf753bfa-8b44-4ea6-8930-727cde979eaa}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Core\PCIBridge\SMC">
+      <UniqueIdentifier>{8d4dcfd7-8786-4c2f-8cba-b3da19a67a1b}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Core\PCIBridge\CDROM">
+      <UniqueIdentifier>{9e46d23a-86f3-46af-bfb0-2f2e4c2173c4}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Core\PCIBridge\HDD">
+      <UniqueIdentifier>{b93fd63c-1600-41a1-96fa-ac1ad6561034}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Core\PCIBridge\XMA">
+      <UniqueIdentifier>{a4246c72-6c92-491a-b155-608a99519da3}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Core\PCIBridge\SFCX">
+      <UniqueIdentifier>{ec80e12a-ff8d-496d-bcb8-6da0e98995da}</UniqueIdentifier>
     </Filter>
   </ItemGroup>
   <ItemGroup>
@@ -132,24 +138,6 @@
     <ClInclude Include="Core\PostBus\PostBus.h">
       <Filter>Core\Bus</Filter>
     </ClInclude>
-    <ClInclude Include="Core\PCIBus\SMC\SMC.h">
-      <Filter>Core\PCIBus\SMC</Filter>
-    </ClInclude>
-    <ClInclude Include="Core\PCIBus\PCIBridge.h">
-      <Filter>Core\PCIBus</Filter>
-    </ClInclude>
-    <ClInclude Include="Core\PCIBus\PCIDevice.h">
-      <Filter>Core\PCIBus</Filter>
-    </ClInclude>
-    <ClInclude Include="Core\PCIBus\XMA\XMA.h">
-      <Filter>Core\PCIBus\XMA</Filter>
-    </ClInclude>
-    <ClInclude Include="Core\PCIBus\HDD\HDD.h">
-      <Filter>Core\PCIBus\HDD</Filter>
-    </ClInclude>
-    <ClInclude Include="Core\PCIBus\CDROM\CDROM.h">
-      <Filter>Core\PCIBus\CDROM</Filter>
-    </ClInclude>
     <ClInclude Include="Core\XCPU\eFuse.h">
       <Filter>Core\XCPU</Filter>
     </ClInclude>
@@ -165,11 +153,32 @@
     <ClInclude Include="Core\XCPU\XenonReservations.h">
       <Filter>Core\XCPU</Filter>
     </ClInclude>
-    <ClInclude Include="Core\PCIBus\SMC\HANA_State.h">
-      <Filter>Core\PCIBus\SMC</Filter>
+    <ClInclude Include="Core\PCIBridge\PCIBridge.h">
+      <Filter>Core\PCIBridge</Filter>
     </ClInclude>
-    <ClInclude Include="Core\PCIBus\PCIBridgeConfig.h">
-      <Filter>Core\PCIBus</Filter>
+    <ClInclude Include="Core\PCIBridge\PCIBridgeConfig.h">
+      <Filter>Core\PCIBridge</Filter>
+    </ClInclude>
+    <ClInclude Include="Core\PCIBridge\PCIDevice.h">
+      <Filter>Core\PCIBridge</Filter>
+    </ClInclude>
+    <ClInclude Include="Core\PCIBridge\SMC\HANA_State.h">
+      <Filter>Core\PCIBridge\SMC</Filter>
+    </ClInclude>
+    <ClInclude Include="Core\PCIBridge\SMC\SMC.h">
+      <Filter>Core\PCIBridge\SMC</Filter>
+    </ClInclude>
+    <ClInclude Include="Core\PCIBridge\CDROM\CDROM.h">
+      <Filter>Core\PCIBridge\CDROM</Filter>
+    </ClInclude>
+    <ClInclude Include="Core\PCIBridge\HDD\HDD.h">
+      <Filter>Core\PCIBridge\HDD</Filter>
+    </ClInclude>
+    <ClInclude Include="Core\PCIBridge\XMA\XMA.h">
+      <Filter>Core\PCIBridge\XMA</Filter>
+    </ClInclude>
+    <ClInclude Include="Core\PCIBridge\SFCX\SFCX.h">
+      <Filter>Core\PCIBridge\SFCX</Filter>
     </ClInclude>
   </ItemGroup>
 </Project>

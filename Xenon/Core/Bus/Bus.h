@@ -3,7 +3,7 @@
 #include <vector>
 
 #include "Xenon/Base/SystemDevice.h"
-#include "Xenon/Core/PCIBus/PCIBridge.h"
+#include "Xenon/Core/PCIBridge/PCIBridge.h"
 
 class Bus
 {

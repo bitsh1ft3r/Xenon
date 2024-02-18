@@ -1,5 +1,5 @@
-#include "Xenon/Core/PCIBus/PCIBridge.h"
-#include "Xenon/Core/PCIBus/PCIBridgeConfig.h"
+#include "Xenon/Core/PCIBridge/PCIBridge.h"
+#include "Xenon/Core/PCIBridge/PCIBridgeConfig.h"
 
 // Device tree, taken from an actual system, Corona V6.
 /*
@@ -127,7 +127,7 @@ void PCIBridge::ConfigRead(u64 readAddress, u64* data, u8 byteCount)
 		currentDevName = "ETHERNET";
 		break;
 	case SFC_DEV_NUM:
-		currentDevName = "SFC";
+		currentDevName = "SFCX";
 		break;
 	case _580C_DEV_NUM:
 		currentDevName = "580C";
@@ -201,7 +201,7 @@ void PCIBridge::ConfigWrite(u64 writeAddress, u64 data, u8 byteCount)
 		currentDevName = "ETHERNET";
 		break;
 	case SFC_DEV_NUM:
-		currentDevName = "SFC";
+		currentDevName = "SFCX";
 		break;
 	case _580C_DEV_NUM:
 		currentDevName = "580C";
