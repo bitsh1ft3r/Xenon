@@ -729,6 +729,7 @@ void PostBus::POST(u64 postCode)
         }
     else
     {
+        SetConsoleTextAttribute(hConsole, 15);
         std::cout << "POST: Unrecognized post code: " << std::hex << postCode << std::endl;
     }
 }

@@ -26,8 +26,13 @@ bool NAND::Load(std::string filePath)
         return false;
     }
 
+    u32 blockSize = 0x4000;
 
-    fread(rawNANDData, 1, 0x1000000, inputFile);
+    for (int currentBlock = 0; currentBlock < rawFileSize; currentBlock += blockSize)
+    {
+        fread(&rawNANDData[currentBlock], 1, blockSize, inputFile);
+    }
+
     fseek(inputFile, 0, SEEK_SET);
 
     CheckSpare();

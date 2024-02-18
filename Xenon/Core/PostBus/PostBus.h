@@ -4,7 +4,7 @@
 
 #include "Xenon/Base/SystemDevice.h"
 
-#define POST_BUS_ADDR 0x20000061010
+#define POST_BUS_ADDR 0x61010
 
 class PostBus : public SystemDevice
 {

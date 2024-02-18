@@ -1,5 +1,12 @@
 #include "CDROM.h"
 
+CDROM::CDROM()
+{
+	// Set PCI Ven & Dev ID.
+	u32 devID = 0x58021414;
+	memcpy(&configReg[0], &devID, 4);
+}
+
 void CDROM::Read(u64 readAddress, u64* data, u8 byteCount)
 {
 

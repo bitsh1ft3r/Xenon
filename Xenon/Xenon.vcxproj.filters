@@ -2,9 +2,6 @@
 <Project ToolsVersion="4.0" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
   <ItemGroup>
     <ClCompile Include="Xe_Main.cpp" />
-    <ClCompile Include="Core\XCPU\XCPU.cpp">
-      <Filter>Core\XCPU</Filter>
-    </ClCompile>
     <ClCompile Include="Core\NAND\NAND.cpp">
       <Filter>Core\NAND</Filter>
     </ClCompile>
@@ -14,25 +11,25 @@
     <ClCompile Include="Core\RAM\RAM.cpp">
       <Filter>Core\RAM</Filter>
     </ClCompile>
-    <ClCompile Include="Core\XCPU\Interpreter\Interpreter_ALU.cpp">
+    <ClCompile Include="Core\XCPU\Interpreter\PPC_ALU.cpp">
       <Filter>Core\XCPU\Interpreter</Filter>
     </ClCompile>
     <ClCompile Include="Core\XCPU\Interpreter\Interpreter_Helpers.cpp">
       <Filter>Core\XCPU\Interpreter</Filter>
     </ClCompile>
-    <ClCompile Include="Core\XCPU\Interpreter\PowerPC_Instruction.cpp">
+    <ClCompile Include="Core\XCPU\Interpreter\PPC_Instruction.cpp">
       <Filter>Core\XCPU\Interpreter</Filter>
     </ClCompile>
-    <ClCompile Include="Core\XCPU\Interpreter\PowerPC_System.cpp">
+    <ClCompile Include="Core\XCPU\Interpreter\PPC_System.cpp">
       <Filter>Core\XCPU\Interpreter</Filter>
     </ClCompile>
-    <ClCompile Include="Core\XCPU\Interpreter\PowerPC_ProgramControl.cpp">
+    <ClCompile Include="Core\XCPU\Interpreter\PPC_BC.cpp">
       <Filter>Core\XCPU\Interpreter</Filter>
     </ClCompile>
-    <ClCompile Include="Core\XCPU\Interpreter\MMU.cpp">
+    <ClCompile Include="Core\XCPU\Interpreter\PPC_MMU.cpp">
       <Filter>Core\XCPU\Interpreter</Filter>
     </ClCompile>
-    <ClCompile Include="Core\XCPU\Interpreter\PowerPC_Load_Store.cpp">
+    <ClCompile Include="Core\XCPU\Interpreter\PPC_LS.cpp">
       <Filter>Core\XCPU\Interpreter</Filter>
     </ClCompile>
     <ClCompile Include="Core\XCPU\Interpreter\PPCInterpreter.cpp">
@@ -41,7 +38,7 @@
     <ClCompile Include="Core\PostBus\PostBus.cpp">
       <Filter>Core\Bus</Filter>
     </ClCompile>
-    <ClCompile Include="Core\PCIBus\PCIBus.cpp">
+    <ClCompile Include="Core\PCIBus\PCIBridge.cpp">
       <Filter>Core\PCIBus</Filter>
     </ClCompile>
     <ClCompile Include="Core\PCIBus\SMC\SMC.cpp">
@@ -55,6 +52,15 @@
     </ClCompile>
     <ClCompile Include="Core\PCIBus\CDROM\CDROM.cpp">
       <Filter>Core\PCIBus\CDROM</Filter>
+    </ClCompile>
+    <ClCompile Include="Core\XCPU\PPU\PPU.cpp">
+      <Filter>Core\XCPU\PPU</Filter>
+    </ClCompile>
+    <ClCompile Include="Core\XCPU\Xenon.cpp">
+      <Filter>Core\XCPU</Filter>
+    </ClCompile>
+    <ClCompile Include="Core\XCPU\XenonReservations.cpp">
+      <Filter>Core\XCPU</Filter>
     </ClCompile>
   </ItemGroup>
   <ItemGroup>
@@ -94,19 +100,13 @@
     <Filter Include="Core\PCIBus\CDROM">
       <UniqueIdentifier>{434eae92-db91-4999-8ea8-4f2ef73e33dc}</UniqueIdentifier>
     </Filter>
+    <Filter Include="Core\XCPU\PPU">
+      <UniqueIdentifier>{748ba388-e417-4af6-819e-b9abf824ad47}</UniqueIdentifier>
+    </Filter>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="Base\TypeDefs.h">
       <Filter>Base</Filter>
-    </ClInclude>
-    <ClInclude Include="Core\XCPU\XCPU.h">
-      <Filter>Core\XCPU</Filter>
-    </ClInclude>
-    <ClInclude Include="Core\XCPU\PowerPC.h">
-      <Filter>Core\XCPU</Filter>
-    </ClInclude>
-    <ClInclude Include="Core\XCPU\XCPU_SPRs.h">
-      <Filter>Core\XCPU</Filter>
     </ClInclude>
     <ClInclude Include="Core\NAND\NAND.h">
       <Filter>Core\NAND</Filter>
@@ -120,20 +120,14 @@
     <ClInclude Include="Core\RAM\RAM.h">
       <Filter>Core\RAM</Filter>
     </ClInclude>
-    <ClInclude Include="Core\XCPU\Interpreter\PowerPCState.h">
-      <Filter>Core\XCPU\Interpreter</Filter>
-    </ClInclude>
     <ClInclude Include="Core\XCPU\Interpreter\PPCInterpreter.h">
       <Filter>Core\XCPU\Interpreter</Filter>
     </ClInclude>
-    <ClInclude Include="Core\XCPU\Interpreter\PowerPCInternal.h">
+    <ClInclude Include="Core\XCPU\Interpreter\PPCInternal.h">
       <Filter>Core\XCPU\Interpreter</Filter>
     </ClInclude>
-    <ClInclude Include="Core\XCPU\Interpreter\PowerPC_Instruction.h">
+    <ClInclude Include="Core\XCPU\Interpreter\PPC_Instruction.h">
       <Filter>Core\XCPU\Interpreter</Filter>
-    </ClInclude>
-    <ClInclude Include="Core\XCPU\XCPUContext.h">
-      <Filter>Core\XCPU</Filter>
     </ClInclude>
     <ClInclude Include="Core\PostBus\PostBus.h">
       <Filter>Core\Bus</Filter>
@@ -141,7 +135,7 @@
     <ClInclude Include="Core\PCIBus\SMC\SMC.h">
       <Filter>Core\PCIBus\SMC</Filter>
     </ClInclude>
-    <ClInclude Include="Core\PCIBus\PCIBus.h">
+    <ClInclude Include="Core\PCIBus\PCIBridge.h">
       <Filter>Core\PCIBus</Filter>
     </ClInclude>
     <ClInclude Include="Core\PCIBus\PCIDevice.h">
@@ -155,6 +149,27 @@
     </ClInclude>
     <ClInclude Include="Core\PCIBus\CDROM\CDROM.h">
       <Filter>Core\PCIBus\CDROM</Filter>
+    </ClInclude>
+    <ClInclude Include="Core\XCPU\eFuse.h">
+      <Filter>Core\XCPU</Filter>
+    </ClInclude>
+    <ClInclude Include="Core\XCPU\Xenon.h">
+      <Filter>Core\XCPU</Filter>
+    </ClInclude>
+    <ClInclude Include="Core\XCPU\PPU\PowerPC.h">
+      <Filter>Core\XCPU\PPU</Filter>
+    </ClInclude>
+    <ClInclude Include="Core\XCPU\PPU\PPU.h">
+      <Filter>Core\XCPU\PPU</Filter>
+    </ClInclude>
+    <ClInclude Include="Core\XCPU\XenonReservations.h">
+      <Filter>Core\XCPU</Filter>
+    </ClInclude>
+    <ClInclude Include="Core\PCIBus\SMC\HANA_State.h">
+      <Filter>Core\PCIBus\SMC</Filter>
+    </ClInclude>
+    <ClInclude Include="Core\PCIBus\PCIBridgeConfig.h">
+      <Filter>Core\PCIBus</Filter>
     </ClInclude>
   </ItemGroup>
 </Project>
