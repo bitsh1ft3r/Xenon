@@ -412,6 +412,9 @@ struct PPU_THREAD_REGISTERS
 	// Interrupt EA for managing Interrupts.
 	u64 intEA = 0;
 
+	// Helper Debug Variable
+	u64 lastWriteAddress = 0;
+
 	PPU_RES* ppuRes;
 };
 

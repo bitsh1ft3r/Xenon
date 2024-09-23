@@ -130,8 +130,8 @@ void PPCInterpreter::PPCInterpreter_cmp(PPU_STATE* hCore)
 	}
 	else
 	{
-		CR = CRCompS32(hCore, static_cast<u32>(GPR(rA)), 
-			static_cast<u32>(GPR(rB)));
+		CR = CRCompS32(hCore, static_cast<s32>(GPR(rA)), 
+			static_cast<s32>(GPR(rB)));
 	}
 
 	ppcUpdateCR(hCore, BF, CR);
@@ -150,7 +150,7 @@ void PPCInterpreter::PPCInterpreter_cmpi(PPU_STATE* hCore)
 	}
 	else
 	{
-		CR = CRCompS32(hCore, (u32)GPR(rA), (u32)SI);
+		CR = CRCompS32(hCore, (s32)GPR(rA), (s32)SI);
 	}
 
 	ppcUpdateCR(hCore, BF, CR);
@@ -239,50 +239,77 @@ void PPCInterpreter::PPCInterpreter_cntlzw(PPU_STATE* hCore)
 void PPCInterpreter::PPCInterpreter_crand(PPU_STATE* hCore)
 {
 	XL_FORM_BT_BA_BB;
-
-	ppcUpdateCR(hCore, BT, CR_GET(BA) & CR_GET(BB));
+	u32 crAnd = CR_GET(BA) & CR_GET(BB);
+	if (crAnd & 1)
+		BSET(hCore->ppuThread[hCore->currentThread].CR.CR_Hex, 32, BT);
+	else
+		BCLR(hCore->ppuThread[hCore->currentThread].CR.CR_Hex, 32, BT);
 }
 
 void PPCInterpreter::PPCInterpreter_crandc(PPU_STATE* hCore)
 {
 	XL_FORM_BT_BA_BB;
 
-	ppcUpdateCR(hCore, BT, CR_GET(BA) & ~CR_GET(BB));
+	u32 crAndc = CR_GET(BA) & ~CR_GET(BB);
+	if (crAndc & 1)
+		BSET(hCore->ppuThread[hCore->currentThread].CR.CR_Hex, 32, BT);
+	else
+		BCLR(hCore->ppuThread[hCore->currentThread].CR.CR_Hex, 32, BT);
 }
 
 void PPCInterpreter::PPCInterpreter_creqv(PPU_STATE* hCore)
 {
 	XL_FORM_BT_BA_BB;
 
-	ppcUpdateCR(hCore, BT, ~(CR_GET(BA) ^ CR_GET(BB)));
+	u32 crEqv = ~CR_GET(BA) ^ CR_GET(BB);
+	if (crEqv & 1)
+		BSET(hCore->ppuThread[hCore->currentThread].CR.CR_Hex, 32, BT);
+	else
+		BCLR(hCore->ppuThread[hCore->currentThread].CR.CR_Hex, 32, BT);
 }
 
 void PPCInterpreter::PPCInterpreter_crnand(PPU_STATE* hCore)
 {
 	XL_FORM_BT_BA_BB;
 
-	ppcUpdateCR(hCore, BT, ~(CR_GET(BA) & CR_GET(BB)));
+	u32 crNand = ~CR_GET(BA) & CR_GET(BB);
+	if (crNand & 1)
+		BSET(hCore->ppuThread[hCore->currentThread].CR.CR_Hex, 32, BT);
+	else
+		BCLR(hCore->ppuThread[hCore->currentThread].CR.CR_Hex, 32, BT);
 }
 
 void PPCInterpreter::PPCInterpreter_crnor(PPU_STATE* hCore)
 {
 	XL_FORM_BT_BA_BB;
 
-	ppcUpdateCR(hCore, BT, ~(CR_GET(BA) | CR_GET(BB)));
+	u32 crNor = ~CR_GET(BA) | CR_GET(BB);
+	if (crNor & 1)
+		BSET(hCore->ppuThread[hCore->currentThread].CR.CR_Hex, 32, BT);
+	else
+		BCLR(hCore->ppuThread[hCore->currentThread].CR.CR_Hex, 32, BT);
 }
 
 void PPCInterpreter::PPCInterpreter_cror(PPU_STATE* hCore)
 {
 	XL_FORM_BT_BA_BB;
 
-	ppcUpdateCR(hCore, BT, CR_GET(BA) | CR_GET(BB));
+	u32 crOr = CR_GET(BA) | CR_GET(BB);
+	if (crOr & 1)
+		BSET(hCore->ppuThread[hCore->currentThread].CR.CR_Hex, 32, BT);
+	else
+		BCLR(hCore->ppuThread[hCore->currentThread].CR.CR_Hex, 32, BT);
 }
 
 void PPCInterpreter::PPCInterpreter_crorc(PPU_STATE* hCore)
 {
 	XL_FORM_BT_BA_BB;
 
-	ppcUpdateCR(hCore, BT, CR_GET(BA) | ~CR_GET(BB));
+	u32 crNor = CR_GET(BA) | ~CR_GET(BB);
+	if (crNor & 1)
+		BSET(hCore->ppuThread[hCore->currentThread].CR.CR_Hex, 32, BT);
+	else
+		BCLR(hCore->ppuThread[hCore->currentThread].CR.CR_Hex, 32, BT);
 }
 
 void PPCInterpreter::PPCInterpreter_crxor(PPU_STATE* hCore)
@@ -580,7 +607,7 @@ void PPCInterpreter::PPCInterpreter_orx(PPU_STATE* hCore)
 
 	if (RC)
 	{
-		u32 CR = CRCompS(hCore, GPR(rA), 0);
+		u32 CR = CRCompU(hCore, GPR(rA), 0);
 		ppcUpdateCR(hCore, 0, CR);
 	}
 }

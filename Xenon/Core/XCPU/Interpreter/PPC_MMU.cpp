@@ -1219,10 +1219,6 @@ u64 PPCInterpreter::MMURead(XENON_CONTEXT* cpuContext, PPU_STATE* ppuState, u64 
 void PPCInterpreter::MMUWrite(XENON_CONTEXT* cpuContext, PPU_STATE* ppuState, u64 data, u64 EA,
     s8 byteCount, bool cacheStore)
 {
-    if (EA == 0x3a07aac4)
-    {
-        u8 a = 0;
-    }
     u64 oldEA = EA;
     if (MMUTranslateAddress(&EA, ppuState) == false)
         return;

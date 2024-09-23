@@ -40,23 +40,8 @@ void PPCInterpreter::ppcExecuteSingleInstruction(PPU_STATE* hCore) {
 		//return;
 	}	
 
-	//
-	//	Some functions skips to get xboxkrnl.exe 2.0.17489.0 working.
-	// 
-
-	// INIT_KEYS inside Hypervisor.
-	if (hCore->ppuThread[hCore->currentThread].CIA == 0x0000000000002dec)
-	{
-		return;
-	}
-	// INIT_KEYVAULT inside Kernel (Syscall to Hypervisor).
-	if (hCore->ppuThread[hCore->currentThread].CIA == 0x80081610)
-	{
-		return;
-	}
-
 	// This is just to set a PC breakpoint in any PPU/Thread.
-	if (hCore->ppuThread[hCore->currentThread].CIA == 0x8008B6B4)
+	if (hCore->ppuThread[hCore->currentThread].CIA == 0x400024af4)
 	{
 		u8 a = 0;
 	}
@@ -64,7 +49,7 @@ void PPCInterpreter::ppcExecuteSingleInstruction(PPU_STATE* hCore) {
 	// This is to set a PPU0[Thread0] breakpoint.
 	if (hCore->ppuThread[hCore->currentThread].SPR.PIR == 0)
 	{
-		u8 b = 9;
+		u8 b = 0;
 	}
 
 	switch (currentInstr)
