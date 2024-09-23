@@ -118,22 +118,44 @@ u64 PPCInterpreter::ppcAddCarrying(PPU_STATE* hCore, u64 op1, u64 op2, u64 carry
     u64 operand2 = (u64)op2;
     u64 carry = (u64)carryBit;
 
-    // TODO: Carry out of bit 32 only, needs 64 bit support.
+    bool SF = hCore->ppuThread[hCore->currentThread].SPR.MSR.SF;
 
     hCore->ppuThread[hCore->currentThread].SPR.XER.CA = 0;
 
     operand1 += operand2;
 
-    if (operand1 < operand2)
+    if (SF)
     {
-        hCore->ppuThread[hCore->currentThread].SPR.XER.CA = 1;
+        if (operand1 < operand2)
+        {
+            hCore->ppuThread[hCore->currentThread].SPR.XER.CA = 1;
+        }
+    }
+    else
+    {
+        // 32 bit mode, reflect operation as in 32 bit systems
+        if ((u32)operand1 < (u32)operand2)
+        {
+            hCore->ppuThread[hCore->currentThread].SPR.XER.CA = 1;
+        }
     }
 
     operand1 += carry;
 
-    if (operand1 < carry)
+    if (SF)
     {
-        hCore->ppuThread[hCore->currentThread].SPR.XER.CA = 1;
+        if (operand1 < carry)
+        {
+            hCore->ppuThread[hCore->currentThread].SPR.XER.CA = 1;
+        }
+    }
+    else
+    {
+        // 32 bit mode, reflect operation as in 32 bit systems
+        if ((u32)operand1 < (u32)carry)
+        {
+            hCore->ppuThread[hCore->currentThread].SPR.XER.CA = 1;
+        }
     }
 
     return(EXTS(operand1, 32));
