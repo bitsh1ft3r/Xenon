@@ -12,20 +12,21 @@
 
 #include <thread>
 
-#include "Xenon/Core/Bus/Bus.h"
+#include "Xenon/Core/RootBus/RootBus.h"
 #include "Xenon/Core/XCPU/PPU/PPU.h"
 
 
 class Xenon
 {
 public:
-	Xenon(Bus* inBus, std::string blPath, eFuses inFuseSet);
+	Xenon(RootBus* inBus, std::string blPath, eFuses inFuseSet);
 	~Xenon();
 
 	void Start(u64 resetVector = 0x100);
+	Xe::XCPU::IIC::XenonIIC *GetIICPointer() { return &xenonContext.xenonIIC; }
 private:
 	// System Bus
-	Bus* mainBus = nullptr;
+	RootBus* mainBus = nullptr;
 
 	XENON_CONTEXT xenonContext = {};
 

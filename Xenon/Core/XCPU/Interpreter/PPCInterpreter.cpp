@@ -1,32 +1,71 @@
 #include <iostream>
+
 #include "Xenon/Core/XCPU/Interpreter/PPCInterpreter.h"
 
 // Forward Declaration
 XENON_CONTEXT* PPCInterpreter::intXCPUContext = nullptr;
-Bus* PPCInterpreter::sysBus  = nullptr;
+RootBus* PPCInterpreter::sysBus  = nullptr;
 
+// interpreter Single Instruction Processing. 
 void PPCInterpreter::ppcExecuteSingleInstruction(PPU_STATE* hCore) {
 
 	PPCInstruction currentInstr = getOpcode(hCore->ppuThread[hCore->currentThread].CI);
 
-	// RGH 2 for CB_A 9188 // jrunner xdk is 0x000000000200c870 / c8d0 modified
-	if (hCore->ppuThread[hCore->currentThread].CIA == 0x000000000200c8d0)
+	// RGH 2 for CB_A 9188 in a JRunner XDKBuild.
+	if (hCore->ppuThread[hCore->currentThread].CIA == 0x000000000200c870)
 	{
 		hCore->ppuThread[hCore->currentThread].GPR[0x5] = 0;
 	}
 
-	// 3BL Check Devkit 2.0.1838.1
+	// 3BL Check Bypass Devkit 2.0.1838.1
 	if (hCore->ppuThread[hCore->currentThread].CIA == 0x0000000003004994)
 	{
 		//hCore->ppuThread[hCore->currentThread].GPR[0x3] = 1;
 	}
 
-	// 4BL Check Devkit 2.0.1838.1
+	// 4BL Check Bypass Devkit 2.0.1838.1
 	if (hCore->ppuThread[hCore->currentThread].CIA == 0x0000000003004bf0)
 	{
 		//hCore->ppuThread[hCore->currentThread].GPR[0x3] = 1;
 	}
 
+	// 3BL Signature Check Bypass Devkit 2.0.2853.0
+	if (hCore->ppuThread[hCore->currentThread].CIA == 0x0000000003006488)
+	{
+		//hCore->ppuThread[hCore->currentThread].GPR[0x3] = 0;
+	}
+
+	if (hCore->ppuThread[hCore->currentThread].CIA == 0x0000000003004a24)
+	{
+		//return;
+	}	
+
+	//
+	//	Some functions skips to get xboxkrnl.exe 2.0.17489.0 working.
+	// 
+
+	// INIT_KEYS inside Hypervisor.
+	if (hCore->ppuThread[hCore->currentThread].CIA == 0x0000000000002dec)
+	{
+		return;
+	}
+	// INIT_KEYVAULT inside Kernel (Syscall to Hypervisor).
+	if (hCore->ppuThread[hCore->currentThread].CIA == 0x80081610)
+	{
+		return;
+	}
+
+	// This is just to set a PC breakpoint in any PPU/Thread.
+	if (hCore->ppuThread[hCore->currentThread].CIA == 0x8008B6B4)
+	{
+		u8 a = 0;
+	}
+	
+	// This is to set a PPU0[Thread0] breakpoint.
+	if (hCore->ppuThread[hCore->currentThread].SPR.PIR == 0)
+	{
+		u8 b = 9;
+	}
 
 	switch (currentInstr)
 	{
@@ -699,6 +738,66 @@ void PPCInterpreter::ppcExecuteSingleInstruction(PPU_STATE* hCore) {
 	}
 }
 
+//
+// Exception definitions.
+//
+
+/* Exception name(Reset Vector) */
+
+// System reset Exception (0x100)
+void PPCInterpreter::ppcResetException(PPU_STATE* hCore)
+{
+	hCore->ppuThread[hCore->currentThread].SPR.SRR0 = hCore->ppuThread[hCore->currentThread].NIA;
+	hCore->ppuThread[hCore->currentThread].SPR.SRR1 = hCore->ppuThread[hCore->currentThread].SPR.MSR.MSR_Hex & (QMASK(0, 32) | QMASK(37, 41) | QMASK(48, 63));
+	hCore->ppuThread[hCore->currentThread].SPR.MSR.MSR_Hex = hCore->ppuThread[hCore->currentThread].SPR.MSR.MSR_Hex & ~(QMASK(48, 50) | QMASK(52, 55) | QMASK(58, 59) | QMASK(61, 63));
+	hCore->ppuThread[hCore->currentThread].SPR.MSR.MSR_Hex = hCore->ppuThread[hCore->currentThread].SPR.MSR.MSR_Hex | (QMASK(0, 0) | QMASK(3, 3));
+	hCore->ppuThread[hCore->currentThread].NIA = hCore->SPR.HRMOR + 0x100;
+	hCore->ppuThread[hCore->currentThread].SPR.MSR.DR = 0;
+	hCore->ppuThread[hCore->currentThread].SPR.MSR.IR = 0;
+	hCore->ppuThread[hCore->currentThread].exceptionOcurred = true;
+}
+// Data Storage Exception (0x300)
+void PPCInterpreter::ppcDataStorageException(PPU_STATE* hCore, u64 EA, u64 ISR)
+{
+	hCore->ppuThread[hCore->currentThread].SPR.SRR0 = hCore->ppuThread[hCore->currentThread].CIA;
+	hCore->ppuThread[hCore->currentThread].SPR.SRR1 = hCore->ppuThread[hCore->currentThread].SPR.MSR.MSR_Hex & (QMASK(0, 32) | QMASK(37, 41) | QMASK(48, 63));
+	hCore->ppuThread[hCore->currentThread].SPR.DSISR = ISR;
+	hCore->ppuThread[hCore->currentThread].SPR.DAR = EA;
+	hCore->ppuThread[hCore->currentThread].SPR.MSR.MSR_Hex = hCore->ppuThread[hCore->currentThread].SPR.MSR.MSR_Hex & ~(QMASK(48, 50) | QMASK(52, 55) | QMASK(58, 59) | QMASK(61, 63));
+	hCore->ppuThread[hCore->currentThread].SPR.MSR.MSR_Hex = hCore->ppuThread[hCore->currentThread].SPR.MSR.MSR_Hex | (QMASK(0, 0) | QMASK(3, 3));
+	hCore->ppuThread[hCore->currentThread].NIA = hCore->SPR.HRMOR + 0x300;
+	hCore->ppuThread[hCore->currentThread].SPR.MSR.DR = 0;
+	hCore->ppuThread[hCore->currentThread].SPR.MSR.IR = 0;
+	hCore->ppuThread[hCore->currentThread].exceptionOcurred = true;
+}
+// Data Segment Exception (0x380)
+void PPCInterpreter::ppcDataSegmentException(PPU_STATE* hCore, u64 EA)
+{
+	hCore->ppuThread[hCore->currentThread].SPR.SRR0 = hCore->ppuThread[hCore->currentThread].CIA;
+	hCore->ppuThread[hCore->currentThread].SPR.SRR1 = hCore->ppuThread[hCore->currentThread].SPR.MSR.MSR_Hex & (QMASK(0, 32) | QMASK(37, 41) | QMASK(48, 63));
+	hCore->ppuThread[hCore->currentThread].SPR.DSISR = 0;
+	hCore->ppuThread[hCore->currentThread].SPR.DAR = EA;
+	hCore->ppuThread[hCore->currentThread].SPR.MSR.MSR_Hex = hCore->ppuThread[hCore->currentThread].SPR.MSR.MSR_Hex & ~(QMASK(48, 50) | QMASK(52, 55) | QMASK(58, 59) | QMASK(61, 63));
+	hCore->ppuThread[hCore->currentThread].SPR.MSR.MSR_Hex = hCore->ppuThread[hCore->currentThread].SPR.MSR.MSR_Hex | (QMASK(0, 0) | QMASK(3, 3));
+	hCore->ppuThread[hCore->currentThread].NIA = hCore->SPR.HRMOR + 0x380;
+	hCore->ppuThread[hCore->currentThread].SPR.MSR.DR = 0;
+	hCore->ppuThread[hCore->currentThread].SPR.MSR.IR = 0;
+	hCore->ppuThread[hCore->currentThread].exceptionOcurred = true;
+}
+// Instruction Storage Exception (0x400)
+void PPCInterpreter::ppcInstStorageException(PPU_STATE* hCore, u64 SRR1)
+{
+	hCore->ppuThread[hCore->currentThread].SPR.SRR0 = hCore->ppuThread[hCore->currentThread].CIA;
+	hCore->ppuThread[hCore->currentThread].SPR.SRR1 = hCore->ppuThread[hCore->currentThread].SPR.MSR.MSR_Hex & (QMASK(0, 32) | QMASK(37, 41) | QMASK(48, 63));
+	hCore->ppuThread[hCore->currentThread].SPR.SRR1 |= SRR1;
+	hCore->ppuThread[hCore->currentThread].SPR.MSR.MSR_Hex = hCore->ppuThread[hCore->currentThread].SPR.MSR.MSR_Hex & ~(QMASK(48, 50) | QMASK(52, 55) | QMASK(58, 59) | QMASK(61, 63));
+	hCore->ppuThread[hCore->currentThread].SPR.MSR.MSR_Hex = hCore->ppuThread[hCore->currentThread].SPR.MSR.MSR_Hex | (QMASK(0, 0) | QMASK(3, 3));
+	hCore->ppuThread[hCore->currentThread].NIA = hCore->SPR.HRMOR + 0x400;
+	hCore->ppuThread[hCore->currentThread].SPR.MSR.DR = 0;
+	hCore->ppuThread[hCore->currentThread].SPR.MSR.IR = 0;
+	hCore->ppuThread[hCore->currentThread].exceptionOcurred = true;
+}
+// Instruction Segment Exception (0x480)
 void PPCInterpreter::ppcInstSegmentException(PPU_STATE* hCore)
 {
 	hCore->ppuThread[hCore->currentThread].SPR.SRR0 = hCore->ppuThread[hCore->currentThread].CIA;
@@ -710,19 +809,21 @@ void PPCInterpreter::ppcInstSegmentException(PPU_STATE* hCore)
 	hCore->ppuThread[hCore->currentThread].SPR.MSR.IR = 0;
 	hCore->ppuThread[hCore->currentThread].exceptionOcurred = true;
 }
-
-void PPCInterpreter::ppcSystemCallException(PPU_STATE* hCore, bool isHypervisorCall)
+// External Exception (0x500)
+void PPCInterpreter::ppcExternalException(PPU_STATE* hCore)
 {
+	std::cout << hCore->ppuName << "(THRD" << hCore->currentThread << ") External Interrupt" << std::endl;
+
 	hCore->ppuThread[hCore->currentThread].SPR.SRR0 = hCore->ppuThread[hCore->currentThread].NIA;
 	hCore->ppuThread[hCore->currentThread].SPR.SRR1 = hCore->ppuThread[hCore->currentThread].SPR.MSR.MSR_Hex & (QMASK(0, 32) | QMASK(37, 41) | QMASK(48, 63));
 	hCore->ppuThread[hCore->currentThread].SPR.MSR.MSR_Hex = hCore->ppuThread[hCore->currentThread].SPR.MSR.MSR_Hex & ~(QMASK(48, 50) | QMASK(52, 55) | QMASK(58, 59) | QMASK(61, 63));
-	hCore->ppuThread[hCore->currentThread].SPR.MSR.MSR_Hex = hCore->ppuThread[hCore->currentThread].SPR.MSR.MSR_Hex | QMASK(0, 0) | (isHypervisorCall ? 0 : QMASK(3, 3));
-	hCore->ppuThread[hCore->currentThread].NIA = hCore->SPR.HRMOR + 0xc00;
+	hCore->ppuThread[hCore->currentThread].SPR.MSR.MSR_Hex = hCore->ppuThread[hCore->currentThread].SPR.MSR.MSR_Hex | (QMASK(0, 0) | QMASK(3, 3));
+	hCore->ppuThread[hCore->currentThread].NIA = hCore->SPR.HRMOR + 0x500;
 	hCore->ppuThread[hCore->currentThread].SPR.MSR.DR = 0;
 	hCore->ppuThread[hCore->currentThread].SPR.MSR.IR = 0;
 	hCore->ppuThread[hCore->currentThread].exceptionOcurred = true;
 }
-
+// Program Exception (0x700)
 void PPCInterpreter::ppcProgramException(PPU_STATE* hCore, u32 trapType)
 {
 	hCore->ppuThread[hCore->currentThread].SPR.SRR0 = hCore->ppuThread[hCore->currentThread].CIA;
@@ -731,6 +832,18 @@ void PPCInterpreter::ppcProgramException(PPU_STATE* hCore, u32 trapType)
 	hCore->ppuThread[hCore->currentThread].SPR.MSR.MSR_Hex = hCore->ppuThread[hCore->currentThread].SPR.MSR.MSR_Hex & ~(QMASK(48, 50) | QMASK(52, 55) | QMASK(58, 59) | QMASK(61, 63));
 	hCore->ppuThread[hCore->currentThread].SPR.MSR.MSR_Hex = hCore->ppuThread[hCore->currentThread].SPR.MSR.MSR_Hex | (QMASK(0, 0) | QMASK(3, 3));
 	hCore->ppuThread[hCore->currentThread].NIA = hCore->SPR.HRMOR + 0x700;
+	hCore->ppuThread[hCore->currentThread].SPR.MSR.DR = 0;
+	hCore->ppuThread[hCore->currentThread].SPR.MSR.IR = 0;
+	hCore->ppuThread[hCore->currentThread].exceptionOcurred = true;
+}
+// System Call Exception (0xC00)
+void PPCInterpreter::ppcSystemCallException(PPU_STATE* hCore, bool isHypervisorCall)
+{
+	hCore->ppuThread[hCore->currentThread].SPR.SRR0 = hCore->ppuThread[hCore->currentThread].NIA;
+	hCore->ppuThread[hCore->currentThread].SPR.SRR1 = hCore->ppuThread[hCore->currentThread].SPR.MSR.MSR_Hex & (QMASK(0, 32) | QMASK(37, 41) | QMASK(48, 63));
+	hCore->ppuThread[hCore->currentThread].SPR.MSR.MSR_Hex = hCore->ppuThread[hCore->currentThread].SPR.MSR.MSR_Hex & ~(QMASK(48, 50) | QMASK(52, 55) | QMASK(58, 59) | QMASK(61, 63));
+	hCore->ppuThread[hCore->currentThread].SPR.MSR.MSR_Hex = hCore->ppuThread[hCore->currentThread].SPR.MSR.MSR_Hex | QMASK(0, 0) | (isHypervisorCall ? 0 : QMASK(3, 3));
+	hCore->ppuThread[hCore->currentThread].NIA = hCore->SPR.HRMOR + 0xc00;
 	hCore->ppuThread[hCore->currentThread].SPR.MSR.DR = 0;
 	hCore->ppuThread[hCore->currentThread].SPR.MSR.IR = 0;
 	hCore->ppuThread[hCore->currentThread].exceptionOcurred = true;
@@ -747,10 +860,10 @@ void PPCInterpreter::ppcInterpreterTrap(PPU_STATE* hCore, u32 trapNumber)
 		{
 			dbgString[idx] = MMURead8(hCore, hCore->ppuThread[hCore->currentThread].GPR[0x3] + idx);
 		}
-		std::cout << "DbgPrint: " << dbgString;
+		std::cout << hCore->ppuName << "(" << hCore->currentThread<< ") " "DbgPrint: " << dbgString;
 	}
 
-	if (trapNumber == 23)
+	if (trapNumber == 0x17)
 	{
 		// DebugLoadImageSymbols, type signature:
 		// PUBLIC VOID DebugLoadImageSymbols(IN PSTRING ModuleName == $r3,
@@ -770,45 +883,4 @@ void PPCInterpreter::ppcInterpreterTrap(PPU_STATE* hCore, u32 trapNumber)
 	}
 
 	ppcProgramException(hCore, TRAP_TYPE_SRR1_TRAP_TRAP);
-}
-
-void PPCInterpreter::ppcInstStorageException(PPU_STATE* hCore, u64 SRR1)
-{
-	hCore->ppuThread[hCore->currentThread].SPR.SRR0 = hCore->ppuThread[hCore->currentThread].CIA;
-	hCore->ppuThread[hCore->currentThread].SPR.SRR1 = hCore->ppuThread[hCore->currentThread].SPR.MSR.MSR_Hex & (QMASK(0, 32) | QMASK(37, 41) | QMASK(48, 63));
-	hCore->ppuThread[hCore->currentThread].SPR.SRR1 |= SRR1;
-	hCore->ppuThread[hCore->currentThread].SPR.MSR.MSR_Hex = hCore->ppuThread[hCore->currentThread].SPR.MSR.MSR_Hex & ~(QMASK(48, 50) | QMASK(52, 55) | QMASK(58, 59) | QMASK(61, 63));
-	hCore->ppuThread[hCore->currentThread].SPR.MSR.MSR_Hex = hCore->ppuThread[hCore->currentThread].SPR.MSR.MSR_Hex | (QMASK(0, 0) | QMASK(3, 3));
-	hCore->ppuThread[hCore->currentThread].NIA = hCore->SPR.HRMOR + 0x400;
-	hCore->ppuThread[hCore->currentThread].SPR.MSR.DR = 0;
-	hCore->ppuThread[hCore->currentThread].SPR.MSR.IR = 0;
-	hCore->ppuThread[hCore->currentThread].exceptionOcurred = true;
-}
-
-void PPCInterpreter::ppcDataStorageException(PPU_STATE* hCore, u64 EA, u64 ISR)
-{
-	hCore->ppuThread[hCore->currentThread].SPR.SRR0 = hCore->ppuThread[hCore->currentThread].CIA;
-	hCore->ppuThread[hCore->currentThread].SPR.SRR1 = hCore->ppuThread[hCore->currentThread].SPR.MSR.MSR_Hex & (QMASK(0, 32) | QMASK(37, 41) | QMASK(48, 63));
-	hCore->ppuThread[hCore->currentThread].SPR.DSISR = ISR;
-	hCore->ppuThread[hCore->currentThread].SPR.DAR = EA;
-	hCore->ppuThread[hCore->currentThread].SPR.MSR.MSR_Hex = hCore->ppuThread[hCore->currentThread].SPR.MSR.MSR_Hex & ~(QMASK(48, 50) | QMASK(52, 55) | QMASK(58, 59) | QMASK(61, 63));
-	hCore->ppuThread[hCore->currentThread].SPR.MSR.MSR_Hex = hCore->ppuThread[hCore->currentThread].SPR.MSR.MSR_Hex | (QMASK(0, 0) | QMASK(3, 3));
-	hCore->ppuThread[hCore->currentThread].NIA = hCore->SPR.HRMOR + 0x300;
-	hCore->ppuThread[hCore->currentThread].SPR.MSR.DR = 0;
-	hCore->ppuThread[hCore->currentThread].SPR.MSR.IR = 0;
-	hCore->ppuThread[hCore->currentThread].exceptionOcurred = true;
-}
-
-void PPCInterpreter::ppcDataSegmentException(PPU_STATE* hCore, u64 EA)
-{
-	hCore->ppuThread[hCore->currentThread].SPR.SRR0 = hCore->ppuThread[hCore->currentThread].CIA;
-	hCore->ppuThread[hCore->currentThread].SPR.SRR1 = hCore->ppuThread[hCore->currentThread].SPR.MSR.MSR_Hex & (QMASK(0, 32) | QMASK(37, 41) | QMASK(48, 63));
-	hCore->ppuThread[hCore->currentThread].SPR.DSISR = 0; 
-	hCore->ppuThread[hCore->currentThread].SPR.DAR = EA;
-	hCore->ppuThread[hCore->currentThread].SPR.MSR.MSR_Hex = hCore->ppuThread[hCore->currentThread].SPR.MSR.MSR_Hex & ~(QMASK(48, 50) | QMASK(52, 55) | QMASK(58, 59) | QMASK(61, 63));
-	hCore->ppuThread[hCore->currentThread].SPR.MSR.MSR_Hex = hCore->ppuThread[hCore->currentThread].SPR.MSR.MSR_Hex | (QMASK(0, 0) | QMASK(3, 3));
-	hCore->ppuThread[hCore->currentThread].NIA = hCore->SPR.HRMOR + 0x380;
-	hCore->ppuThread[hCore->currentThread].SPR.MSR.DR = 0;
-	hCore->ppuThread[hCore->currentThread].SPR.MSR.IR = 0;
-	hCore->ppuThread[hCore->currentThread].exceptionOcurred = true;
 }

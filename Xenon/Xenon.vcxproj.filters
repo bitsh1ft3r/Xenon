@@ -5,9 +5,6 @@
     <ClCompile Include="Core\NAND\NAND.cpp">
       <Filter>Core\NAND</Filter>
     </ClCompile>
-    <ClCompile Include="Core\Bus\Bus.cpp">
-      <Filter>Core\Bus</Filter>
-    </ClCompile>
     <ClCompile Include="Core\RAM\RAM.cpp">
       <Filter>Core\RAM</Filter>
     </ClCompile>
@@ -35,9 +32,6 @@
     <ClCompile Include="Core\XCPU\Interpreter\PPCInterpreter.cpp">
       <Filter>Core\XCPU\Interpreter</Filter>
     </ClCompile>
-    <ClCompile Include="Core\PostBus\PostBus.cpp">
-      <Filter>Core\Bus</Filter>
-    </ClCompile>
     <ClCompile Include="Core\XCPU\PPU\PPU.cpp">
       <Filter>Core\XCPU\PPU</Filter>
     </ClCompile>
@@ -47,23 +41,56 @@
     <ClCompile Include="Core\XCPU\XenonReservations.cpp">
       <Filter>Core\XCPU</Filter>
     </ClCompile>
-    <ClCompile Include="Core\PCIBridge\PCIBridge.cpp">
-      <Filter>Core\PCIBridge</Filter>
+    <ClCompile Include="Core\RootBus\RootBus.cpp">
+      <Filter>Core\RootBus</Filter>
     </ClCompile>
-    <ClCompile Include="Core\PCIBridge\SMC\SMC.cpp">
-      <Filter>Core\PCIBridge\SMC</Filter>
+    <ClCompile Include="Core\RootBus\HostBridge\PCIBridge\PCIBridge.cpp">
+      <Filter>Core\RootBus\HostBridge\PCIBridge</Filter>
     </ClCompile>
-    <ClCompile Include="Core\PCIBridge\CDROM\CDROM.cpp">
-      <Filter>Core\PCIBridge\CDROM</Filter>
+    <ClCompile Include="Core\RootBus\HostBridge\PCIBridge\CDROM\CDROM.cpp">
+      <Filter>Core\RootBus\HostBridge\PCIBridge\CDROM</Filter>
     </ClCompile>
-    <ClCompile Include="Core\PCIBridge\HDD\HDD.cpp">
-      <Filter>Core\PCIBridge\HDD</Filter>
+    <ClCompile Include="Core\RootBus\HostBridge\PCIBridge\HDD\HDD.cpp">
+      <Filter>Core\RootBus\HostBridge\PCIBridge\HDD</Filter>
     </ClCompile>
-    <ClCompile Include="Core\PCIBridge\XMA\XMA.cpp">
-      <Filter>Core\PCIBridge\XMA</Filter>
+    <ClCompile Include="Core\RootBus\HostBridge\PCIBridge\SFCX\SFCX.cpp">
+      <Filter>Core\RootBus\HostBridge\PCIBridge\SFCX</Filter>
     </ClCompile>
-    <ClCompile Include="Core\PCIBridge\SFCX\SFCX.cpp">
-      <Filter>Core\PCIBridge\SFCX</Filter>
+    <ClCompile Include="Core\RootBus\HostBridge\PCIBridge\XMA\XMA.cpp">
+      <Filter>Core\RootBus\HostBridge\PCIBridge\XMA</Filter>
+    </ClCompile>
+    <ClCompile Include="Core\RootBus\HostBridge\PCIBridge\SMC\SMC.cpp">
+      <Filter>Core\RootBus\HostBridge\PCIBridge\SMC</Filter>
+    </ClCompile>
+    <ClCompile Include="Core\RootBus\HostBridge\HostBridge.cpp">
+      <Filter>Core\RootBus\HostBridge</Filter>
+    </ClCompile>
+    <ClCompile Include="Core\RootBus\HostBridge\XGPU\XGPU.cpp">
+      <Filter>Core\RootBus\HostBridge\XGPU</Filter>
+    </ClCompile>
+    <ClCompile Include="Core\XCPU\PostBus\PostBus.cpp">
+      <Filter>Core\XCPU\PostBus</Filter>
+    </ClCompile>
+    <ClCompile Include="Core\XCPU\IIC\IIC.cpp">
+      <Filter>Core\XCPU\IIC</Filter>
+    </ClCompile>
+    <ClCompile Include="Core\RootBus\HostBridge\PCIBridge\ETHERNET\Ethernet.cpp">
+      <Filter>Core\RootBus\HostBridge\PCIBridge\ETHERNET</Filter>
+    </ClCompile>
+    <ClCompile Include="Core\RootBus\HostBridge\PCIBridge\EHCI0\EHCI0.cpp">
+      <Filter>Core\RootBus\HostBridge\PCIBridge\EHCI0</Filter>
+    </ClCompile>
+    <ClCompile Include="Core\RootBus\HostBridge\PCIBridge\AUDIOCTRLLR\AudioController.cpp">
+      <Filter>Core\RootBus\HostBridge\PCIBridge\AUDIOCTRLLR</Filter>
+    </ClCompile>
+    <ClCompile Include="Core\RootBus\HostBridge\PCIBridge\EHCI1\EHCI1.cpp">
+      <Filter>Core\RootBus\HostBridge\PCIBridge\EHCI1</Filter>
+    </ClCompile>
+    <ClCompile Include="Core\RootBus\HostBridge\PCIBridge\OHCI1\OHCI1.cpp">
+      <Filter>Core\RootBus\HostBridge\PCIBridge\OHCI1</Filter>
+    </ClCompile>
+    <ClCompile Include="Core\RootBus\HostBridge\PCIBridge\OHCI0\OHCI0.cpp">
+      <Filter>Core\RootBus\HostBridge\PCIBridge\OHCI0</Filter>
     </ClCompile>
   </ItemGroup>
   <ItemGroup>
@@ -79,9 +106,6 @@
     <Filter Include="Core\NAND">
       <UniqueIdentifier>{cc95a832-703f-44c9-8117-542dbc81ac25}</UniqueIdentifier>
     </Filter>
-    <Filter Include="Core\Bus">
-      <UniqueIdentifier>{ea488c4b-00ec-48f6-8e78-31d3c88c1747}</UniqueIdentifier>
-    </Filter>
     <Filter Include="Core\RAM">
       <UniqueIdentifier>{66bf2a3b-096c-445d-ae45-55fcf1b22f54}</UniqueIdentifier>
     </Filter>
@@ -91,23 +115,56 @@
     <Filter Include="Core\XCPU\PPU">
       <UniqueIdentifier>{748ba388-e417-4af6-819e-b9abf824ad47}</UniqueIdentifier>
     </Filter>
-    <Filter Include="Core\PCIBridge">
-      <UniqueIdentifier>{cf753bfa-8b44-4ea6-8930-727cde979eaa}</UniqueIdentifier>
+    <Filter Include="Core\RootBus">
+      <UniqueIdentifier>{e65b2d6f-6d63-49f5-917a-7b9105898614}</UniqueIdentifier>
     </Filter>
-    <Filter Include="Core\PCIBridge\SMC">
-      <UniqueIdentifier>{8d4dcfd7-8786-4c2f-8cba-b3da19a67a1b}</UniqueIdentifier>
+    <Filter Include="Core\RootBus\HostBridge">
+      <UniqueIdentifier>{6a7ac5fd-8a34-49d3-abe6-db73bf78bf1b}</UniqueIdentifier>
     </Filter>
-    <Filter Include="Core\PCIBridge\CDROM">
-      <UniqueIdentifier>{9e46d23a-86f3-46af-bfb0-2f2e4c2173c4}</UniqueIdentifier>
+    <Filter Include="Core\RootBus\HostBridge\PCIBridge">
+      <UniqueIdentifier>{90b9d984-aa96-412c-a585-2ce8f817e348}</UniqueIdentifier>
     </Filter>
-    <Filter Include="Core\PCIBridge\HDD">
-      <UniqueIdentifier>{b93fd63c-1600-41a1-96fa-ac1ad6561034}</UniqueIdentifier>
+    <Filter Include="Core\RootBus\HostBridge\PCIBridge\CDROM">
+      <UniqueIdentifier>{1db8a2a2-358a-4115-b178-0507d599715a}</UniqueIdentifier>
     </Filter>
-    <Filter Include="Core\PCIBridge\XMA">
-      <UniqueIdentifier>{a4246c72-6c92-491a-b155-608a99519da3}</UniqueIdentifier>
+    <Filter Include="Core\RootBus\HostBridge\PCIBridge\HDD">
+      <UniqueIdentifier>{90081b32-1ef4-4069-8d00-5f396933abf9}</UniqueIdentifier>
     </Filter>
-    <Filter Include="Core\PCIBridge\SFCX">
-      <UniqueIdentifier>{ec80e12a-ff8d-496d-bcb8-6da0e98995da}</UniqueIdentifier>
+    <Filter Include="Core\RootBus\HostBridge\PCIBridge\SFCX">
+      <UniqueIdentifier>{a9e967b7-bdef-49f0-8e0f-63bb6dadbbc9}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Core\RootBus\HostBridge\PCIBridge\SMC">
+      <UniqueIdentifier>{7b25e70f-c53b-4455-9003-d59ed2aa2db9}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Core\RootBus\HostBridge\PCIBridge\XMA">
+      <UniqueIdentifier>{88773577-e871-4edf-acc0-90e3bdb6a6cd}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Core\RootBus\HostBridge\XGPU">
+      <UniqueIdentifier>{a29c4aee-12cd-42ec-a697-b3d1d1b8390e}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Core\XCPU\PostBus">
+      <UniqueIdentifier>{b2a07eb8-fe4f-4664-a1aa-1f62ed9349b3}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Core\XCPU\IIC">
+      <UniqueIdentifier>{34211e63-eb6a-46a8-b757-aea1aee920a7}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Core\RootBus\HostBridge\PCIBridge\ETHERNET">
+      <UniqueIdentifier>{c87ccec5-6200-409c-87b8-f6495500c4b4}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Core\RootBus\HostBridge\PCIBridge\AUDIOCTRLLR">
+      <UniqueIdentifier>{bb96e463-3a5a-44a1-8d8d-b3167422dd24}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Core\RootBus\HostBridge\PCIBridge\OHCI0">
+      <UniqueIdentifier>{5187b2a0-b3c6-482a-8100-16a31d02c8ff}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Core\RootBus\HostBridge\PCIBridge\EHCI0">
+      <UniqueIdentifier>{a84aeb3a-c027-4ca8-a7af-1fd809505e50}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Core\RootBus\HostBridge\PCIBridge\EHCI1">
+      <UniqueIdentifier>{a991a132-01d9-4174-b0a9-c765beb6d67b}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Core\RootBus\HostBridge\PCIBridge\OHCI1">
+      <UniqueIdentifier>{ddde28b3-071d-44eb-a939-9bf9b6e5b25b}</UniqueIdentifier>
     </Filter>
   </ItemGroup>
   <ItemGroup>
@@ -116,9 +173,6 @@
     </ClInclude>
     <ClInclude Include="Core\NAND\NAND.h">
       <Filter>Core\NAND</Filter>
-    </ClInclude>
-    <ClInclude Include="Core\Bus\Bus.h">
-      <Filter>Core\Bus</Filter>
     </ClInclude>
     <ClInclude Include="Base\SystemDevice.h">
       <Filter>Base</Filter>
@@ -135,9 +189,6 @@
     <ClInclude Include="Core\XCPU\Interpreter\PPC_Instruction.h">
       <Filter>Core\XCPU\Interpreter</Filter>
     </ClInclude>
-    <ClInclude Include="Core\PostBus\PostBus.h">
-      <Filter>Core\Bus</Filter>
-    </ClInclude>
     <ClInclude Include="Core\XCPU\eFuse.h">
       <Filter>Core\XCPU</Filter>
     </ClInclude>
@@ -153,32 +204,74 @@
     <ClInclude Include="Core\XCPU\XenonReservations.h">
       <Filter>Core\XCPU</Filter>
     </ClInclude>
-    <ClInclude Include="Core\PCIBridge\PCIBridge.h">
-      <Filter>Core\PCIBridge</Filter>
+    <ClInclude Include="Core\RootBus\RootBus.h">
+      <Filter>Core\RootBus</Filter>
     </ClInclude>
-    <ClInclude Include="Core\PCIBridge\PCIBridgeConfig.h">
-      <Filter>Core\PCIBridge</Filter>
+    <ClInclude Include="Core\RootBus\HostBridge\PCIBridge\PCIBridge.h">
+      <Filter>Core\RootBus\HostBridge\PCIBridge</Filter>
     </ClInclude>
-    <ClInclude Include="Core\PCIBridge\PCIDevice.h">
-      <Filter>Core\PCIBridge</Filter>
+    <ClInclude Include="Core\RootBus\HostBridge\PCIBridge\PCIBridgeConfig.h">
+      <Filter>Core\RootBus\HostBridge\PCIBridge</Filter>
     </ClInclude>
-    <ClInclude Include="Core\PCIBridge\SMC\HANA_State.h">
-      <Filter>Core\PCIBridge\SMC</Filter>
+    <ClInclude Include="Core\RootBus\HostBridge\PCIBridge\PCIDevice.h">
+      <Filter>Core\RootBus\HostBridge\PCIBridge</Filter>
     </ClInclude>
-    <ClInclude Include="Core\PCIBridge\SMC\SMC.h">
-      <Filter>Core\PCIBridge\SMC</Filter>
+    <ClInclude Include="Core\RootBus\HostBridge\PCIBridge\CDROM\CDROM.h">
+      <Filter>Core\RootBus\HostBridge\PCIBridge\CDROM</Filter>
     </ClInclude>
-    <ClInclude Include="Core\PCIBridge\CDROM\CDROM.h">
-      <Filter>Core\PCIBridge\CDROM</Filter>
+    <ClInclude Include="Core\RootBus\HostBridge\PCIBridge\HDD\HDD.h">
+      <Filter>Core\RootBus\HostBridge\PCIBridge\HDD</Filter>
     </ClInclude>
-    <ClInclude Include="Core\PCIBridge\HDD\HDD.h">
-      <Filter>Core\PCIBridge\HDD</Filter>
+    <ClInclude Include="Core\RootBus\HostBridge\PCIBridge\SFCX\SFCX.h">
+      <Filter>Core\RootBus\HostBridge\PCIBridge\SFCX</Filter>
     </ClInclude>
-    <ClInclude Include="Core\PCIBridge\XMA\XMA.h">
-      <Filter>Core\PCIBridge\XMA</Filter>
+    <ClInclude Include="Core\RootBus\HostBridge\PCIBridge\XMA\XMA.h">
+      <Filter>Core\RootBus\HostBridge\PCIBridge\XMA</Filter>
     </ClInclude>
-    <ClInclude Include="Core\PCIBridge\SFCX\SFCX.h">
-      <Filter>Core\PCIBridge\SFCX</Filter>
+    <ClInclude Include="Core\RootBus\HostBridge\PCIBridge\SMC\HANA_State.h">
+      <Filter>Core\RootBus\HostBridge\PCIBridge\SMC</Filter>
+    </ClInclude>
+    <ClInclude Include="Core\RootBus\HostBridge\PCIBridge\SMC\SMC.h">
+      <Filter>Core\RootBus\HostBridge\PCIBridge\SMC</Filter>
+    </ClInclude>
+    <ClInclude Include="Core\RootBus\HostBridge\HostBridge.h">
+      <Filter>Core\RootBus\HostBridge</Filter>
+    </ClInclude>
+    <ClInclude Include="Core\RootBus\HostBridge\XGPU\XGPU.h">
+      <Filter>Core\RootBus\HostBridge\XGPU</Filter>
+    </ClInclude>
+    <ClInclude Include="Core\RootBus\HostBridge\XGPU\XGPUConfig.h">
+      <Filter>Core\RootBus\HostBridge\XGPU</Filter>
+    </ClInclude>
+    <ClInclude Include="Core\XCPU\PostBus\PostBus.h">
+      <Filter>Core\XCPU\PostBus</Filter>
+    </ClInclude>
+    <ClInclude Include="Core\XCPU\IIC\IIC.h">
+      <Filter>Core\XCPU\IIC</Filter>
+    </ClInclude>
+    <ClInclude Include="Core\RootBus\HostBridge\PCIBridge\SMC\SMC_Config.h">
+      <Filter>Core\RootBus\HostBridge\PCIBridge\SMC</Filter>
+    </ClInclude>
+    <ClInclude Include="Core\RootBus\HostBridge\PCIe.h">
+      <Filter>Core\RootBus\HostBridge</Filter>
+    </ClInclude>
+    <ClInclude Include="Core\RootBus\HostBridge\PCIBridge\ETHERNET\Ethernet.h">
+      <Filter>Core\RootBus\HostBridge\PCIBridge\ETHERNET</Filter>
+    </ClInclude>
+    <ClInclude Include="Core\RootBus\HostBridge\PCIBridge\AUDIOCTRLLR\AudioController.h">
+      <Filter>Core\RootBus\HostBridge\PCIBridge\AUDIOCTRLLR</Filter>
+    </ClInclude>
+    <ClInclude Include="Core\RootBus\HostBridge\PCIBridge\OHCI0\OHCI0.h">
+      <Filter>Core\RootBus\HostBridge\PCIBridge\OHCI0</Filter>
+    </ClInclude>
+    <ClInclude Include="Core\RootBus\HostBridge\PCIBridge\OHCI1\OHCI1.h">
+      <Filter>Core\RootBus\HostBridge\PCIBridge\OHCI1</Filter>
+    </ClInclude>
+    <ClInclude Include="Core\RootBus\HostBridge\PCIBridge\EHCI1\EHCI1.h">
+      <Filter>Core\RootBus\HostBridge\PCIBridge\EHCI1</Filter>
+    </ClInclude>
+    <ClInclude Include="Core\RootBus\HostBridge\PCIBridge\EHCI0\EHCI0.h">
+      <Filter>Core\RootBus\HostBridge\PCIBridge\EHCI0</Filter>
     </ClInclude>
   </ItemGroup>
 </Project>

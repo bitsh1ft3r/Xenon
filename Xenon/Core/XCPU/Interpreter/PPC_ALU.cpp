@@ -482,6 +482,11 @@ void PPCInterpreter::PPCInterpreter_mulldx(PPU_STATE* hCore)
 
 	u64 qwH, qwL;
 
+	if (OE)
+	{
+		std::cout << "PPC Interpreter: mulldx -> Fatal error, OE not implemented!" << std::endl;
+	}
+
 	ppcMul64Signed(GPR(rA), GPR(rB), &qwH, &qwL);
 
 	GPR(rD) = qwL;

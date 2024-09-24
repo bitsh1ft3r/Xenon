@@ -105,7 +105,7 @@ void PPCInterpreter::ppcDebugLoadImageSymbols(PPU_STATE* hCore, u64 moduleNameAd
     Kdinfo.SizeOfImage = MMURead32(hCore, moduleInfoAddress + 12);
 
     std::cout << "XCPU[" << hCore->ppuName << "]: *** DebugLoadImageSymbols ***\n\t > Loaded: "
-        << moduleName << " at address 0x" << Kdinfo.BaseOfDll << std::endl;
+        << moduleName << " at address 0x" << Kdinfo.BaseOfDll << " - 0x" << Kdinfo.BaseOfDll + Kdinfo.SizeOfImage << std::endl;
 }
 
 void PPCInterpreter::ppcDebugUnloadImageSymbols(PPU_STATE* hCore, u64 moduleNameAddress, u64 moduleInfoAddress)
@@ -114,9 +114,9 @@ void PPCInterpreter::ppcDebugUnloadImageSymbols(PPU_STATE* hCore, u64 moduleName
 
 u64 PPCInterpreter::ppcAddCarrying(PPU_STATE* hCore, u64 op1, u64 op2, u64 carryBit)
 {
-    u32 operand1 = (u32)op1;
-    u32 operand2 = (u32)op2;
-    u32 carry = (u32)carryBit;
+    u64 operand1 = (u64)op1;
+    u64 operand2 = (u64)op2;
+    u64 carry = (u64)carryBit;
 
     // TODO: Carry out of bit 32 only, needs 64 bit support.
 
@@ -228,4 +228,18 @@ void PPCInterpreter::ppcMul64Signed(u64 operand0, u64 operand1, u64* u64High, u6
 
     *u64High = high;
     *u64Low = low;
+}
+
+bool PPCInterpreter::ppcDidCarry(u64 input1, u64 input2, u64 input3)
+{
+    if ((input1 + input2) < input1)
+    {
+        return true;
+
+    }
+    if ((input1 +input2 + input3) < input3)
+    {
+        return true;
+    }
+    return false;
 }

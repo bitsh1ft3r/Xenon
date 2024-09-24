@@ -2,7 +2,7 @@
 
 #include "Xenon.h"
 
-Xenon::Xenon(Bus* inBus, std::string blPath, eFuses inFuseSet)
+Xenon::Xenon(RootBus* inBus, std::string blPath, eFuses inFuseSet)
 {
 	// First, Initialize system bus.
 	mainBus = inBus;
@@ -13,13 +13,14 @@ Xenon::Xenon(Bus* inBus, std::string blPath, eFuses inFuseSet)
 	// Set SRAM to 0.
 	memset(xenonContext.SRAM, 0, XE_SRAM_SIZE);
 
-	// Set Security Engine context to 0;
+	// Set Security Engine context to 0.
 	memset(&xenonContext.secEngBlock, 0, sizeof(SOCSECENG_BLOCK));
 	memset(xenonContext.secEngData, 0, XE_SECENG_SIZE);
+
 	// Populate FuseSet.
 	xenonContext.fuseSet = inFuseSet;
 
-	// Initilize PPU's
+	// Initilize PPU's.
 	ppu0.Initialize(&xenonContext, mainBus, XE_PVR, 0, "PPU0"); // Threads 0-1
 	ppu1.Initialize(&xenonContext, mainBus, XE_PVR, 2, "PPU1"); // Threads 2-3
 	ppu2.Initialize(&xenonContext, mainBus, XE_PVR, 4, "PPU2"); // Threads 4-5

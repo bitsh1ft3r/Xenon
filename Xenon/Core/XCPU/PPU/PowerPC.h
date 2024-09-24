@@ -1,6 +1,7 @@
 #pragma once
 
 #include "Xenon/Core/XCPU/eFuse.h"
+#include "Xenon/Core/XCPU/IIC/IIC.h"
 #include "Xenon/Core/XCPU/XenonReservations.h"
 
 //
@@ -80,15 +81,14 @@ union FPSCR
 */
 union XER
 {
-	u64 XER_Hex;
+	u32 XER_Hex;
 	struct
 	{
-		u64 ByteCount : 7;
-		u64 R0 : 21;
-		u64 CA : 1;
-		u64 OV : 1;
-		u64 SO : 1;
-		u64 R1 : 32;
+		u32 ByteCount : 7;
+		u32 R0 : 22;
+		u32 CA : 1;
+		u32 OV : 1;
+		u32 SO : 1;
 	};
 };
 
@@ -282,7 +282,7 @@ enum PPU_THREAD
 	PPU_THREAD_0,
 	PPU_THREAD_1,
 	PPU_THREAD_BOTH,
-	PPU_THRAD_NONE
+	PPU_THREAD_NONE
 };
 
 //
@@ -363,7 +363,7 @@ typedef struct SOCSECENG_BLOCK { //Addr = 80000200_00024000
 #define XE_FUSESET_LOC		0x20000
 #define XE_FUSESET_SIZE		0x17FF
 #define XE_L2_CACHE_SIZE	0x100000
-#define XE_PVR				0x00710800
+#define XE_PVR				0x00710500
 
 // Floating Point Register
 
@@ -439,6 +439,9 @@ struct XENON_CONTEXT
 	u8* SRAM = new u8[XE_SRAM_SIZE];
 	// 768 bits eFuse
 	eFuses fuseSet = { 0 };
+
+	// Xenon IIC.
+	Xe::XCPU::IIC::XenonIIC xenonIIC;
 
 	XenonReservations xenonRes;
 

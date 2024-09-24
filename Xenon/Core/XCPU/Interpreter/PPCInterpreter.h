@@ -1,17 +1,17 @@
 #pragma once
 
-#include "Xenon/Core/Bus/Bus.h"
+#include "Xenon/Core/RootBus/RootBus.h"
 #include "Xenon/Core/XCPU/PPU/PowerPC.h"
 #include "Xenon/Core/XCPU/Interpreter/PPCInternal.h"
 #include "Xenon/Core/XCPU/Interpreter/PPC_Instruction.h"
 
 namespace PPCInterpreter
 {
-	extern Bus* sysBus;
+	extern RootBus* sysBus;
 	extern XENON_CONTEXT* intXCPUContext;
 
 	//
-	//	Basic Block Loading, sebug symbols and stuff.
+	//	Basic Block Loading, debug symbols and stuff.
 	//
 	struct KD_SYMBOLS_INFO {
 		u32 BaseOfDll;
@@ -27,7 +27,7 @@ namespace PPCInterpreter
 	u64 ppcAddCarrying(PPU_STATE* hCore, u64 op1, u64 op2, u64 carryBit);
 	void ppcMul64(u64 operand0, u64 operand1, u64* u64High, u64* u64Low);
 	void ppcMul64Signed(u64 operand0, u64 operand1, u64* u64High, u64* u64Low);
-	
+	bool ppcDidCarry(u64 input1, u64 input2, u64 input3);
 	//
 	// Condition Register
 	//
@@ -55,6 +55,7 @@ namespace PPCInterpreter
 #define TRAP_TYPE_SRR1_TRAP_PRIV 45
 #define TRAP_TYPE_SRR1_TRAP_TRAP 46
 
+	void ppcResetException(PPU_STATE* hCore);
 	void ppcInterpreterTrap(PPU_STATE* hCore, u32 trapNumber);
 	void ppcInstStorageException(PPU_STATE* hCore, u64 SRR1);
 	void ppcDataStorageException(PPU_STATE* hCore, u64 EA, u64 ISR);
@@ -62,6 +63,7 @@ namespace PPCInterpreter
 	void ppcInstSegmentException(PPU_STATE* hCore);
 	void ppcSystemCallException(PPU_STATE* hCore, bool isHypervisorCall);
 	void ppcProgramException(PPU_STATE* hCore, u32 trapType);
+	void ppcExternalException(PPU_STATE* hCore);
 
 	//
 	// MMU
@@ -72,36 +74,36 @@ namespace PPCInterpreter
 	void mmuAddTlbEntry(PPU_STATE* hCore);
 	bool mmuSearchTlbEntry(PPU_STATE* hCore, u64* RPN, u64 VA, u64 VPN, u8 p, bool LP);
 	void mmuReadString(PPU_STATE* hCore, u64 stringAddress, char* string, u32 maxLenght);
+
 	// Security Engine Related
 	SECENG_ADDRESS_INFO mmuGetSecEngInfoFromAddress(u64 inputAddress);
-	u64 mmuContructEndAddressFromSecEngAddr(u64 inputAddress, bool* soc);
+	u64 mmuContructEndAddressFromSecEngAddr(u64 inputAddress, bool* socAccess);
 
+	// Main R/W Routines.
 	u64 MMURead(XENON_CONTEXT* cpuContext, PPU_STATE* ppuState, u64 EA, s8 byteCount);
 	void MMUWrite(XENON_CONTEXT* cpuContext, PPU_STATE* ppuState, u64 data, u64 EA, s8 byteCount, bool cacheStore = false);
 
+	// Helper Read Routines.
 	u8	MMURead8(PPU_STATE* ppuState, u64 EA);
 	u16 MMURead16(PPU_STATE* ppuState, u64 EA);
 	u32 MMURead32(PPU_STATE* ppuState, u64 EA);
 	u64 MMURead64(PPU_STATE* ppuState, u64 EA);
-
+	// Helper Write Routines.
 	void MMUWrite8(PPU_STATE* ppuState, u64 EA, u8 data);
 	void MMUWrite16(PPU_STATE* ppuState, u64 EA, u16 data);
 	void MMUWrite32(PPU_STATE* ppuState, u64 EA, u32 data);
 	void MMUWrite64(PPU_STATE* ppuState, u64 EA, u64 data);
 
 	//
-	// Instruction definitions
+	// Instruction definitions, only implemented instructions as of now.
 	//
 
 	// ALU
 	void PPCInterpreter_addx(PPU_STATE* hCore);
-	void PPCInterpreter_addc(PPU_STATE* hCore);
-	void PPCInterpreter_adde(PPU_STATE* hCore);
 	void PPCInterpreter_addi(PPU_STATE* hCore);
 	void PPCInterpreter_addic(PPU_STATE* hCore);
 	void PPCInterpreter_addic_rc(PPU_STATE* hCore);
 	void PPCInterpreter_addis(PPU_STATE* hCore);
-	void PPCInterpreter_addme(PPU_STATE* hCore, u32 instrData);
 	void PPCInterpreter_addzex(PPU_STATE* hCore);
 	void PPCInterpreter_and(PPU_STATE* hCore);
 	void PPCInterpreter_andc(PPU_STATE* hCore);
@@ -123,7 +125,6 @@ namespace PPCInterpreter
 	void PPCInterpreter_crxor(PPU_STATE* hCore);
 	void PPCInterpreter_divd(PPU_STATE* hCore);
 	void PPCInterpreter_divdu(PPU_STATE* hCore);
-	void PPCInterpreter_divw(PPU_STATE* hCore, u32 instrData);
 	void PPCInterpreter_divwux(PPU_STATE* hCore);
 	void PPCInterpreter_isync(PPU_STATE* hCore);
 	void PPCInterpreter_extsbx(PPU_STATE* hCore);
@@ -187,11 +188,7 @@ namespace PPCInterpreter
 	void PPCInterpreter_mtmsrd(PPU_STATE* hCore);
 
 	// Cache Management
-	void PPCInterpreter_dcbf(PPU_STATE* hCore, u32 instrData);
-	void PPCInterpreter_dcbi(PPU_STATE* hCore, u32 instrData);
 	void PPCInterpreter_dcbst(PPU_STATE* hCore);
-	void PPCInterpreter_dcbt(PPU_STATE* hCore, u32 instrData);
-	void PPCInterpreter_dcbtst(PPU_STATE* hCore, u32 instrData);
 	void PPCInterpreter_dcbz(PPU_STATE* hCore);
 
 	//
@@ -212,9 +209,6 @@ namespace PPCInterpreter
 	void PPCInterpreter_sthx(PPU_STATE* hCore);
 
 	// Store Word
-	void PPCInterpreter_stmw(PPU_STATE* hCore);
-	void PPCInterpreter_stswi(PPU_STATE* hCore);
-	void PPCInterpreter_stswx(PPU_STATE* hCore);
 	void PPCInterpreter_stw(PPU_STATE* hCore);
 	void PPCInterpreter_stwbrx(PPU_STATE* hCore);
 	void PPCInterpreter_stwcx(PPU_STATE* hCore);

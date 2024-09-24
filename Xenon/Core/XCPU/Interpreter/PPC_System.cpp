@@ -33,6 +33,9 @@ void PPCInterpreter::PPCInterpreter_sc(PPU_STATE* hCore)
 	case 0x4:
 		syscallName = "HvxFlushSingleTb";
 		break;
+	case 0x5:
+		syscallName = "KeInsertCurrentSingleTb";
+		break;
 	case 0x6:
 		syscallName = "HvxGetSpecialPurposeRegister";
 		break;
@@ -40,16 +43,16 @@ void PPCInterpreter::PPCInterpreter_sc(PPU_STATE* hCore)
 		syscallName = "HvxSetSpecialPurposeRegister";
 		break;
 	case 0x8:
-		syscallName = "HvxGetSocRegister";
+		syscallName = "KiCalibrateTargetPerformanceCounter";
 		break;
 	case 0x9:
-		syscallName = "HvxSetSocRegister";
+		syscallName = "KeZeroPage";
 		break;
 	case 0xA:
 		syscallName = "HvxSetTimeBaseToZero";
 		break;
 	case 0xB:
-		syscallName = "KeZeroPage";
+		syscallName = "KiWritePostOutputRegister";
 		break;
 	case 0xC:
 		syscallName = "HvxFlushDcacheRange";
@@ -364,8 +367,8 @@ void PPCInterpreter::PPCInterpreter_sc(PPU_STATE* hCore)
 		syscallName = " *** Unknown System Call! ***";
 		break;
 	}
-	std::cout << "XCPU(" << hCore->ppuName << ") SystemCall: " 
-		<< syscallName.c_str() << " ID: 0x" << syscallNum << std::endl;
+	//std::cout << "XCPU(" << hCore->ppuName << ") SystemCall: " 
+	//	<< syscallName.c_str() << " ID: 0x" << syscallNum << std::endl;
 }
 
 void PPCInterpreter::PPCInterpreter_slbmte(PPU_STATE* hCore)
@@ -736,7 +739,7 @@ void PPCInterpreter::PPCInterpreter_mtspr(PPU_STATE* hCore)
 		hCore->ppuThread[hCore->currentThread].SPR.DABRX = hCore->ppuThread[hCore->currentThread].GPR[rD];
 		break;
 	case SPR_XER:
-		hCore->ppuThread[hCore->currentThread].SPR.XER.XER_Hex = hCore->ppuThread[hCore->currentThread].GPR[rD];
+		hCore->ppuThread[hCore->currentThread].SPR.XER.XER_Hex = static_cast<u32>(hCore->ppuThread[hCore->currentThread].GPR[rD]);
 		break;
 	case SPR_TBL_WO:
 		hCore->SPR.TB = hCore->ppuThread[hCore->currentThread].GPR[rD];

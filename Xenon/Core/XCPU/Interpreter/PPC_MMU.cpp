@@ -1,5 +1,6 @@
 #include <iostream>
 
+#include "Xenon/Core/XCPU/PostBus/PostBus.h"
 #include "Xenon/Core/XCPU/Interpreter/PPCInterpreter.h"
 
 //
@@ -35,7 +36,6 @@
 
 // 0x8000020000060000 Seems to be the random number generator. Implement this?
 
-
 void PPCInterpreter::PPCInterpreter_slbia(PPU_STATE* hCore)
 {
     for (auto slbEntry : hCore->ppuThread[hCore->currentThread].SLB) {
@@ -52,14 +52,30 @@ void PPCInterpreter::PPCInterpreter_tlbiel(PPU_STATE* hCore)
     bool LP = (hCore->ppuThread[hCore->currentThread].GPR[rB] & 0x1000) >> 12;
     bool invalSelector = (hCore->ppuThread[hCore->currentThread].GPR[rB] & 0x800) >> 11;
     u8 p = mmuGetPageSize(hCore, L, LP);
-    u64 VPN = 0;
+    u64 VA, VPN = 0;
 
     if (invalSelector == 0)
     {
         // The TLB is as selective as possible when invalidating TLB entries.The
         // invalidation match criteria is VPN[38:79 - p], L, LP, and LPID.
 
-        VPN = QGET(hCore->ppuThread[hCore->currentThread].GPR[rB], 22, 63 - p);
+        VA = hCore->ppuThread[hCore->currentThread].GPR[rB];
+        
+        if (VA > 0x7FFFFFFF)
+        {
+            VPN = (VA >> 16) & ~0x7F;
+        }
+        else if (VA > 0x20000000)
+        {
+            if (p == 0x18)
+                VPN = (VA >> 16) & ~0xFF;
+            else
+                VPN = (VA >> 16) & ~0x7F;
+        }
+        else
+        {
+            VPN = (VA >> 16) & ~0xF;
+        }
 
         for (auto& tlbEntry : hCore->TLB.tlbSet0) {
             if (tlbEntry.V && tlbEntry.VPN == VPN && tlbEntry.p == p)
@@ -482,7 +498,7 @@ bool PPCInterpreter::mmuSearchTlbEntry(PPU_STATE* hCore, u64* RPN, u64 VA,
         // Entry was invalid, make this set the a candidate for refill.
         tlbSet = 0b0001;
     }
-   
+
     // If the PPE is running on TLB Software managed mode, then this SPR
     // is updated every time a Data or Instr Storage Exception occurs. This
     // ensures that the next time that the tlb software updates via an 
@@ -581,7 +597,7 @@ SECENG_ADDRESS_INFO PPCInterpreter::mmuGetSecEngInfoFromAddress(u64 inputAddress
     return addressInfo;
 }
 
-u64 PPCInterpreter::mmuContructEndAddressFromSecEngAddr(u64 inputAddress, bool* soc)
+u64 PPCInterpreter::mmuContructEndAddressFromSecEngAddr(u64 inputAddress, bool* socAccess)
 {
     SECENG_ADDRESS_INFO inputAddressInfo = mmuGetSecEngInfoFromAddress(inputAddress);
 
@@ -590,6 +606,7 @@ u64 PPCInterpreter::mmuContructEndAddressFromSecEngAddr(u64 inputAddress, bool* 
     switch (inputAddressInfo.regionType)
     {
     case SECENG_REGION_PHYS:
+        // Going to RAM directly.
         outputAddress = inputAddressInfo.accesedAddr;
         break;
     case SECENG_REGION_HASHED:
@@ -597,8 +614,8 @@ u64 PPCInterpreter::mmuContructEndAddressFromSecEngAddr(u64 inputAddress, bool* 
         outputAddress = inputAddressInfo.accesedAddr;
         break;
     case SECENG_REGION_SOC:
+        *socAccess = true;
         outputAddress = inputAddressInfo.accesedAddr;
-        *soc = true;
         break;
     case SECENG_REGION_ENCRYPTED:
         // Going to RAM directly without encryption!
@@ -737,7 +754,7 @@ bool PPCInterpreter::MMUTranslateAddress(u64* EA, PPU_STATE *hCoreState)
                 L = slbEntry.L;
                 LP = slbEntry.LP;
                 slbHit = true;
-                continue;
+                break;
             }
         }
 
@@ -770,7 +787,7 @@ bool PPCInterpreter::MMUTranslateAddress(u64* EA, PPU_STATE *hCoreState)
             u32 OFFSET = QGET(*EA, 64 - p, 63);
             u64 VA = VSID | PAGE | OFFSET;
 
-            VA |= upperEA;
+            VA;// |= upperEA;
 
             if (VA > 0x7FFFFFFF)
             {
@@ -778,7 +795,7 @@ bool PPCInterpreter::MMUTranslateAddress(u64* EA, PPU_STATE *hCoreState)
             }
             else if(VA > 0x20000000)
             {
-                if(p == 0x18)
+                if (p == 0x18)
                     VPN = (VA >> 16) & ~0xFF;
                 else
                     VPN = (VA >> 16) & ~0x7F;
@@ -803,10 +820,21 @@ bool PPCInterpreter::MMUTranslateAddress(u64* EA, PPU_STATE *hCoreState)
                     //   (hCoreState->ppuThread[hCoreState->currentThread].iFetch ? " I" : " D") 
                     //    << "TLB Miss in Software Managed "
                     //    << "Mode. Generating Interrupt. Address = 0x" << *EA << std::endl;
+
+                    bool hv = hCoreState->ppuThread[hCoreState->currentThread].SPR.MSR.HV;
+                    bool sfMode = hCoreState->ppuThread[hCoreState->currentThread].SPR.MSR.SF;
+                    u64 CIA = hCoreState->ppuThread[hCoreState->currentThread].CIA;
+
+                    //std::cout << "XCPU[" << hCoreState->ppuName << "(Thrd" << hCoreState->currentThread
+                    //    << ")](MMU) : TLB Search Failed!" << std::endl;
+                    //std::cout << " * EA = 0x" << (*EA | upperEA) << std::endl;
+                    //std::cout << " * VPN = 0x" << VPN << std::endl;
+                    //std::cout << " * CIA = 0x" << CIA << std::endl;
+                    //std::cout << " * MSR(HV) = " << hv << " MSR(SF) = " << sfMode << std::endl;
                     if (hCoreState->ppuThread[hCoreState->currentThread].iFetch)
                         ppcInstStorageException(hCoreState, QMASK(33, 33));
                     else
-                        ppcDataStorageException(hCoreState, (*EA | upperEA), DMASK(1, 1));
+                        ppcDataStorageException(hCoreState, (*EA), DMASK(1, 1));
                     return false;
                 }
                 else
@@ -845,12 +873,27 @@ bool PPCInterpreter::MMUTranslateAddress(u64* EA, PPU_STATE *hCoreState)
 u64 PPCInterpreter::MMURead(XENON_CONTEXT* cpuContext, PPU_STATE* ppuState, u64 EA, s8 byteCount)
 {
     u64 data = 0;
-    bool socRead = false;
+    u64 oldEA = EA;
+
+    if (EA == 0x3a07aac4)
+    {
+        u8 a = 0;
+    }
+
     // Exception ocurred?
     if (MMUTranslateAddress(&EA, ppuState) == false)
         return 0;
 
+    bool socRead = false;
+
     EA = mmuContructEndAddressFromSecEngAddr(EA, &socRead);
+
+    // When the xboxkrnl writes to address 0x7fffxxxx is writing to the IIC
+    // so we use that address here to validate its an soc write.
+    if (((oldEA & 0x000000007fff0000) >> 16) == 0x7FFF)
+    {
+        socRead = true;
+    }
 
     // TODO: Investigate this values FSB_CONFIG_RX_STATE - Needed to Work!
     if (ppuState->ppuThread[ppuState->currentThread].CIA == 0x1003598)
@@ -968,44 +1011,249 @@ u64 PPCInterpreter::MMURead(XENON_CONTEXT* cpuContext, PPU_STATE* ppuState, u64 
             data = cpuContext->fuseSet.fuseLine11;
             break;
         default:
-            std::cout << "XCPU SECOTP(eFuse): Reading to FUSE at address 0x" 
+            std::cout << "XCPU SECOTP(eFuse): Reading to FUSE at address 0x"
                 << EA << std::endl;
             break;
 
         }
 
         return _byteswap_uint64(data);
-    }   
-
-    else
-    {
-        // External Read      
-        sysBus->Read(EA, &data, byteCount, socRead);
     }
 
+    // Integrated Interrupt Controller in real mode, used when the HV wants to start a 
+    // CPUs IC.
+    if (socRead && (EA & ~0xF000) >= XE_IIC_BASE && (EA & ~0xF000) < XE_IIC_BASE + XE_IIC_SIZE
+        && (EA & 0xFFFFF) < 0x56000)
+    {
+        intXCPUContext->xenonIIC.readInterrupt(EA, &data);
+        return data;
+    }
+
+    // Time Base register. Writing here starts or stops the RTC apparently.
+    if (socRead && EA == 0x611a0)
+    {
+        if (!intXCPUContext->timeBaseActive)
+        {
+            data = 0;
+            return data;
+        }
+        else
+        {
+            data = 0x0001000000000000;
+            return data;
+        }
+    }
+
+    bool nand = false;
+    bool smc = false;
+    bool pciConfigSpace = false;
+
+    if (EA >= 0xC8000000 && EA <= 0xCC000000)
+    {
+        nand = true;
+    }
+
+    if (EA >= 0xEA001000 && EA <= 0xEA0010FF)
+    {
+        smc = true;
+    }
+
+    if (EA >= 0xD0000000 && EA <= 0xD1000000)
+    {
+        pciConfigSpace = true;
+    }
+
+    if (socRead && nand != true && smc != true && pciConfigSpace != true)
+    {
+        std::cout << "MMU: SoC Read from 0x" << EA << ", returning 0." << std::endl;
+        data = 0;
+        return data;
+    }
+
+    // External Read      
+    sysBus->Read(EA, &data, byteCount, socRead);
     return data;
+
+    /*
+    // If we're in HV mode, then addreses are 64 bit wide, that means that MMU address flags
+    // have an effect on adressing.
+    if (socAccess)
+    {
+        // SROM
+        if (EA >= XE_SROM_ADDR && EA < XE_SROM_ADDR + XE_SROM_SIZE)
+        {
+            u32 sromAddr = static_cast<u32>(EA) - static_cast<u32>(XE_SROM_ADDR);
+            memcpy(&data, &cpuContext->SROM[sromAddr], byteCount);
+            return data;
+        }
+        // SRAM
+        if (EA >= XE_SRAM_ADDR && EA < XE_SRAM_ADDR + XE_SRAM_SIZE)
+        {
+            u32 sramAddr = static_cast<u32>(EA) - static_cast<u32>(XE_SRAM_ADDR);
+            memcpy(&data, &cpuContext->SRAM[sramAddr], byteCount);
+            return data;
+        }
+
+        // SECENG address, CB compares this to 0.
+        // Further research required!
+        if (EA == 0x26000 || EA == 0x26008)
+        {
+            data = 0;
+            return data;
+        }
+
+        // Check if reading from Security Engine config block
+        if (EA >= XE_SECENG_ADDR && EA < XE_SECENG_ADDR + XE_SECENG_SIZE)
+        {
+            u32 secAddr = (u32)(EA - XE_SECENG_ADDR);
+            memcpy(&data, &intXCPUContext->secEngData[secAddr], byteCount);
+            return data;
+        }
+
+        // Random Number Generator
+        if (EA == 0x00060000)
+        {
+            u64 generatedRandomNumber = rand();
+            memcpy(&data, &generatedRandomNumber, byteCount);
+            return data;
+        }
+
+        // Check if reading from eFuses section
+        if (EA >= XE_FUSESET_LOC && EA <= (XE_FUSESET_LOC + XE_FUSESET_SIZE))
+        {
+            switch ((u32)EA)
+            {
+            case 0x20000:
+                data = cpuContext->fuseSet.fuseLine00;
+                break;
+            case 0x20200:
+                data = cpuContext->fuseSet.fuseLine01;
+                break;
+            case 0x20400:
+                data = cpuContext->fuseSet.fuseLine02;
+                break;
+            case 0x20600:
+                data = cpuContext->fuseSet.fuseLine03;
+                break;
+            case 0x20800:
+                data = cpuContext->fuseSet.fuseLine04;
+                break;
+            case 0x20a00:
+                data = cpuContext->fuseSet.fuseLine05;
+                break;
+            case 0x20c00:
+                data = cpuContext->fuseSet.fuseLine06;
+                break;
+            case 0x20e00:
+                data = cpuContext->fuseSet.fuseLine07;
+                break;
+            case 0x21000:
+                data = cpuContext->fuseSet.fuseLine08;
+                break;
+            case 0x21200:
+                data = cpuContext->fuseSet.fuseLine09;
+                break;
+            case 0x21400:
+                data = cpuContext->fuseSet.fuseLine10;
+                break;
+            case 0x21600:
+                data = cpuContext->fuseSet.fuseLine11;
+                break;
+            default:
+                std::cout << "XCPU SECOTP(eFuse): Reading to FUSE at address 0x"
+                    << EA << std::endl;
+                break;
+
+            }
+
+            return _byteswap_uint64(data);
+        }
+
+        // Hack Needed for CB to work, seems like it reads from some SoC this value
+        // and checks againts the fuses.
+        if (EA == 0x00061000)
+        {
+            data = 0x0000000000000020;
+            return data;
+        }
+
+        // Special Case: NAND is mapped at 0x200 C800 0000 before the SFCX is configured. This
+        // means software/bootloaders need to access it through that address in 64 bit mode and
+        // with the SOC flag set.
+        if (EA >= 0xC8000000 && EA <= 0xCC000000)
+        {
+            sysBus->Read(EA, &data, byteCount, socAccess);
+            return data;
+        }
+
+        // Another case! SMC In real mode is at 0x200 00EA 1000.
+        if (EA >= 0xEA001000 && EA <= 0xEA0010FF)
+        {
+            sysBus->Read(EA, &data, byteCount, socAccess);
+            return data;
+        }
+    }
+    else // We're in 32 bit addressing mode.
+    {
+        // Hack Needed for CB to work, reading ram size to this address, further
+        // research required. Free60.org shows this belongs to BIU address range.
+        if (EA == 0xe1040000)
+        {
+            data = 0x0000000020000000;
+            return data;
+        }
+
+        if (EA >= 0x50000 && EA <= 0x56000)
+        {
+            u8 a = 0;
+        }
+
+        // External Read, send it through the bus.      
+        sysBus->Read(EA, &data, byteCount, socAccess);
+        return data;
+    }
+    */
 }
 
 // MMU Write Routine, used by the CPU
 void PPCInterpreter::MMUWrite(XENON_CONTEXT* cpuContext, PPU_STATE* ppuState, u64 data, u64 EA,
     s8 byteCount, bool cacheStore)
 {
-    bool socWrite = false;
-
+    if (EA == 0x3a07aac4)
+    {
+        u8 a = 0;
+    }
+    u64 oldEA = EA;
     if (MMUTranslateAddress(&EA, ppuState) == false)
         return;
 
+    bool socWrite = false;
+
     EA = mmuContructEndAddressFromSecEngAddr(EA, &socWrite);
 
+    // When the xboxkrnl writes to address 0x7fffxxxx is writing to the IIC
+    // so we use that address here to validate its an soc write.
+    if (((oldEA & 0x000000007fff0000) >> 16) == 0x7FFF)
+    {
+        socWrite = true;
+    }
+
+    // CPU POST Bus
+    if (socWrite && EA == POST_BUS_ADDR)
+    {
+        Xe::XCPU::POSTBUS::POST(data);
+        return;
+    }
+
     // Time Base register. Writing here starts or stops the RTC apparently.
-    if (socWrite && EA == 0x000611a0)
+    if (socWrite && EA == 0x611a0)
     {
         if (data == 0)
         {
             intXCPUContext->timeBaseActive = false;
             return;
         }
-        else if (data == 0xff01000000000000) // 0x1FF byte reversed!
+        else if (data == 0xff01000000000000 || data == 0x0001000000000000) // 0x1FF byte reversed!
         {
             intXCPUContext->timeBaseActive = true;
             return;
@@ -1015,7 +1263,7 @@ void PPCInterpreter::MMUWrite(XENON_CONTEXT* cpuContext, PPU_STATE* ppuState, u6
     // Check if writing to bootloader section
     if (socWrite && EA >= XE_SROM_ADDR && EA < XE_SROM_ADDR + XE_SROM_SIZE)
     {
-        std::cout << "XCPU (MMU): WARNING: Tried to write to XCPU SROM!" 
+        std::cout << "XCPU (MMU): WARNING: Tried to write to XCPU SROM!"
             << std::endl;
         return;
     }
@@ -1036,13 +1284,115 @@ void PPCInterpreter::MMUWrite(XENON_CONTEXT* cpuContext, PPU_STATE* ppuState, u6
         return;
     }
 
-    else
+    // Integrated Interrupt Controller in real mode, used when the HV wants to start a 
+    // CPUs IC.
+    if (socWrite && (EA & ~0xF000) >= XE_IIC_BASE && (EA & ~0xF000) < XE_IIC_BASE + XE_IIC_SIZE && (EA & 0xFFFFF) < 0x560FF)
     {
-        // External Write
-        sysBus->Write(EA, data, byteCount, socWrite);
+        intXCPUContext->xenonIIC.writeInterrupt(EA, data);
+        return;
     }
 
+    bool nand = false;
+    bool smc = false;
+    bool pciConfigSpace = false;
+
+    if (EA >= 0xC8000000 && EA <= 0xCC000000)
+    {
+        nand = true;
+    }
+
+    if (EA >= 0xEA001000 && EA <= 0xEA0010FF)
+    {
+        smc = true;
+    }
+
+    if (EA >= 0xD0000000 && EA <= 0xD1000000)
+    {
+        pciConfigSpace = true;
+    }
+
+    if (socWrite && nand != true && smc != true && pciConfigSpace != true)
+    {
+
+        std::cout << "MMU: SoC Write to 0x" << EA << ", data = 0x" << data << ", invalidating." << std::endl;
+        return;
+    }
+
+    // External Write
+    sysBus->Write(EA, data, byteCount, socWrite);
+
     intXCPUContext->xenonRes.Check(EA);
+    /*
+    // If we're in HV mode, then addreses are 64 bit wide, that means that MMU address flags
+    // have an effect on adressing.
+    if (socAccess)
+    {
+        // Check if writing to internal SRAM
+        if (EA >= XE_SRAM_ADDR && EA < XE_SRAM_ADDR + XE_SRAM_SIZE)
+        {
+            u32 sramAddr = (u32)(EA - XE_SRAM_ADDR);
+            memcpy(&cpuContext->SRAM[sramAddr], &data, byteCount);
+            intXCPUContext->xenonRes.Check(EA);
+            return;
+        }
+
+        // System POST Bus
+        if (EA == POST_BUS_ADDR)
+        {
+            Xe::XCPU::POSTBUS::POST(data);
+            return;
+        }
+
+        // Time Base register. Writing here starts or stops the RTC apparently.
+        if (EA == 0x000611a0)
+        {
+            if (data == 0)
+            {
+                intXCPUContext->timeBaseActive = false;
+                return;
+            }
+            else if (data == 0xff01000000000000) // 0x1FF byte reversed!
+            {
+                intXCPUContext->timeBaseActive = true;
+                return;
+            }
+        }
+
+        // Check if writing to Security Engine Config Block
+        if (EA >= XE_SECENG_ADDR && EA < XE_SECENG_ADDR + XE_SECENG_SIZE)
+        {
+            u32 secAddr = (u32)(EA - XE_SECENG_ADDR);
+            memcpy(&intXCPUContext->secEngData[secAddr], &data, byteCount);
+            intXCPUContext->xenonRes.Check(EA);
+            return;
+        }
+
+        // Integrated Interrupt Controller in real mode, used when the HV wants to start a 
+        // CPU"s IC.
+        if (EA >= XE_IIC_BASE && EA < XE_IIC_BASE + XE_IIC_SIZE)
+        {
+            intXCPUContext->xenonIIC.RouteInterrupt(EA, data);
+            return;
+        }
+
+        // Another case! SMC In real mode is at 0x200 00EA 1000.
+        if (EA >= 0xEA001000 && EA <= 0xEA0010FF)
+        {
+            sysBus->Write(EA, data, byteCount, socAccess);
+            intXCPUContext->xenonRes.Check(EA);
+        }
+    }
+    else
+    {
+        if (EA >= 0x50000 && EA <= 0x56000)
+        {
+            u8 a = 0;
+        }
+        // External Write
+        sysBus->Write(EA, data, byteCount, socAccess);
+        intXCPUContext->xenonRes.Check(EA);
+    }
+    */
 }
 
 // Reads 1 Byte of memory.
