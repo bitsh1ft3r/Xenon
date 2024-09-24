@@ -1,56 +1,138 @@
-#include <iostream>
 #include <stdio.h>
-#include <stdlib.h>
 #include <thread>
+#include <stdlib.h>
+#include <iostream>
 
-#include "Xenon/Core/Bus/Bus.h"
-#include "Xenon/Core/PostBus/PostBus.h"
-#include "Xenon/Core/NAND/NAND.h"
-#include "Xenon/Core/XCPU/XCPU.h"
+
+#include "Xenon/Core/RootBus/RootBus.h"
 #include "Xenon/Core/RAM/RAM.h"
-#include "Xenon/Core/PCIBus/PCIBus.h"
-#include "Xenon/Core/PCIBus/XMA/XMA.h"
-#include "Xenon/Core/PCIBus/CDROM/CDROM.h"
-#include "Xenon/Core/PCIBus/HDD/HDD.h"
-#include "Xenon/Core/PCIBus/SMC/SMC.h"
+#include "Xenon/Core/NAND/NAND.h"
+#include "Xenon/Core/XCPU/Xenon.h"
+#include "Xenon/Core/RootBus/HostBridge/HostBridge.h"
+#include "Xenon/Core/RootBus/HostBridge/XGPU/XGPU.h"
+#include "Xenon/Core/RootBus/HostBridge/PCIBridge/PCIBridge.h"
+#include "Xenon/Core/RootBus/HostBridge/PCIBridge/ETHERNET/Ethernet.h"
+#include "Xenon/Core/RootBus/HostBridge/PCIBridge/AUDIOCTRLLR/AudioController.h"
+#include "Xenon/Core/RootBus/HostBridge/PCIBridge/SFCX/SFCX.h"
+#include "Xenon/Core/RootBus/HostBridge/PCIBridge/XMA/XMA.h"
+#include "Xenon/Core/RootBus/HostBridge/PCIBridge/HDD/HDD.h"
+#include "Xenon/Core/RootBus/HostBridge/PCIBridge/SMC/SMC.h"
+#include "Xenon/Core/RootBus/HostBridge/PCIBridge/CDROM/CDROM.h"
+#include "Xenon/Core/RootBus/HostBridge/PCIBridge/OHCI0/OHCI0.h"
+#include "Xenon/Core/RootBus/HostBridge/PCIBridge/OHCI1/OHCI1.h"
+#include "Xenon/Core/RootBus/HostBridge/PCIBridge/EHCI0/EHCI0.h"
+#include "Xenon/Core/RootBus/HostBridge/PCIBridge/EHCI1/EHCI1.h"
 
 int main(int argc, char* argv[])
 {
-	Bus Bus;
-	PCIBus pciBus;
+	eFuses jasperCpuFuses;
+	jasperCpuFuses.fuseLine00 = 0xc0ffffffffffffff;
+	jasperCpuFuses.fuseLine01 = 0x0f0f0f0f0f0f0ff0;
+	jasperCpuFuses.fuseLine02 = 0x0000000000000000;
+	jasperCpuFuses.fuseLine03 = 0x2EBCD846F1A7711C;
+	jasperCpuFuses.fuseLine04 = 0x2EBCD846F1A7711C;
+	jasperCpuFuses.fuseLine05 = 0x8F06C4C7E3EC4961;
+	jasperCpuFuses.fuseLine06 = 0x8F06C4C7E3EC4961;
+	jasperCpuFuses.fuseLine07 = 0x0000000000000000;
+	jasperCpuFuses.fuseLine08 = 0x0000000000000000;
+	jasperCpuFuses.fuseLine09 = 0x0000000000000000;
+	jasperCpuFuses.fuseLine10 = 0x0000000000000000;
+	jasperCpuFuses.fuseLine11 = 0x0000000000000000;
 
+	eFuses xenonCpuFuses;
+	xenonCpuFuses.fuseLine00 = 0xc0ffffffffffffff;
+	xenonCpuFuses.fuseLine01 = 0x0f0f0f0f0f0f0f0f;
+	xenonCpuFuses.fuseLine02 = 0x0000000000000000;
+	xenonCpuFuses.fuseLine03 = 0xF98C9725B2052FE2;
+	xenonCpuFuses.fuseLine04 = 0xF98C9725B2052FE2;
+	xenonCpuFuses.fuseLine05 = 0x08EE3C57932DCACA;
+	xenonCpuFuses.fuseLine06 = 0x08EE3C57932DCACA;
+	xenonCpuFuses.fuseLine07 = 0x0000000000000000;
+	xenonCpuFuses.fuseLine08 = 0x0000000000000000;
+	xenonCpuFuses.fuseLine09 = 0x0000000000000000;
+	xenonCpuFuses.fuseLine10 = 0x0000000000000000;
+	xenonCpuFuses.fuseLine11 = 0x0000000000000000;
+
+	eFuses xedkCpuFuses;
+	xedkCpuFuses.fuseLine00 = 0xc0ffffffffffffff;
+	xedkCpuFuses.fuseLine01 = 0x0f0f0f0f0f0f0f0f;
+	xedkCpuFuses.fuseLine02 = 0x0000000000000000;
+	xedkCpuFuses.fuseLine03 = 0x906074D69D22B28B;
+	xedkCpuFuses.fuseLine04 = 0x906074D69D22B28B;
+	xedkCpuFuses.fuseLine05 = 0x2C70CE7BDDAB81A9;
+	xedkCpuFuses.fuseLine06 = 0x2C70CE7BDDAB81A9;
+	xedkCpuFuses.fuseLine07 = 0x0000000000000000;
+	xedkCpuFuses.fuseLine08 = 0x0000000000000000;
+	xedkCpuFuses.fuseLine09 = 0x0000000000000000;
+	xedkCpuFuses.fuseLine10 = 0x0000000000000000;
+	xedkCpuFuses.fuseLine11 = 0x0000000000000000;
+	
+	
+	RootBus RootBus;
+	HostBridge hostBridge;
+	PCIBridge pciBridge;
+	
+	Xe::Xenos::XGPU xenos;
+
+	Xe::PCIDev::ETHERNET::ETHERNET ethernet;
+	Xe::PCIDev::AUDIOCTRLR::AUDIOCTRLR audioController;
+	Xe::PCIDev::OHCI0::OHCI0 ohci0;
+	Xe::PCIDev::OHCI1::OHCI1 ohci1;
+	Xe::PCIDev::EHCI0::EHCI0 ehci0;
+	Xe::PCIDev::EHCI1::EHCI1 ehci1;
+	SFCX sfcx;
 	XMA xma;
 	CDROM cdrom;
 	HDD hdd;
-	SMC smc;
-
-	PostBus postBus;
+	SMC smc(&pciBridge);
 	NAND nandDevice;
 	RAM ram;
 
-	Bus.Init();
+	RootBus.Init();
 
-	xma.Initialize("XMA", XMA_START_ADDR, XMA_END_ADDR);
-	cdrom.Initialize("CDROM", CDROM_START_ADDR, CDROM_END_ADDR);
-	hdd.Initialize("HDD", HDD_START_ADDR, HDD_END_ADDR);
-	smc.Initialize("SMC", SMC_START_ADDR, SMC_END_ADDR);
+	ohci0.Initialize("OHCI0", OHCI0_DEV_SIZE);
+	ohci1.Initialize("OHCI1", OHCI1_DEV_SIZE);
+	ehci0.Initialize("EHCI0", OHCI0_DEV_SIZE);
+	ehci1.Initialize("EHCI1", OHCI1_DEV_SIZE);
+	audioController.Initialize("AUDIOCTRLR", AUDIO_CTRLR_DEV_SIZE);
+	ethernet.Initialize("ETHERNET", ETHERNET_DEV_SIZE);
+	sfcx.Initialize("SFCX", SFCX_DEV_SIZE);
+	xma.Initialize("XMA", XMA_DEV_SIZE);
+	cdrom.Initialize("CDROM", CDROM_DEV_SIZE);
+	hdd.Initialize("HDD", HDD_DEV_SIZE);
+	smc.Initialize("SMC", SMC_DEV_SIZE);
 
-	pciBus.addPCIDevice(&xma);
-	pciBus.addPCIDevice(&cdrom);
-	pciBus.addPCIDevice(&hdd);
-	pciBus.addPCIDevice(&smc);
+	pciBridge.addPCIDevice(&ohci0);
+	pciBridge.addPCIDevice(&ohci1);
+	pciBridge.addPCIDevice(&ehci0);
+	pciBridge.addPCIDevice(&ehci1);
+	pciBridge.addPCIDevice(&audioController);
+	pciBridge.addPCIDevice(&ethernet);
+	pciBridge.addPCIDevice(&sfcx);
+	pciBridge.addPCIDevice(&xma);
+	pciBridge.addPCIDevice(&cdrom);
+	pciBridge.addPCIDevice(&hdd);
+	pciBridge.addPCIDevice(&smc);
 
-	postBus.Initialize("PostBus", POST_BUS_ADDR, POST_BUS_ADDR);
-	nandDevice.Initialize("NAND", NAND_START_ADDR, NAND_END_ADDR);
-	ram.Initialize("RAM", RAM_START_ADDR, RAM_START_ADDR + RAM_SIZE);
+	hostBridge.RegisterXGPU(&xenos);
+	hostBridge.RegisterPCIBridge(&pciBridge);
 
-	Bus.AddPCIBus(&pciBus);
-	Bus.AddDevice(&postBus);
-	Bus.AddDevice(&nandDevice);
-	Bus.AddDevice(&ram);
-    nandDevice.Load("C://Xbox/jasper_nand_rgh2.bin");
-    Xe::Core::XCPU::XCPU xcpu("C://Xbox/1bl.bin", &Bus);
-    
-    xcpu.Start(0x8000020000000100);
+	nandDevice.Initialize("NAND", NAND_START_ADDR, NAND_END_ADDR, true);
+	ram.Initialize("RAM", RAM_START_ADDR, RAM_START_ADDR + RAM_SIZE, false);
+
+	RootBus.AddHostBridge(&hostBridge);
+	RootBus.AddDevice(&nandDevice);
+	RootBus.AddDevice(&ram);
+
+	// NAND Load Path.
+    nandDevice.Load("C://Xbox/xenon_xdk.bin");
+
+	// Load 1BL here from given path.
+	Xenon xenonCPU(&RootBus, "C://Xbox/1bl.bin", xenonCpuFuses);
+
+	pciBridge.RegisterIIC(xenonCPU.GetIICPointer());
+
+	// CPU Start routine and entry point.
+	xenonCPU.Start(0x20000000100);
 	return 0;
 }

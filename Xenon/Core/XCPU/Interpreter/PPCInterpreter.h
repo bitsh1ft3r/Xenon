@@ -1,237 +1,269 @@
 #pragma once
 
-#include "Xenon/Core/XCPU/XCPUContext.h"
-#include "Xenon/Core/XCPU/Interpreter/PowerPCInternal.h"
-#include "Xenon/Core/XCPU/Interpreter/PowerPC_Instruction.h"
+#include "Xenon/Core/RootBus/RootBus.h"
+#include "Xenon/Core/XCPU/PPU/PowerPC.h"
+#include "Xenon/Core/XCPU/Interpreter/PPCInternal.h"
+#include "Xenon/Core/XCPU/Interpreter/PPC_Instruction.h"
 
 namespace PPCInterpreter
 {
-	extern XCPUContext* intXCPUContext;
+	extern RootBus* sysBus;
+	extern XENON_CONTEXT* intXCPUContext;
 
+	//
+	//	Basic Block Loading, debug symbols and stuff.
+	//
+	struct KD_SYMBOLS_INFO {
+		u32 BaseOfDll;
+		u32 ProcessId;
+		u32 CheckSum;
+		u32 SizeOfImage;
+	};
+
+	void ppcDebugLoadImageSymbols(PPU_STATE* hCore, u64 moduleNameAddress, u64 moduleInfoAddress);
+	void ppcDebugUnloadImageSymbols(PPU_STATE* hCore, u64 moduleNameAddress, u64 moduleInfoAddress);
+	
 	// Interpreter helpers
-	u64 ppcAddCarrying(PPCState* hCore, u64 op1, u64 op2, u64 carryBit);
+	u64 ppcAddCarrying(PPU_STATE* hCore, u64 op1, u64 op2, u64 carryBit);
 	void ppcMul64(u64 operand0, u64 operand1, u64* u64High, u64* u64Low);
 	void ppcMul64Signed(u64 operand0, u64 operand1, u64* u64High, u64* u64Low);
-	
+	bool ppcDidCarry(u64 input1, u64 input2, u64 input3);
 	//
 	// Condition Register
 	//
 	
 	// Compare Unsigned
-	u32 CRCompU(PPCState* hCore, u64 num1, u64 num2);
+	u32 CRCompU(PPU_STATE* hCore, u64 num1, u64 num2);
 	// Compare Signed 32 bits
-	u32 CRCompS32(PPCState* hCore, u32 num1, u32 num2);
+	u32 CRCompS32(PPU_STATE* hCore, u32 num1, u32 num2);
 	// Compare Signed 64 bits
-	u32 CRCompS64(PPCState* hCore, u64 num1, u64 num2);
+	u32 CRCompS64(PPU_STATE* hCore, u64 num1, u64 num2);
 	// Compare Unsigned
-	u32 CRCompS(PPCState* hCore, u64 num1, u64 num2);
+	u32 CRCompS(PPU_STATE* hCore, u64 num1, u64 num2);
 	// Condition register Update
-	void ppcUpdateCR(PPCState* hCore, s8 crNum, u32 crValue);
-
-	// Entry point
-	void ppcInterpreterExecute(XCPUContext* cpuContext);
+	void ppcUpdateCR(PPU_STATE* hCore, s8 crNum, u32 crValue);
 
 	// Single instruction execution
-	void ppcExecuteSingleInstruction(PPCState* hCore);
+	void ppcExecuteSingleInstruction(PPU_STATE* hCore);
 
 	//
 	// Exceptions
 	//
-	void ppcInstStorageException(PPCState* hCore, u64 SRR1);
-	void ppcDataStorageException(PPCState* hCore, u64 EA, u64 ISR);
-	void ppcDataSegmentException(PPCState* hCore, u64 EA);
-	void ppcInstSegmentException(PPCState* hCore);
-	void ppcSystemCallException(PPCState* hCore, bool isHypervisorCall);
+
+#define TRAP_TYPE_SRR1_TRAP_FPU  43
+#define TRAP_TYPE_SRR1_TRAP_ILL  44
+#define TRAP_TYPE_SRR1_TRAP_PRIV 45
+#define TRAP_TYPE_SRR1_TRAP_TRAP 46
+
+	void ppcResetException(PPU_STATE* hCore);
+	void ppcInterpreterTrap(PPU_STATE* hCore, u32 trapNumber);
+	void ppcInstStorageException(PPU_STATE* hCore, u64 SRR1);
+	void ppcDataStorageException(PPU_STATE* hCore, u64 EA, u64 ISR);
+	void ppcDataSegmentException(PPU_STATE* hCore, u64 EA);
+	void ppcInstSegmentException(PPU_STATE* hCore);
+	void ppcSystemCallException(PPU_STATE* hCore, bool isHypervisorCall);
+	void ppcProgramException(PPU_STATE* hCore, u32 trapType);
+	void ppcExternalException(PPU_STATE* hCore);
 
 	//
 	// MMU
 	//
 
-	bool MMUTranslateAddress(u64* EA, PPCState* hCoreState);
-	u8 mmuGetPageSize(PPCState* hCore, bool L, u8 LP);
-	void mmuAddTlbEntry(PPCState* hCore);
-	bool mmuSearchTlbEntry(PPCState* hCore, u64* RPN, u64 VPN, u8 p, bool LP);
+	bool MMUTranslateAddress(u64* EA, PPU_STATE* hCoreState);
+	u8 mmuGetPageSize(PPU_STATE* hCore, bool L, u8 LP);
+	void mmuAddTlbEntry(PPU_STATE* hCore);
+	bool mmuSearchTlbEntry(PPU_STATE* hCore, u64* RPN, u64 VA, u64 VPN, u8 p, bool LP);
+	void mmuReadString(PPU_STATE* hCore, u64 stringAddress, char* string, u32 maxLenght);
 
-	u64 MMURead(XCPUContext* cpuContext, u64 EA, s8 byteCount);
-	void MMUWrite(XCPUContext* cpuContext, u64 data, u64 EA, s8 byteCount, bool cacheStore = false);
+	// Security Engine Related
+	SECENG_ADDRESS_INFO mmuGetSecEngInfoFromAddress(u64 inputAddress);
+	u64 mmuContructEndAddressFromSecEngAddr(u64 inputAddress, bool* socAccess);
 
-	u8	MMURead8(u64 EA);
-	u16 MMURead16(u64 EA);
-	u32 MMURead32(u64 EA);
-	u64 MMURead64(u64 EA);
+	// Main R/W Routines.
+	u64 MMURead(XENON_CONTEXT* cpuContext, PPU_STATE* ppuState, u64 EA, s8 byteCount);
+	void MMUWrite(XENON_CONTEXT* cpuContext, PPU_STATE* ppuState, u64 data, u64 EA, s8 byteCount, bool cacheStore = false);
 
-	void MMUWrite8(u64 EA, u8 data);
-	void MMUWrite16(u64 EA, u16 data);
-	void MMUWrite32(u64 EA, u32 data);
-	void MMUWrite64(u64 EA, u64 data);
+	// Helper Read Routines.
+	u8	MMURead8(PPU_STATE* ppuState, u64 EA);
+	u16 MMURead16(PPU_STATE* ppuState, u64 EA);
+	u32 MMURead32(PPU_STATE* ppuState, u64 EA);
+	u64 MMURead64(PPU_STATE* ppuState, u64 EA);
+	// Helper Write Routines.
+	void MMUWrite8(PPU_STATE* ppuState, u64 EA, u8 data);
+	void MMUWrite16(PPU_STATE* ppuState, u64 EA, u16 data);
+	void MMUWrite32(PPU_STATE* ppuState, u64 EA, u32 data);
+	void MMUWrite64(PPU_STATE* ppuState, u64 EA, u64 data);
 
 	//
-	// Instruction definitions
+	// Instruction definitions, only implemented instructions as of now.
 	//
 
 	// ALU
-	void PPCInterpreter_addx(PPCState* hCore);
-	void PPCInterpreter_addc(PPCState* hCore);
-	void PPCInterpreter_adde(PPCState* hCore);
-	void PPCInterpreter_addi(PPCState* hCore);
-	void PPCInterpreter_addic(PPCState* hCore);
-	void PPCInterpreter_addic_rc(PPCState* hCore);
-	void PPCInterpreter_addis(PPCState* hCore);
-	void PPCInterpreter_addme(PPCState* hCore, u32 instrData);
-	void PPCInterpreter_addze(PPCState* hCore, u32 instrData);
-	void PPCInterpreter_and(PPCState* hCore);
-	void PPCInterpreter_andc(PPCState* hCore);
-	void PPCInterpreter_andi(PPCState* hCore);
-	void PPCInterpreter_andis(PPCState* hCore);
-	void PPCInterpreter_cmp(PPCState* hCore);
-	void PPCInterpreter_cmpi(PPCState* hCore);
-	void PPCInterpreter_cmpl(PPCState* hCore);
-	void PPCInterpreter_cmpli(PPCState* hCore);
-	void PPCInterpreter_cntlzd(PPCState* hCore, u32 instrData);
-	void PPCInterpreter_cntlzw(PPCState* hCore);
-	void PPCInterpreter_crand(PPCState* hCore, u32 instrData);
-	void PPCInterpreter_crandc(PPCState* hCore, u32 instrData);
-	void PPCInterpreter_creqv(PPCState* hCore, u32 instrData);
-	void PPCInterpreter_crnand(PPCState* hCore, u32 instrData);
-	void PPCInterpreter_crnor(PPCState* hCore, u32 instrData);
-	void PPCInterpreter_cror(PPCState* hCore, u32 instrData);
-	void PPCInterpreter_crorc(PPCState* hCore, u32 instrData);
-	void PPCInterpreter_crxor(PPCState* hCore, u32 instrData);
-	void PPCInterpreter_divd(PPCState* hCore, u32 instrData);
-	void PPCInterpreter_divdu(PPCState* hCore);
-	void PPCInterpreter_divw(PPCState* hCore, u32 instrData);
-	void PPCInterpreter_divwu(PPCState* hCore, u32 instrData);
-	void PPCInterpreter_isync(PPCState* hCore);
-	void PPCInterpreter_extsbx(PPCState* hCore);
-	void PPCInterpreter_extshx(PPCState* hCore);
-	void PPCInterpreter_extswx(PPCState* hCore);
-	void PPCInterpreter_mfcr(PPCState* hCore);
-	void PPCInterpreter_mftb(PPCState* hCore);
-	void PPCInterpreter_mtcrf(PPCState* hCore);
-	void PPCInterpreter_mulli(PPCState* hCore);
-	void PPCInterpreter_mulldx(PPCState* hCore);
-	void PPCInterpreter_mullw(PPCState* hCore);
-	void PPCInterpreter_mulhdux(PPCState* hCore);
-	void PPCInterpreter_negx(PPCState* hCore);
-	void PPCInterpreter_norx(PPCState* hCore);
-	void PPCInterpreter_ori(PPCState* hCore);
-	void PPCInterpreter_oris(PPCState* hCore);
-	void PPCInterpreter_orx(PPCState* hCore);
-	void PPCInterpreter_rldicx(PPCState* hCore);
-	void PPCInterpreter_rldcrx(PPCState* hCore);
-	void PPCInterpreter_rldiclx(PPCState* hCore);
-	void PPCInterpreter_rldicrx(PPCState* hCore);
-	void PPCInterpreter_rldimix(PPCState* hCore);
-	void PPCInterpreter_rlwimix(PPCState* hCore);
-	void PPCInterpreter_rlwnmx(PPCState* hCore);
-	void PPCInterpreter_rlwinmx(PPCState* hCore);
-	void PPCInterpreter_slbia(PPCState* hCore);
-	void PPCInterpreter_sldx(PPCState* hCore);
-	void PPCInterpreter_slwx(PPCState* hCore);
-	void PPCInterpreter_sradx(PPCState* hCore);
-	void PPCInterpreter_sradix(PPCState* hCore);
-	void PPCInterpreter_srawix(PPCState* hCore);
-	void PPCInterpreter_srdx(PPCState* hCore);
-	void PPCInterpreter_srwx(PPCState* hCore);
-	void PPCInterpreter_subfcx(PPCState* hCore);
-	void PPCInterpreter_subfx(PPCState* hCore);
-	void PPCInterpreter_subfex(PPCState* hCore);
-	void PPCInterpreter_subfic(PPCState* hCore);
-	void PPCInterpreter_xori(PPCState* hCore);
-	void PPCInterpreter_xoris(PPCState* hCore);
-	void PPCInterpreter_xorx(PPCState* hCore);
+	void PPCInterpreter_addx(PPU_STATE* hCore);
+	void PPCInterpreter_addi(PPU_STATE* hCore);
+	void PPCInterpreter_addic(PPU_STATE* hCore);
+	void PPCInterpreter_addic_rc(PPU_STATE* hCore);
+	void PPCInterpreter_addis(PPU_STATE* hCore);
+	void PPCInterpreter_addzex(PPU_STATE* hCore);
+	void PPCInterpreter_and(PPU_STATE* hCore);
+	void PPCInterpreter_andc(PPU_STATE* hCore);
+	void PPCInterpreter_andi(PPU_STATE* hCore);
+	void PPCInterpreter_andis(PPU_STATE* hCore);
+	void PPCInterpreter_cmp(PPU_STATE* hCore);
+	void PPCInterpreter_cmpi(PPU_STATE* hCore);
+	void PPCInterpreter_cmpl(PPU_STATE* hCore);
+	void PPCInterpreter_cmpli(PPU_STATE* hCore);
+	void PPCInterpreter_cntlzd(PPU_STATE* hCore);
+	void PPCInterpreter_cntlzw(PPU_STATE* hCore);
+	void PPCInterpreter_crand(PPU_STATE* hCore);
+	void PPCInterpreter_crandc(PPU_STATE* hCore);
+	void PPCInterpreter_creqv(PPU_STATE* hCore);
+	void PPCInterpreter_crnand(PPU_STATE* hCore);
+	void PPCInterpreter_crnor(PPU_STATE* hCore);
+	void PPCInterpreter_cror(PPU_STATE* hCore);
+	void PPCInterpreter_crorc(PPU_STATE* hCore);
+	void PPCInterpreter_crxor(PPU_STATE* hCore);
+	void PPCInterpreter_divd(PPU_STATE* hCore);
+	void PPCInterpreter_divdu(PPU_STATE* hCore);
+	void PPCInterpreter_divwux(PPU_STATE* hCore);
+	void PPCInterpreter_isync(PPU_STATE* hCore);
+	void PPCInterpreter_extsbx(PPU_STATE* hCore);
+	void PPCInterpreter_extshx(PPU_STATE* hCore);
+	void PPCInterpreter_extswx(PPU_STATE* hCore);
+	void PPCInterpreter_mcrf(PPU_STATE* hCore);
+	void PPCInterpreter_mfcr(PPU_STATE* hCore);
+	void PPCInterpreter_mftb(PPU_STATE* hCore);
+	void PPCInterpreter_mtcrf(PPU_STATE* hCore);
+	void PPCInterpreter_mulli(PPU_STATE* hCore);
+	void PPCInterpreter_mulldx(PPU_STATE* hCore);
+	void PPCInterpreter_mullw(PPU_STATE* hCore);
+	void PPCInterpreter_mulhdux(PPU_STATE* hCore);
+	void PPCInterpreter_negx(PPU_STATE* hCore);
+	void PPCInterpreter_norx(PPU_STATE* hCore);
+	void PPCInterpreter_ori(PPU_STATE* hCore);
+	void PPCInterpreter_oris(PPU_STATE* hCore);
+	void PPCInterpreter_orx(PPU_STATE* hCore);
+	void PPCInterpreter_rldicx(PPU_STATE* hCore);
+	void PPCInterpreter_rldcrx(PPU_STATE* hCore);
+	void PPCInterpreter_rldiclx(PPU_STATE* hCore);
+	void PPCInterpreter_rldicrx(PPU_STATE* hCore);
+	void PPCInterpreter_rldimix(PPU_STATE* hCore);
+	void PPCInterpreter_rlwimix(PPU_STATE* hCore);
+	void PPCInterpreter_rlwnmx(PPU_STATE* hCore);
+	void PPCInterpreter_rlwinmx(PPU_STATE* hCore);
+	void PPCInterpreter_slbia(PPU_STATE* hCore);
+	void PPCInterpreter_sldx(PPU_STATE* hCore);
+	void PPCInterpreter_slwx(PPU_STATE* hCore);
+	void PPCInterpreter_sradx(PPU_STATE* hCore);
+	void PPCInterpreter_sradix(PPU_STATE* hCore);
+	void PPCInterpreter_srawix(PPU_STATE* hCore);
+	void PPCInterpreter_srdx(PPU_STATE* hCore);
+	void PPCInterpreter_srwx(PPU_STATE* hCore);
+	void PPCInterpreter_subfcx(PPU_STATE* hCore);
+	void PPCInterpreter_subfx(PPU_STATE* hCore);
+	void PPCInterpreter_subfex(PPU_STATE* hCore);
+	void PPCInterpreter_subfic(PPU_STATE* hCore);
+	void PPCInterpreter_xori(PPU_STATE* hCore);
+	void PPCInterpreter_xoris(PPU_STATE* hCore);
+	void PPCInterpreter_xorx(PPU_STATE* hCore);
 
 	// Program control
-	void PPCInterpreter_b(PPCState* hCore);
-	void PPCInterpreter_bc(PPCState* hCore);
-	void PPCInterpreter_bcctr(PPCState* hCore);
-	void PPCInterpreter_bclr(PPCState* hCore);
+	void PPCInterpreter_b(PPU_STATE* hCore);
+	void PPCInterpreter_bc(PPU_STATE* hCore);
+	void PPCInterpreter_bcctr(PPU_STATE* hCore);
+	void PPCInterpreter_bclr(PPU_STATE* hCore);
 
 	// System instructions
-	void PPCInterpreter_sc(PPCState* hCore);
-	void PPCInterpreter_slbmte(PPCState* hCore);
-	void PPCInterpreter_rfid(PPCState* hCore);
-	void PPCInterpreter_tdi(PPCState* hCore);
-	void PPCInterpreter_tlbiel(PPCState* hCore);
-	void PPCInterpreter_mfspr(PPCState* hCore);
-	void PPCInterpreter_mtspr(PPCState* hCore);
-	void PPCInterpreter_mfmsr(PPCState* hCore);
-	void PPCInterpreter_mtmsrd(PPCState* hCore);
+	void PPCInterpreter_sc(PPU_STATE* hCore);
+	void PPCInterpreter_slbmte(PPU_STATE* hCore);
+	void PPCInterpreter_rfid(PPU_STATE* hCore);
+	void PPCInterpreter_tw(PPU_STATE* hCore);
+	void PPCInterpreter_twi(PPU_STATE* hCore);
+	void PPCInterpreter_tdi(PPU_STATE* hCore);
+	void PPCInterpreter_tlbiel(PPU_STATE* hCore);
+	void PPCInterpreter_mfspr(PPU_STATE* hCore);
+	void PPCInterpreter_mtspr(PPU_STATE* hCore);
+	void PPCInterpreter_mfmsr(PPU_STATE* hCore);
+	void PPCInterpreter_mtmsr(PPU_STATE* hCore);
+	void PPCInterpreter_mtmsrd(PPU_STATE* hCore);
 
 	// Cache Management
-	void PPCInterpreter_dcbf(PPCState* hCore, u32 instrData);
-	void PPCInterpreter_dcbi(PPCState* hCore, u32 instrData);
-	void PPCInterpreter_dcbst(PPCState* hCore);
-	void PPCInterpreter_dcbt(PPCState* hCore, u32 instrData);
-	void PPCInterpreter_dcbtst(PPCState* hCore, u32 instrData);
-	void PPCInterpreter_dcbz(PPCState* hCore);
+	void PPCInterpreter_dcbst(PPU_STATE* hCore);
+	void PPCInterpreter_dcbz(PPU_STATE* hCore);
 
 	//
 	// Load/Store
 	//
 
 	// Store Byte
-	void PPCInterpreter_stb(PPCState* hCore);
-	void PPCInterpreter_stbu(PPCState* hCore);
-	void PPCInterpreter_stbux(PPCState* hCore);
-	void PPCInterpreter_stbx(PPCState* hCore);
+	void PPCInterpreter_stb(PPU_STATE* hCore);
+	void PPCInterpreter_stbu(PPU_STATE* hCore);
+	void PPCInterpreter_stbux(PPU_STATE* hCore);
+	void PPCInterpreter_stbx(PPU_STATE* hCore);
 
 	// Store Halfword
-	void PPCInterpreter_sth(PPCState* hCore);
-	void PPCInterpreter_sthbrx(PPCState* hCore);
-	void PPCInterpreter_sthu(PPCState* hCore);
-	void PPCInterpreter_sthux(PPCState* hCore);
-	void PPCInterpreter_sthx(PPCState* hCore);
+	void PPCInterpreter_sth(PPU_STATE* hCore);
+	void PPCInterpreter_sthbrx(PPU_STATE* hCore);
+	void PPCInterpreter_sthu(PPU_STATE* hCore);
+	void PPCInterpreter_sthux(PPU_STATE* hCore);
+	void PPCInterpreter_sthx(PPU_STATE* hCore);
 
 	// Store Word
-	void PPCInterpreter_stmw(PPCState* hCore);
-	void PPCInterpreter_stswi(PPCState* hCore);
-	void PPCInterpreter_stswx(PPCState* hCore);
-	void PPCInterpreter_stw(PPCState* hCore);
-	void PPCInterpreter_stwbrx(PPCState* hCore);
-	void PPCInterpreter_stwcx(PPCState* hCore);
-	void PPCInterpreter_stwu(PPCState* hCore);
-	void PPCInterpreter_stwux(PPCState* hCore);
-	void PPCInterpreter_stwx(PPCState* hCore);
+	void PPCInterpreter_stw(PPU_STATE* hCore);
+	void PPCInterpreter_stwbrx(PPU_STATE* hCore);
+	void PPCInterpreter_stwcx(PPU_STATE* hCore);
+	void PPCInterpreter_stwu(PPU_STATE* hCore);
+	void PPCInterpreter_stwux(PPU_STATE* hCore);
+	void PPCInterpreter_stwx(PPU_STATE* hCore);
 
 	// Store Doubleword
-	void PPCInterpreter_std(PPCState* hCore);
-	void PPCInterpreter_stdcx(PPCState* hCore);
-	void PPCInterpreter_stdu(PPCState* hCore);
-	void PPCInterpreter_stdux(PPCState* hCore);
-	void PPCInterpreter_stdx(PPCState* hCore);
+	void PPCInterpreter_std(PPU_STATE* hCore);
+	void PPCInterpreter_stdcx(PPU_STATE* hCore);
+	void PPCInterpreter_stdu(PPU_STATE* hCore);
+	void PPCInterpreter_stdux(PPU_STATE* hCore);
+	void PPCInterpreter_stdx(PPU_STATE* hCore);
+
+	// Store Floating
+	void PPCInterpreter_stfd(PPU_STATE* hCore);
 
 	// Load Byte
-	void PPCInterpreter_lbz(PPCState* hCore);
-	void PPCInterpreter_lbzu(PPCState* hCore);
-	void PPCInterpreter_lbzux(PPCState* hCore);
-	void PPCInterpreter_lbzx(PPCState* hCore);
+	void PPCInterpreter_lbz(PPU_STATE* hCore);
+	void PPCInterpreter_lbzu(PPU_STATE* hCore);
+	void PPCInterpreter_lbzux(PPU_STATE* hCore);
+	void PPCInterpreter_lbzx(PPU_STATE* hCore);
 
 	// Load Halfword
-	void PPCInterpreter_lha(PPCState* hCore);
-	void PPCInterpreter_lhau(PPCState* hCore);
-	void PPCInterpreter_lhax(PPCState* hCore);
-	void PPCInterpreter_lhbrx(PPCState* hCore);
-	void PPCInterpreter_lhz(PPCState* hCore);
-	void PPCInterpreter_lhzu(PPCState* hCore);
-	void PPCInterpreter_lhzux(PPCState* hCore);
-	void PPCInterpreter_lhzx(PPCState* hCore);
+	void PPCInterpreter_lha(PPU_STATE* hCore);
+	void PPCInterpreter_lhau(PPU_STATE* hCore);
+	void PPCInterpreter_lhax(PPU_STATE* hCore);
+	void PPCInterpreter_lhbrx(PPU_STATE* hCore);
+	void PPCInterpreter_lhz(PPU_STATE* hCore);
+	void PPCInterpreter_lhzu(PPU_STATE* hCore);
+	void PPCInterpreter_lhzux(PPU_STATE* hCore);
+	void PPCInterpreter_lhzx(PPU_STATE* hCore);
 
 	// Load Word
-	void PPCInterpreter_lwa(PPCState* hCore);
-	void PPCInterpreter_lwax(PPCState* hCore);
-	void PPCInterpreter_lwarx(PPCState* hCore);
-	void PPCInterpreter_lwbrx(PPCState* hCore);
-	void PPCInterpreter_lwz(PPCState* hCore);
-	void PPCInterpreter_lwzu(PPCState* hCore);
-	void PPCInterpreter_lwzux(PPCState* hCore);
-	void PPCInterpreter_lwzx(PPCState* hCore);
+	void PPCInterpreter_lwa(PPU_STATE* hCore);
+	void PPCInterpreter_lwax(PPU_STATE* hCore);
+	void PPCInterpreter_lwarx(PPU_STATE* hCore);
+	void PPCInterpreter_lwbrx(PPU_STATE* hCore);
+	void PPCInterpreter_lwz(PPU_STATE* hCore);
+	void PPCInterpreter_lwzu(PPU_STATE* hCore);
+	void PPCInterpreter_lwzux(PPU_STATE* hCore);
+	void PPCInterpreter_lwzx(PPU_STATE* hCore);
 
 	// Load Doubleword
-	void PPCInterpreter_ld(PPCState* hCore);
-	void PPCInterpreter_ldarx(PPCState* hCore);
-	void PPCInterpreter_ldbrx(PPCState* hCore);
-	void PPCInterpreter_ldu(PPCState* hCore);
-	void PPCInterpreter_ldux(PPCState* hCore);
-	void PPCInterpreter_ldx(PPCState* hCore);
+	void PPCInterpreter_ld(PPU_STATE* hCore);
+	void PPCInterpreter_ldarx(PPU_STATE* hCore);
+	void PPCInterpreter_ldbrx(PPU_STATE* hCore);
+	void PPCInterpreter_ldu(PPU_STATE* hCore);
+	void PPCInterpreter_ldux(PPU_STATE* hCore);
+	void PPCInterpreter_ldx(PPU_STATE* hCore);
+
+	//
+	// Load Floating
+	//
+
+	// Load Floating Single
+	void PPCInterpreter_lfs(PPU_STATE* hCore);
 }

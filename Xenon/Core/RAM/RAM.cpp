@@ -5,7 +5,7 @@
 
 RAM::RAM()
 {
-	memset(RAMData, 0, sizeof(RAMData));
+	memset(RAMData, 0xcd, sizeof(RAMData));
 }
 
 void RAM::Read(u64 readAddress, u64* data, u8 byteCount)
