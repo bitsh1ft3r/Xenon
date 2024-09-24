@@ -40,11 +40,14 @@ Setting up Windbg to do kernel debugging on the emulated system is pretty straig
 [My Ko-Fi Page, where i'll be posting development advances and info about the 360 HW/Reverse engeneering in general.](https://ko-fi.com/bitsh1ft3r)
 
 ## Showcase
-**1BL** Running on the emulated XCPU.  
+**1BL** Running on the emulated XCPU. 
+
 ![1BL,running on an early stage](/Xenon/Assets/images/1bl_boot.png)
 
 **Xell First Stage**
+
 ![Xell First Stage running up to Second Stage.](/Xenon/Assets/images/Xell_First_Stage.png)
 
 **WinDBG connected via KDNet via a Virtual Serial Port to an early debug kernel**
+
 ![xboxkrnl.exe V2.0.2853.](/Xenon/Assets/images/windbg_2853.png)
