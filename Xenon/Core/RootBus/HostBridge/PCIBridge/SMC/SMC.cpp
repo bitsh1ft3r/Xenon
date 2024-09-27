@@ -645,8 +645,8 @@ void SMC::smcFIFOProcessWrite(u64 writeAddress, u64 data, u8 byteCount)
 			// Clear the written mesage position counter.
 			currentWritePos = 0;
 			// Send Interrupt?
-			intPending = 0x10;
-			//parentBus->RouteInterrupt(PRIO_SMM);
+			intPending = 0x10000000; // Interrupt pending dispatch. If this register contains this value then the kernel issues a dpc routine for reading the smc response.
+			parentBus->RouteInterrupt(PRIO_SMM);
 			return;
 		}
 		return;
