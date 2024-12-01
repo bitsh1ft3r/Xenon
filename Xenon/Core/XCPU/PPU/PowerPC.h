@@ -198,7 +198,7 @@ struct PPU_THREAD_SPRS
 	// Data Address Register
 	u64 DAR;
 	// Decrementer Register
-	u64 DEC;
+	u32 DEC;
 	// Machine Status Save/Restore Register 0
 	u64 SRR0;
 	// Machine Status Save/Restore Register 1
@@ -412,8 +412,9 @@ struct PPU_THREAD_REGISTERS
 	// Interrupt EA for managing Interrupts.
 	u64 intEA = 0;
 
-	// Helper Debug Variable
+	// Helper Debug Variables
 	u64 lastWriteAddress = 0;
+	u64 lastRegValue = 0;
 
 	PPU_RES* ppuRes;
 };

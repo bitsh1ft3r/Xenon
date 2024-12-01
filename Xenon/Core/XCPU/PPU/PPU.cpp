@@ -105,6 +105,19 @@ void PPU::StartExecution()
 						xenonContext->xenonIIC.clearExtInterrupt(ppuState.ppuThread[ppuState.currentThread].SPR.PIR);
 					}
 
+					// Check for Decrementer interrupts.
+					// First decrement if time base is active.
+					if (xenonContext->timeBaseActive)
+					{
+						ppuState.ppuThread[ppuState.currentThread].SPR.DEC -= 1;
+					}
+					// Signal the exception if DEC = 0 and MSR[EE] = 1.
+					if (ppuState.ppuThread[ppuState.currentThread].SPR.DEC == 0 && 
+						ppuState.ppuThread[ppuState.currentThread].SPR.MSR.EE)
+					{
+						PPCInterpreter::ppcDecrementerException(&ppuState);
+					}
+					
 					// Read Next Intruction from Memory.
 					ppuReadNextInstruction();
 
@@ -121,6 +134,7 @@ void PPU::StartExecution()
 					if (xenonContext->timeBaseActive)
 					{
 						ppuState.SPR.TB++;
+						// Decrease the Decrementer.
 					}
 				}
 
@@ -149,6 +163,19 @@ void PPU::StartExecution()
 					{
 						PPCInterpreter::ppcExternalException(&ppuState);
 						xenonContext->xenonIIC.clearExtInterrupt(ppuState.ppuThread[ppuState.currentThread].SPR.PIR);
+					}
+
+					// Check for Decrementer interrupts.
+					// First decrement if time base is active.
+					if (xenonContext->timeBaseActive)
+					{
+						ppuState.ppuThread[ppuState.currentThread].SPR.DEC -= 1;
+					}
+					// Signal the exception if DEC = 0 and MSR[EE] = 1.
+					if (ppuState.ppuThread[ppuState.currentThread].SPR.DEC == 0 &&
+						ppuState.ppuThread[ppuState.currentThread].SPR.MSR.EE)
+					{
+						PPCInterpreter::ppcDecrementerException(&ppuState);
 					}
 
 					// Read Next Intruction from Memory.
