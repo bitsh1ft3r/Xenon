@@ -74,10 +74,22 @@ bool PCIBridge::RouteInterrupt(u8 prio)
 
 	switch (prio)
 	{
+	case PRIO_CLOCK:
+		if (pciBridgeState.PRIO_REG_CLCK.intEnabled)
+		{
+			xenonIIC->genInterrupt(PRIO_CLOCK, pciBridgeState.PRIO_REG_CLCK.targetCPU);
+		}
+		break;
 	case PRIO_SMM:
 		if (pciBridgeState.PRIO_REG_SMM.intEnabled)
 		{			
 			xenonIIC->genInterrupt(PRIO_SMM, pciBridgeState.PRIO_REG_SMM.targetCPU);
+		}
+		break;
+	case PRIO_SFCX:
+		if (pciBridgeState.PRIO_REG_SFCX.intEnabled)
+		{
+			xenonIIC->genInterrupt(PRIO_SFCX, pciBridgeState.PRIO_REG_SFCX.targetCPU);
 		}
 		break;
 	default:
@@ -128,6 +140,9 @@ bool PCIBridge::Read(u64 readAddress, u64* data, u8 byteCount)
 			break;
 		case 0xEA00001C:
 			*data = pciBridgeState.PRIO_REG_SMM.hexData;
+			break;
+		case 0xEA000044:
+			*data = pciBridgeState.PRIO_REG_SFCX.hexData;
 			break;
 		default:
 			std::cout << "PCI Bridge: Unknown reg being read: 0x" << readAddress << std::endl;
@@ -184,6 +199,13 @@ bool PCIBridge::Write(u64 writeAddress, u64 data, u8 byteCount)
 			pciBridgeState.PRIO_REG_SMM.latched = latched;
 			pciBridgeState.PRIO_REG_SMM.targetCPU = targetCPU;
 			pciBridgeState.PRIO_REG_SMM.cpuIRQ = cpuIRQ;
+			break;
+		case 0xEA000044: // PRIO_SFCX Secure Flash Controller for Xbox Int.
+			pciBridgeState.PRIO_REG_SFCX.hexData = static_cast<u32>(data);
+			pciBridgeState.PRIO_REG_SFCX.intEnabled = enabled;
+			pciBridgeState.PRIO_REG_SFCX.latched = latched;
+			pciBridgeState.PRIO_REG_SFCX.targetCPU = targetCPU;
+			pciBridgeState.PRIO_REG_SFCX.cpuIRQ = cpuIRQ;
 			break;
 		default:
 			std::cout << "PCI Bridge: Unknown reg being written: 0x" << writeAddress << ", 0x" << data << std::endl;

@@ -65,6 +65,7 @@ struct PCI_BRIDGE_STATE
 	u32 REG_EA00000C;
 	PRIO_REG PRIO_REG_CLCK;
 	PRIO_REG PRIO_REG_SMM;
+	PRIO_REG PRIO_REG_SFCX;
 };
 
 class PCIBridge
@@ -89,11 +90,13 @@ public:
 	bool RouteInterrupt(u8 prio);
 
 private:
-
+	// IIC Pointer used for interrupts.
 	Xe::XCPU::IIC::XenonIIC* xenonIIC;
 
+	// Connected device pointers.
 	std::vector<PCIDevice*> connectedPCIDevices;
 
+	// Current bridge config.
 	PCI_PCI_BRIDGE_CONFIG_SPACE pciBridgeConfig = {};
 	PCI_BRIDGE_STATE pciBridgeState = {};
 	u8 pciBridgeConfigSpace[256];

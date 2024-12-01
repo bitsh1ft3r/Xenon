@@ -272,7 +272,7 @@ bool SFCX::checkMagic()
 
 	// Retail Nand Magic is 0xFF4F.
 	// Devkit Nand Magic is 0x0F4F.
-	// Older Devkir Nand's magic is 0x0F3F.
+	// Older Devkit Nand's magic is 0x0F3F.
 
 	if (magic[0] == (char)0xff && magic[1] == (char)0x4f)
 	{

@@ -118,16 +118,23 @@ SMC::SMC(PCIBridge* parentPCIBridge)
 
 	// Asign parent PCI Bridge pointer.
 	parentBus = parentPCIBridge;
+
+	// Enter SMC Thread.
+	smcThread = std::thread(&SMC::smcLoop, this);
 }
 
 void SMC::Read(u64 readAddress, u64* data, u8 byteCount)
 {
+	u8 offset = readAddress & 0xFF;
+
 	smcProcessRead(readAddress, data, byteCount);
 }
 
 void SMC::Write(u64 writeAddress, u64 data, u8 byteCount)
 {
 	smcProcessWrite(writeAddress, data, byteCount);
+
+	u8 offset = writeAddress & 0xFF;
 }
 
 void SMC::ConfigRead(u64 readAddress, u64* data, u8 byteCount)
@@ -197,6 +204,11 @@ void SMC::smcProcessRead(u64 readAddress, u64* data, u8 byteCount)
 		smcFIFOProcessRead(readAddress, data, byteCount);
 		return;
 	}
+	else if (readAddress == 0xEA00106C)
+	{
+		// Clock interrupt related.
+		*data = smcState.clockIntReg;
+	}
 	else
 	{
 		std::cout << "SMC: Read to unknown address, addr 0x" << std::hex <<
@@ -261,6 +273,11 @@ void SMC::smcProcessWrite(u64 writeAddress, u64 data, u8 byteCount)
 		// FIFO Queue Write
 		smcFIFOProcessWrite(writeAddress, data, byteCount);
 		return;
+	}
+	else if (writeAddress == 0xEA00106C)
+	{
+		// Clock interrupt related.
+		smcState.clockIntReg = static_cast<u32>(data);
 	}
 	else
 	{
@@ -495,11 +512,13 @@ void SMC::smcFIFOProcessWrite(u64 writeAddress, u64 data, u8 byteCount)
 			case SMC_PWRON_TYPE:
 				// Change here to not enter Xell on modified nands!
 				fifoReadedMsg[0] = SMC_PWRON_TYPE;
-				fifoReadedMsg[1] = SMC_PWR_REAS_PWRBTN; // Eject button.
+				fifoReadedMsg[1] = SMC_PWR_REAS_EJECT; // Eject button.
 				break;
 			case SMC_QUERY_RTC:
-				std::cout << "SMC Unimplemented SMC FIFO Command SMC_QUERY_RTC"
+				std::cout << "SMC: SMC_QUERY_RTC, returning 0."
 					<< std::endl;
+				fifoReadedMsg[0] = SMC_QUERY_RTC;
+				fifoReadedMsg[1] = 0;
 				break;
 			case SMC_QUERY_TEMP_SENS:
 				std::cout << "SMC Unimplemented SMC FIFO Command SMC_QUERY_TEMP_SENS"
@@ -510,13 +529,16 @@ void SMC::smcFIFOProcessWrite(u64 writeAddress, u64 data, u8 byteCount)
 					<< std::endl;
 				break;
 			case SMC_QUERY_AVPACK:
-				std::cout << "SMC Unimplemented SMC FIFO Command SMC_QUERY_AVPACK"
+				std::cout << "SMC: SMC_QUERY_AVPACK returning 0x5c."
 					<< std::endl;
+				fifoReadedMsg[0] = SMC_QUERY_AVPACK;
+				fifoReadedMsg[1] = 0x5c;
 				break;
 			case SMC_I2C_READ_WRITE:				
 				switch (fifoWrittenMsg[1])
 				{
 				case 0x10: // SMC_READ_ANA
+					std::cout << "SMC: ANA READ" << std::endl;
 					fifoReadedMsg[0] = SMC_I2C_READ_WRITE;
 					fifoReadedMsg[1] = 0x0;
 					fifoReadedMsg[4] = (HANA_State[fifoWrittenMsg[6]] & 0xFF);
@@ -525,6 +547,7 @@ void SMC::smcFIFOProcessWrite(u64 writeAddress, u64 data, u8 byteCount)
 					fifoReadedMsg[7] = ((HANA_State[fifoWrittenMsg[6]] >> 24) & 0xFF);
 					break;
 				case 0x60: // SMC_WRITE_ANA
+					std::cout << "SMC: ANA WRITE" << std::endl;
 					fifoReadedMsg[0] = SMC_I2C_READ_WRITE;
 					fifoReadedMsg[1] = 0x0;
 					HANA_State[fifoWrittenMsg[6]] = fifoWrittenMsg[4] 
@@ -666,4 +689,25 @@ void SMC::smcFIFOProcessWrite(u64 writeAddress, u64 data, u8 byteCount)
 		currentWritePos += 4;
 		return;
 	}
+}
+
+void SMC::smcLoop()
+{
+	while (true)
+	{
+		// Clock tick.
+		smcClockTick();
+	}
+}
+
+void SMC::smcClockTick()
+{
+	// Check for SMC Clock interrupt register? Software writes here after a ClockInterrupt is taken.
+	if (smcState.clockIntReg == 1)
+	{
+		parentBus->RouteInterrupt(PRIO_CLOCK);
+		smcState.clockIntReg = 0;
+	}
+	// Need to find out what's the best delay here.
+	std::this_thread::sleep_for(std::chrono::milliseconds(50));
 }
