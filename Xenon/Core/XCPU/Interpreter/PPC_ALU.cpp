@@ -830,6 +830,35 @@ void PPCInterpreter::PPCInterpreter_sradix(PPU_STATE* hCore)
 	}
 }
 
+void PPCInterpreter::PPCInterpreter_srawx(PPU_STATE* hCore)
+{
+	X_FORM_rS_rA_rB_RC;
+
+	u64 rSReg = GPR(rS);
+	u8 n = rSReg & 0x1F;
+	u64 r = _rotl(static_cast<u32>(rSReg), 64 - n);
+	u64 m = 0;
+	if (QGET(rSReg, 26, 58) == 0)
+	{
+		m = QMASK(n + 32, 63);
+	}
+
+	u64 s = static_cast<u32>(GPR(rS));
+
+	GPR(rA) = (r & m) | (s & ~m);
+
+	if (s && (((u32)(r & ~m)) != 0))
+		hCore->ppuThread[hCore->currentThread].SPR.XER.CA = 1;
+	else
+		hCore->ppuThread[hCore->currentThread].SPR.XER.CA = 0;
+
+	if (RC)
+	{
+		u32 CR = CRCompS(hCore, GPR(rA), 0);
+		ppcUpdateCR(hCore, 0, CR);
+	}
+}
+
 void PPCInterpreter::PPCInterpreter_srawix(PPU_STATE* hCore)
 {
 	X_FORM_rS_rA_SH_RC;

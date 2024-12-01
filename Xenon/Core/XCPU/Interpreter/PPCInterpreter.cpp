@@ -17,6 +17,12 @@ void PPCInterpreter::ppcExecuteSingleInstruction(PPU_STATE* hCore) {
 		hCore->ppuThread[hCore->currentThread].GPR[0x5] = 0;
 	}
 
+	// RGH 2 17489 in a JRunner Corona XDKBuild.
+	if (hCore->ppuThread[hCore->currentThread].CIA == 0x200c7f0)
+	{
+		//hCore->ppuThread[hCore->currentThread].GPR[0x3] = 0;
+	}
+
 	// 3BL Check Bypass Devkit 2.0.1838.1
 	if (hCore->ppuThread[hCore->currentThread].CIA == 0x0000000003004994)
 	{
@@ -35,21 +41,16 @@ void PPCInterpreter::ppcExecuteSingleInstruction(PPU_STATE* hCore) {
 		//hCore->ppuThread[hCore->currentThread].GPR[0x3] = 0;
 	}
 
-	if (hCore->ppuThread[hCore->currentThread].CIA == 0x0000000003004a24)
-	{
-		//return;
-	}	
-
 	// This is just to set a PC breakpoint in any PPU/Thread.
-	if (hCore->ppuThread[hCore->currentThread].CIA == 0x400024af4)
+	if (hCore->ppuThread[hCore->currentThread].CIA == 0x80099558)
 	{
 		u8 a = 0;
 	}
 	
 	// This is to set a PPU0[Thread0] breakpoint.
-	if (hCore->ppuThread[hCore->currentThread].SPR.PIR == 0)
+	if (hCore->ppuThread[hCore->currentThread].SPR.PIR == 2)
 	{
-		u8 b = 0;
+		hCore->ppuThread[hCore->currentThread].lastRegValue = hCore->ppuThread[hCore->currentThread].GPR[11];
 	}
 
 	switch (currentInstr)
@@ -557,10 +558,9 @@ void PPCInterpreter::ppcExecuteSingleInstruction(PPU_STATE* hCore) {
 	case PPCInstruction::srawix:
 		PPCInterpreter_srawix(hCore);
 		break;
-		/*
 	case PPCInstruction::srawx:
+		PPCInterpreter_srawx(hCore);
 		break;
-		*/
 	case PPCInstruction::srdx:
 		PPCInterpreter_srdx(hCore);
 		break;
@@ -721,6 +721,15 @@ void PPCInterpreter::ppcExecuteSingleInstruction(PPU_STATE* hCore) {
 		std::cout << " *** " << getOpcodeName(hCore->ppuThread[hCore->currentThread].CI) << " ***" << std::endl;
 		break;
 	}
+
+	if (hCore->ppuThread[hCore->currentThread].SPR.PIR == 2)
+	{
+		if (hCore->ppuThread[hCore->currentThread].lastRegValue != hCore->ppuThread[hCore->currentThread].GPR[11])
+		{
+			// Changed!
+			//hCore->ppuThread[hCore->currentThread].lastWriteAddress = hCore->ppuThread[hCore->currentThread].CIA;
+		}
+	}
 }
 
 //
@@ -797,7 +806,7 @@ void PPCInterpreter::ppcInstSegmentException(PPU_STATE* hCore)
 // External Exception (0x500)
 void PPCInterpreter::ppcExternalException(PPU_STATE* hCore)
 {
-	std::cout << hCore->ppuName << "(THRD" << hCore->currentThread << ") External Interrupt" << std::endl;
+	//std::cout << hCore->ppuName << "(THRD" << hCore->currentThread << ") External Interrupt" << std::endl;
 
 	hCore->ppuThread[hCore->currentThread].SPR.SRR0 = hCore->ppuThread[hCore->currentThread].NIA;
 	hCore->ppuThread[hCore->currentThread].SPR.SRR1 = hCore->ppuThread[hCore->currentThread].SPR.MSR.MSR_Hex & (QMASK(0, 32) | QMASK(37, 41) | QMASK(48, 63));
@@ -829,6 +838,18 @@ void PPCInterpreter::ppcSystemCallException(PPU_STATE* hCore, bool isHypervisorC
 	hCore->ppuThread[hCore->currentThread].SPR.MSR.MSR_Hex = hCore->ppuThread[hCore->currentThread].SPR.MSR.MSR_Hex & ~(QMASK(48, 50) | QMASK(52, 55) | QMASK(58, 59) | QMASK(61, 63));
 	hCore->ppuThread[hCore->currentThread].SPR.MSR.MSR_Hex = hCore->ppuThread[hCore->currentThread].SPR.MSR.MSR_Hex | QMASK(0, 0) | (isHypervisorCall ? 0 : QMASK(3, 3));
 	hCore->ppuThread[hCore->currentThread].NIA = hCore->SPR.HRMOR + 0xc00;
+	hCore->ppuThread[hCore->currentThread].SPR.MSR.DR = 0;
+	hCore->ppuThread[hCore->currentThread].SPR.MSR.IR = 0;
+	hCore->ppuThread[hCore->currentThread].exceptionOcurred = true;
+}
+
+void PPCInterpreter::ppcDecrementerException(PPU_STATE* hCore)
+{
+	hCore->ppuThread[hCore->currentThread].SPR.SRR0 = hCore->ppuThread[hCore->currentThread].NIA;
+	hCore->ppuThread[hCore->currentThread].SPR.SRR1 = hCore->ppuThread[hCore->currentThread].SPR.MSR.MSR_Hex & (QMASK(0, 32) | QMASK(37, 41) | QMASK(48, 63));
+	hCore->ppuThread[hCore->currentThread].SPR.MSR.MSR_Hex = hCore->ppuThread[hCore->currentThread].SPR.MSR.MSR_Hex & ~(QMASK(48, 50) | QMASK(52, 55) | QMASK(58, 59) | QMASK(61, 63));
+	hCore->ppuThread[hCore->currentThread].SPR.MSR.MSR_Hex = hCore->ppuThread[hCore->currentThread].SPR.MSR.MSR_Hex | QMASK(0, 0) | (QMASK(3, 3));
+	hCore->ppuThread[hCore->currentThread].NIA = hCore->SPR.HRMOR + 0x900;
 	hCore->ppuThread[hCore->currentThread].SPR.MSR.DR = 0;
 	hCore->ppuThread[hCore->currentThread].SPR.MSR.IR = 0;
 	hCore->ppuThread[hCore->currentThread].exceptionOcurred = true;

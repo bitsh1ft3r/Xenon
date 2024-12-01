@@ -62,6 +62,7 @@ namespace PPCInterpreter
 	void ppcDataSegmentException(PPU_STATE* hCore, u64 EA);
 	void ppcInstSegmentException(PPU_STATE* hCore);
 	void ppcSystemCallException(PPU_STATE* hCore, bool isHypervisorCall);
+	void ppcDecrementerException(PPU_STATE* hCore);
 	void ppcProgramException(PPU_STATE* hCore, u32 trapType);
 	void ppcExternalException(PPU_STATE* hCore);
 
@@ -156,6 +157,7 @@ namespace PPCInterpreter
 	void PPCInterpreter_slwx(PPU_STATE* hCore);
 	void PPCInterpreter_sradx(PPU_STATE* hCore);
 	void PPCInterpreter_sradix(PPU_STATE* hCore);
+	void PPCInterpreter_srawx(PPU_STATE* hCore);
 	void PPCInterpreter_srawix(PPU_STATE* hCore);
 	void PPCInterpreter_srdx(PPU_STATE* hCore);
 	void PPCInterpreter_srwx(PPU_STATE* hCore);
