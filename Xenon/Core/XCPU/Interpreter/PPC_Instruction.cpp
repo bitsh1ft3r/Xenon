@@ -163,6 +163,9 @@ PPCInstruction PPCInterpreter::getOpcode(u32 instrData)
         case 278: // dcbt
             return PPCInstruction::dcbt;
             break;
+        case 792: // srawx
+            return PPCInstruction::srawx;
+            break;
         }
         switch (XO_21to30)
         {
