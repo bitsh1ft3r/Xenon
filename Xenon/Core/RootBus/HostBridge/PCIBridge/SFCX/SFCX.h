@@ -1,11 +1,15 @@
 #pragma once
 
+#include <thread>
 #include <iostream>
 
+#include "Xenon/Core/RootBus/HostBridge/PCIBridge/PCIBridge.h"
 #include "Xenon/Core/RootBus/HostBridge/PCIBridge/PCIDevice.h"
 
 // Device Size (at address 0xEA00C000)
 #define SFCX_DEV_SIZE	0x400
+
+// Device true size is 0xFF, then it just repeats itself.
 
 // Memory Mapped NAND Flash, 1:1. Sofware access this via 0x200 MMU flag wich
 // is SOC.
@@ -43,7 +47,7 @@
 #define DMA_RAM_TO_PHY			0x08 		// DMA main memory to physical flash
 #define UNLOCK_CMD_0			0x55 		// Unlock command 0
 #define UNLOCK_CMD_1			0xAA		// Unlock command 1
-
+#define NO_CMD					0xFF
 //
 // Config Register Bitmasks
 //
@@ -83,12 +87,46 @@
 #define STSCHK_ECC_ERR(sta)		(!((sta & STATUS_ECC_ER) < 0x10))
 #define STSCHK_DMA_ERR(sta)		((sta & (STATUS_DMA_ERROR) != 0)
 
-//Page bitmasks
+// Page bitmasks
 #define PAGE_VALID          	(0x4000000)
 #define PAGE_PID            	(0x3FFFE00)
 
+// Meta Types
+#define META_TYPE_0				0x00 			// Pre Jasper
+#define META_TYPE_1				0x01 			// Jasper 16MB
+#define META_TYPE_2				0x02			// Jasper 256MB and 512MB (Large Block)
+
+// Raw NAND Sizes
+#define NAND_16MB_SIZE				0x1080000
+#define NAND_64MB_SIZE				0x4200000
+
+//
+// NAND Header
+//
+struct NAND_HEADER
+{
+	u16 nandMagic;
+	u16 build;
+	u16 qfe;
+	u16 flags;
+	u32 entry;
+	u32 size;
+	char msCopyright[64];
+	u8 reserved[16];
+	u32 keyvaultSize;
+	u32 sysUpdateAddr;
+	u16 sysUpdateCount;
+	u16 keyvaultVer;
+	u32 keyvaultAddr;
+	u32 sysUpdateSize;
+	u32 smcConfigAddr;
+	u32 smcBootSize;
+	u32 smcBootAddr;
+};
+
 struct SFCX_STATE
 {
+	// Original SFCX Registers
 	u32 configReg;
 	u32 statusReg;
 	u32 commandReg;
@@ -99,12 +137,24 @@ struct SFCX_STATE
 	u32 dataPhysAddrReg;
 	u32 sparePhysAddrReg;
 	u32 mmcIDReg;
+
+	// Helpers
+	u8 metaType = 0;
+	u16 pageSize = 0x200;
+	u8 metaSize = 0x10;
+	u16 pageSizePhys = pageSize + metaSize;
+	u8 pageBuffer[0x210];
+	u16 currentPageBufferPos = 0;
+	u8 currentDataReadPos = 0;
+
+	// Loaded Nand Header
+	NAND_HEADER nandHeader = {};
 };
 
 class SFCX : public PCIDevice
 {
 public:
-	SFCX();
+	SFCX(std::string nandLoadPath, PCIBridge* parentPCIBridge);
 	bool LoadNANDDump(char* nandPath);
 	void Read(u64 readAddress, u64* data, u8 byteCount) override;
 	void ConfigRead(u64 readAddress, u64* data, u8 byteCount) override;
@@ -112,5 +162,21 @@ public:
 	void ConfigWrite(u64 writeAddress, u64 data, u8 byteCount) override;
 
 private:
+	// Secure Flash Controller for Xbox main loop.
+	void sfcxMainLoop();
+
+	// Magic check
+	bool checkMagic();
+
+	// Thread object
+	std::thread sfcxThread;
+
+	// SFCX State
 	SFCX_STATE sfcxState;
+
+	// I/O File stream.
+	FILE* nandFile;
+
+	// PCI Bridge pointer. Used for Interrupts.
+	PCIBridge* parentBus;
 };
