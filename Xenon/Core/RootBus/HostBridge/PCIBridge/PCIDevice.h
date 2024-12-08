@@ -59,5 +59,5 @@ public:
 	GENRAL_PCI_DEVICE_CONFIG_SPACE pciConfigSpace = {};
 
 private:
-	PCIDeviceInfo deviceInfo;
+	PCIDeviceInfo deviceInfo = { 0 };
 };
