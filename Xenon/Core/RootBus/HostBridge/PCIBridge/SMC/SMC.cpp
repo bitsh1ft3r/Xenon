@@ -106,6 +106,26 @@ enum SMC_PWR_REAS {
 	// Using Guitar controller from Activision Guitar Hero 5: 0x55
 };
 
+// AVPACK's Taken from libXenon.
+enum SMC_AVPACK_TYPE
+{
+	HDMI_AUDIO = 0x13,				// HDMI_AUDIO
+	HDMI_AUDIO = 0x14,				// HDMI_AUDIO - GHETTO MOD
+	HDMI_AUDIO_GHETTO_MOD = 0x1C,	// HDMI_AUDIO - GHETTO MOD
+	HDMI_AUDIO_GHETTO_MOD = 0x1E,	// HDMI
+	HDMI = 0x1F,					// HDMI
+	COMPOSITE_TV_MODE = 0x43,		// COMPOSITE - TV MODE
+	SCART = 0x47,					// SCART
+	COMPOSITE_S_VIDEO = 0x54,		// COMPOSITE + S-VIDEO
+	COMPOSITE = 0x57,				// NORMAL COMPOSITE
+	COMPONENT = 0x0C,				// COMPONENT
+	COMPONENT = 0x0F,				// COMPONENT
+	COMPOSITE_HD_MODE = 0x4F,		// COMPOSITE - HD MODE
+	VGA = 0x5B,						// VGA
+	VGA = 0x59,						// VGA
+	VGA_ADP_FIX = 0x1B				// This fixes a generic VGA-HDMI Adapter
+};
+
 SMC::SMC(PCIBridge* parentPCIBridge)
 {
 	// Set config registers.
@@ -532,7 +552,7 @@ void SMC::smcFIFOProcessWrite(u64 writeAddress, u64 data, u8 byteCount)
 				std::cout << "SMC: SMC_QUERY_AVPACK returning 0x5c."
 					<< std::endl;
 				fifoReadedMsg[0] = SMC_QUERY_AVPACK;
-				fifoReadedMsg[1] = 0x5c;
+				fifoReadedMsg[1] = 0x1F; // HDMI NO Audio
 				break;
 			case SMC_I2C_READ_WRITE:				
 				switch (fifoWrittenMsg[1])
