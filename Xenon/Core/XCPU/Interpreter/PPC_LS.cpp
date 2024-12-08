@@ -11,13 +11,6 @@
 
 void PPCInterpreter::PPCInterpreter_dcbst(PPU_STATE* hCore)
 {
-    X_FORM_rA_rB;
-
-    u64 EA = (rA ? hCore->ppuThread[hCore->currentThread].GPR[rA] : 0) + hCore->ppuThread[hCore->currentThread].GPR[rB];
-    u64 RA = EA;
-
-    MMUTranslateAddress(&RA, hCore);
-    u8* dataBlock = new(u8[128]);
     // Temporarely disable caching.
     return;
 }
