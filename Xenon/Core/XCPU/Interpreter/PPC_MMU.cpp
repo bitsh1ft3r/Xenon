@@ -1044,18 +1044,20 @@ u64 PPCInterpreter::MMURead(XENON_CONTEXT* cpuContext, PPU_STATE* ppuState, u64 
         }
     }
 
+    // CPU VID Register
+    if (socRead && EA == 0x61188)
+    {
+        data = 0x382c00000000b001;
+        return _byteswap_uint64(data);
+    }
+
     bool nand = false;
-    bool smc = false;
     bool pciConfigSpace = false;
+    bool pciBridge = false;
 
     if (EA >= 0xC8000000 && EA <= 0xCC000000)
     {
         nand = true;
-    }
-
-    if (EA >= 0xEA001000 && EA <= 0xEA0010FF)
-    {
-        smc = true;
     }
 
     if (EA >= 0xD0000000 && EA <= 0xD1000000)
@@ -1063,7 +1065,12 @@ u64 PPCInterpreter::MMURead(XENON_CONTEXT* cpuContext, PPU_STATE* ppuState, u64 
         pciConfigSpace = true;
     }
 
-    if (socRead && nand != true && smc != true && pciConfigSpace != true)
+    if (EA >= 0xEA000000 && EA <= 0xEA010000)
+    {
+        pciBridge = true;
+    }
+
+    if (socRead && nand != true && pciBridge != true && pciConfigSpace != true)
     {
         std::cout << "MMU: SoC Read from 0x" << EA << ", returning 0." << std::endl;
         data = 0;
@@ -1073,146 +1080,6 @@ u64 PPCInterpreter::MMURead(XENON_CONTEXT* cpuContext, PPU_STATE* ppuState, u64 
     // External Read      
     sysBus->Read(EA, &data, byteCount, socRead);
     return data;
-
-    /*
-    // If we're in HV mode, then addreses are 64 bit wide, that means that MMU address flags
-    // have an effect on adressing.
-    if (socAccess)
-    {
-        // SROM
-        if (EA >= XE_SROM_ADDR && EA < XE_SROM_ADDR + XE_SROM_SIZE)
-        {
-            u32 sromAddr = static_cast<u32>(EA) - static_cast<u32>(XE_SROM_ADDR);
-            memcpy(&data, &cpuContext->SROM[sromAddr], byteCount);
-            return data;
-        }
-        // SRAM
-        if (EA >= XE_SRAM_ADDR && EA < XE_SRAM_ADDR + XE_SRAM_SIZE)
-        {
-            u32 sramAddr = static_cast<u32>(EA) - static_cast<u32>(XE_SRAM_ADDR);
-            memcpy(&data, &cpuContext->SRAM[sramAddr], byteCount);
-            return data;
-        }
-
-        // SECENG address, CB compares this to 0.
-        // Further research required!
-        if (EA == 0x26000 || EA == 0x26008)
-        {
-            data = 0;
-            return data;
-        }
-
-        // Check if reading from Security Engine config block
-        if (EA >= XE_SECENG_ADDR && EA < XE_SECENG_ADDR + XE_SECENG_SIZE)
-        {
-            u32 secAddr = (u32)(EA - XE_SECENG_ADDR);
-            memcpy(&data, &intXCPUContext->secEngData[secAddr], byteCount);
-            return data;
-        }
-
-        // Random Number Generator
-        if (EA == 0x00060000)
-        {
-            u64 generatedRandomNumber = rand();
-            memcpy(&data, &generatedRandomNumber, byteCount);
-            return data;
-        }
-
-        // Check if reading from eFuses section
-        if (EA >= XE_FUSESET_LOC && EA <= (XE_FUSESET_LOC + XE_FUSESET_SIZE))
-        {
-            switch ((u32)EA)
-            {
-            case 0x20000:
-                data = cpuContext->fuseSet.fuseLine00;
-                break;
-            case 0x20200:
-                data = cpuContext->fuseSet.fuseLine01;
-                break;
-            case 0x20400:
-                data = cpuContext->fuseSet.fuseLine02;
-                break;
-            case 0x20600:
-                data = cpuContext->fuseSet.fuseLine03;
-                break;
-            case 0x20800:
-                data = cpuContext->fuseSet.fuseLine04;
-                break;
-            case 0x20a00:
-                data = cpuContext->fuseSet.fuseLine05;
-                break;
-            case 0x20c00:
-                data = cpuContext->fuseSet.fuseLine06;
-                break;
-            case 0x20e00:
-                data = cpuContext->fuseSet.fuseLine07;
-                break;
-            case 0x21000:
-                data = cpuContext->fuseSet.fuseLine08;
-                break;
-            case 0x21200:
-                data = cpuContext->fuseSet.fuseLine09;
-                break;
-            case 0x21400:
-                data = cpuContext->fuseSet.fuseLine10;
-                break;
-            case 0x21600:
-                data = cpuContext->fuseSet.fuseLine11;
-                break;
-            default:
-                std::cout << "XCPU SECOTP(eFuse): Reading to FUSE at address 0x"
-                    << EA << std::endl;
-                break;
-
-            }
-
-            return _byteswap_uint64(data);
-        }
-
-        // Hack Needed for CB to work, seems like it reads from some SoC this value
-        // and checks againts the fuses.
-        if (EA == 0x00061000)
-        {
-            data = 0x0000000000000020;
-            return data;
-        }
-
-        // Special Case: NAND is mapped at 0x200 C800 0000 before the SFCX is configured. This
-        // means software/bootloaders need to access it through that address in 64 bit mode and
-        // with the SOC flag set.
-        if (EA >= 0xC8000000 && EA <= 0xCC000000)
-        {
-            sysBus->Read(EA, &data, byteCount, socAccess);
-            return data;
-        }
-
-        // Another case! SMC In real mode is at 0x200 00EA 1000.
-        if (EA >= 0xEA001000 && EA <= 0xEA0010FF)
-        {
-            sysBus->Read(EA, &data, byteCount, socAccess);
-            return data;
-        }
-    }
-    else // We're in 32 bit addressing mode.
-    {
-        // Hack Needed for CB to work, reading ram size to this address, further
-        // research required. Free60.org shows this belongs to BIU address range.
-        if (EA == 0xe1040000)
-        {
-            data = 0x0000000020000000;
-            return data;
-        }
-
-        if (EA >= 0x50000 && EA <= 0x56000)
-        {
-            u8 a = 0;
-        }
-
-        // External Read, send it through the bus.      
-        sysBus->Read(EA, &data, byteCount, socAccess);
-        return data;
-    }
-    */
 }
 
 // MMU Write Routine, used by the CPU
@@ -1222,6 +1089,11 @@ void PPCInterpreter::MMUWrite(XENON_CONTEXT* cpuContext, PPU_STATE* ppuState, u6
     u64 oldEA = EA;
     if (MMUTranslateAddress(&EA, ppuState) == false)
         return;
+
+    if (oldEA >= 0x9e000000 && oldEA <= 0x9eFFFFFF)
+    {
+        u8 a = 0;
+    }
 
     bool socWrite = false;
 
@@ -1254,6 +1126,17 @@ void PPCInterpreter::MMUWrite(XENON_CONTEXT* cpuContext, PPU_STATE* ppuState, u6
             intXCPUContext->timeBaseActive = true;
             return;
         }
+    }
+
+    // CPU VID Register
+    if (socWrite && EA == 0x61188)
+    {
+        if (data != 0)
+        {
+            std::cout << "XCPU(SOC): New VID value being set: " << data
+                << std::endl;
+        }
+        return;
     }
 
     // Check if writing to bootloader section
@@ -1289,17 +1172,12 @@ void PPCInterpreter::MMUWrite(XENON_CONTEXT* cpuContext, PPU_STATE* ppuState, u6
     }
 
     bool nand = false;
-    bool smc = false;
     bool pciConfigSpace = false;
+    bool pciBridge = false;
 
     if (EA >= 0xC8000000 && EA <= 0xCC000000)
     {
         nand = true;
-    }
-
-    if (EA >= 0xEA001000 && EA <= 0xEA0010FF)
-    {
-        smc = true;
     }
 
     if (EA >= 0xD0000000 && EA <= 0xD1000000)
@@ -1307,7 +1185,12 @@ void PPCInterpreter::MMUWrite(XENON_CONTEXT* cpuContext, PPU_STATE* ppuState, u6
         pciConfigSpace = true;
     }
 
-    if (socWrite && nand != true && smc != true && pciConfigSpace != true)
+    if (EA >= 0xEA000000 && EA <= 0xEA010000)
+    {
+        pciBridge = true;
+    }
+
+    if (socWrite && nand != true && pciBridge != true && pciConfigSpace != true)
     {
 
         std::cout << "MMU: SoC Write to 0x" << EA << ", data = 0x" << data << ", invalidating." << std::endl;
@@ -1318,77 +1201,6 @@ void PPCInterpreter::MMUWrite(XENON_CONTEXT* cpuContext, PPU_STATE* ppuState, u6
     sysBus->Write(EA, data, byteCount, socWrite);
 
     intXCPUContext->xenonRes.Check(EA);
-    /*
-    // If we're in HV mode, then addreses are 64 bit wide, that means that MMU address flags
-    // have an effect on adressing.
-    if (socAccess)
-    {
-        // Check if writing to internal SRAM
-        if (EA >= XE_SRAM_ADDR && EA < XE_SRAM_ADDR + XE_SRAM_SIZE)
-        {
-            u32 sramAddr = (u32)(EA - XE_SRAM_ADDR);
-            memcpy(&cpuContext->SRAM[sramAddr], &data, byteCount);
-            intXCPUContext->xenonRes.Check(EA);
-            return;
-        }
-
-        // System POST Bus
-        if (EA == POST_BUS_ADDR)
-        {
-            Xe::XCPU::POSTBUS::POST(data);
-            return;
-        }
-
-        // Time Base register. Writing here starts or stops the RTC apparently.
-        if (EA == 0x000611a0)
-        {
-            if (data == 0)
-            {
-                intXCPUContext->timeBaseActive = false;
-                return;
-            }
-            else if (data == 0xff01000000000000) // 0x1FF byte reversed!
-            {
-                intXCPUContext->timeBaseActive = true;
-                return;
-            }
-        }
-
-        // Check if writing to Security Engine Config Block
-        if (EA >= XE_SECENG_ADDR && EA < XE_SECENG_ADDR + XE_SECENG_SIZE)
-        {
-            u32 secAddr = (u32)(EA - XE_SECENG_ADDR);
-            memcpy(&intXCPUContext->secEngData[secAddr], &data, byteCount);
-            intXCPUContext->xenonRes.Check(EA);
-            return;
-        }
-
-        // Integrated Interrupt Controller in real mode, used when the HV wants to start a 
-        // CPU"s IC.
-        if (EA >= XE_IIC_BASE && EA < XE_IIC_BASE + XE_IIC_SIZE)
-        {
-            intXCPUContext->xenonIIC.RouteInterrupt(EA, data);
-            return;
-        }
-
-        // Another case! SMC In real mode is at 0x200 00EA 1000.
-        if (EA >= 0xEA001000 && EA <= 0xEA0010FF)
-        {
-            sysBus->Write(EA, data, byteCount, socAccess);
-            intXCPUContext->xenonRes.Check(EA);
-        }
-    }
-    else
-    {
-        if (EA >= 0x50000 && EA <= 0x56000)
-        {
-            u8 a = 0;
-        }
-        // External Write
-        sysBus->Write(EA, data, byteCount, socAccess);
-        intXCPUContext->xenonRes.Check(EA);
-    }
-    */
 }
 
 // Reads 1 Byte of memory.
