@@ -19,3 +19,9 @@ void RAM::Write(u64 writeAddress, u64 data, u8 byteCount)
 	u64 offset = (u32)(writeAddress - RAM_START_ADDR);
 	memcpy(&RAMData[offset], &data, byteCount);
 }
+
+u8* RAM::getPointerToAddress(u32 address)
+{
+	u64 offset = (u32)(address - RAM_START_ADDR);
+	return RAMData + offset;
+}

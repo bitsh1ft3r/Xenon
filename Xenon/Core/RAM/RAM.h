@@ -12,6 +12,8 @@ public:
 	void Read(u64 readAddress, u64* data, u8 byteCount) override;
 	void Write(u64 writeAddress, u64 data, u8 byteCount) override;
 
+	u8* getPointerToAddress(u32 address);
+
 private:
 	u8* RAMData = new u8[RAM_SIZE];
 };
