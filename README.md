@@ -1,7 +1,17 @@
 # Xenon - Xbox 360 Low Level Emulator Research Project.
 
+Join our Discord ![Discord Shield](https://discord.com/api/guilds/1289565618957193217/widget.png?style=shield)
+
 **Current State**  
-The project is in a really early stage, so far it can only load and execute several parts of the Xbox 360 bootchain, until it reaches the **Kernel**.  
+***Kernel*** (`xboxkrnl.exe`)
+- Proper boot (skipping `HW_INIT` CB Bootloader step) is functional up to the latest Dev kernel: 2.0.17489.0. Kernel boots and reaches INIT_SECURITY boot stage, soon after main thread dies because of unimplemented/improper SFCX routines.
+- Kernel debugging via WindDBG is implemented and works as expected with some minor glitches.
+
+***Xell Reloaded***  
+![Xell Reloaded Second Stage.](/Xenon/Assets/images/Xell_Second_Stage.png)
+
+  Xell is successfully loaded from NAND and stages 1 and 2 execute.
+  Linux executables or .elfs are probably runnable, but the lack of a proper USB/HDD/ODD implementation makes it imposible to test ATM.
   
 No binaries are provided so far, so you must build it yourself, you'll also need your own dump of the **1BL**, and a 16/64Mb Retail/XDK NAND dump with its own set of matching CPU key/eFuses.
 
@@ -16,8 +26,8 @@ No binaries are provided so far, so you must build it yourself, you'll also need
   
 ### Whats missing:
 - **Proper Memory Controller Handling:** In **CB** in **early** versions it is possible to just let the `HW_INIT` VM execute. It outputs several error messages regarding memory/bit errors but continues sucessfully. In **later** kernel/system versions as of now we just skip the call to HW_INIT because of such unimplemented hardware, as the checks fail and the VM Hangs.  
-- **Xenos GPU:** Basic device skeleton and several registers are implemented, but I still need some early form of GPU/framebuffer functionality, at least until the kernel loads to the point that a most proper GPU emulation is needed.  Hopefully Soon :) 
-- **Xbox 360 Specific Hardware** (H)ANA, Secure flash controller, Sonus(?) Sound Chip, XMA Decoder, and several CPU specific undocumented configuration ring registers.
+- **Xenos GPU:** Basic device skeleton and several registers are implemented, as well as an early form of the Xenos framebuffer with correct Blitting interpretation,this will do it for now, at least until the kernel loads to the point that a most proper GPU emulation is needed.  Hopefully Soon :) 
+- **Xbox 360 Specific Hardware** (H)ANA,  Sonus(?) Sound Chip, XMA Decoder, and several CPU specific undocumented configuration ring registers.
 
 ### Setup:
 1. Clone the repo and build as usual using Visual Studio 2022 or later.
