@@ -11,7 +11,7 @@ SFCX::SFCX(std::string nandLoadPath, PCIBridge* parentPCIBridge)
 	std::cout << "Xenon Secure Flash Controller for Xbox" << std::endl;
 	
 	// Set the registers as a dump from my Corona 16MB. These were dumped at POR via Xell before SFCX Init.
-	sfcxState.configReg = 0x00aa3020; // Config Reg is VERY Important. Tells info about Meta/NAND Type.
+	sfcxState.configReg = 0x43000; // Config Reg is VERY Important. Tells info about Meta/NAND Type.
 	sfcxState.statusReg = _byteswap_ulong(0x00060000);
 	sfcxState.addressReg = _byteswap_ulong(0x3000f700);
 	sfcxState.dataReg = 0xffffffff;
