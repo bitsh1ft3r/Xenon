@@ -99,13 +99,13 @@
       <SDLCheck>true</SDLCheck>
       <PreprocessorDefinitions>_DEBUG;_CONSOLE;%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <ConformanceMode>true</ConformanceMode>
-      <AdditionalIncludeDirectories>$(SolutionDir);$(SolutionDir)\Xenon\third_party\SDL\include;$(SolutionDir)\Xenon\third_party\imgui;$(SolutionDir)\Xenon\third_party\Vulkan\Include;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+      <AdditionalIncludeDirectories>$(SolutionDir)\Xenon\third_party\SDL\include;$(SolutionDir)\Xenon\third_party\;$(SolutionDir);%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
       <LanguageStandard>stdcpp20</LanguageStandard>
     </ClCompile>
     <Link>
       <SubSystem>Console</SubSystem>
       <GenerateDebugInformation>true</GenerateDebugInformation>
-      <AdditionalLibraryDirectories>$(SolutionDir)\Xenon\third_party\Vulkan\;$(SolutionDir)\Xenon\third_party\SDL\lib\x64</AdditionalLibraryDirectories>
+      <AdditionalLibraryDirectories>C:\Users\Yeimik\source\repos\Xenon\Xenon\third_party\SDL\lib\x64</AdditionalLibraryDirectories>
     </Link>
   </ItemDefinitionGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">
@@ -132,14 +132,14 @@
       <SDLCheck>true</SDLCheck>
       <PreprocessorDefinitions>NDEBUG;_CONSOLE;%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <ConformanceMode>true</ConformanceMode>
-      <AdditionalIncludeDirectories>$(SolutionDir);$(SolutionDir)\Xenon\third_party\SDL\include;$(SolutionDir)\Xenon\third_party\imgui;$(SolutionDir)\Xenon\third_party\Vulkan\Include;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+      <AdditionalIncludeDirectories>$(SolutionDir)\Xenon\third_party\SDL\include;$(SolutionDir)\Xenon\third_party\;$(SolutionDir);%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
     </ClCompile>
     <Link>
       <SubSystem>Console</SubSystem>
       <EnableCOMDATFolding>true</EnableCOMDATFolding>
       <OptimizeReferences>true</OptimizeReferences>
       <GenerateDebugInformation>true</GenerateDebugInformation>
-      <AdditionalLibraryDirectories>$(SolutionDir)\Xenon\third_party\Vulkan\;$(SolutionDir)\Xenon\third_party\SDL\lib\x64</AdditionalLibraryDirectories>
+      <AdditionalLibraryDirectories>C:\Users\Yeimik\source\repos\Xenon\Xenon\third_party\SDL\lib\x64</AdditionalLibraryDirectories>
     </Link>
   </ItemDefinitionGroup>
   <ItemGroup>
@@ -198,6 +198,7 @@
     <ClInclude Include="Core\RootBus\HostBridge\PCIBridge\SMC\SMC_Config.h" />
     <ClInclude Include="Core\RootBus\HostBridge\PCIBridge\XMA\XMA.h" />
     <ClInclude Include="Core\RootBus\HostBridge\PCIe.h" />
+    <ClInclude Include="Core\RootBus\HostBridge\XGPU\XenosRegisters.h" />
     <ClInclude Include="Core\RootBus\HostBridge\XGPU\XGPU.h" />
     <ClInclude Include="Core\RootBus\HostBridge\XGPU\XGPUConfig.h" />
     <ClInclude Include="Core\RootBus\RootBus.h" />

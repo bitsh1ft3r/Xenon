@@ -4,17 +4,6 @@
 
 #include "Xenon/Core/RootBus/HostBridge/PCIBridge/PCIDevice.h"
 
-namespace Xe
-{
-	namespace PCIDev
-	{
-		namespace CDROM
-		{
-
-		}
-	}
-}
-
 #define CDROM_DEV_SIZE	0x30
 
 class CDROM : public PCIDevice

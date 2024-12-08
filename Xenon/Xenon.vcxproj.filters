@@ -273,5 +273,8 @@
     <ClInclude Include="Core\RootBus\HostBridge\PCIBridge\EHCI0\EHCI0.h">
       <Filter>Core\RootBus\HostBridge\PCIBridge\EHCI0</Filter>
     </ClInclude>
+    <ClInclude Include="Core\RootBus\HostBridge\XGPU\XenosRegisters.h">
+      <Filter>Core\RootBus\HostBridge\XGPU</Filter>
+    </ClInclude>
   </ItemGroup>
 </Project>

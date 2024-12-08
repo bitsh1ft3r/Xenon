@@ -1,9 +1,3 @@
-#include <stdio.h>
-#include <thread>
-#include <stdlib.h>
-#include <iostream>
-
-
 #include "Xenon/Core/RootBus/RootBus.h"
 #include "Xenon/Core/RAM/RAM.h"
 #include "Xenon/Core/NAND/NAND.h"
@@ -55,12 +49,12 @@ int main(int argc, char* argv[])
 
 	eFuses xedkCpuFuses;
 	xedkCpuFuses.fuseLine00 = 0xc0ffffffffffffff;
-	xedkCpuFuses.fuseLine01 = 0x0f0f0f0f0f0f0f0f;
+	xedkCpuFuses.fuseLine01 = 0x0f0f0f0f0f0f0ff0;
 	xedkCpuFuses.fuseLine02 = 0x0000000000000000;
-	xedkCpuFuses.fuseLine03 = 0x906074D69D22B28B;
-	xedkCpuFuses.fuseLine04 = 0x906074D69D22B28B;
-	xedkCpuFuses.fuseLine05 = 0x2C70CE7BDDAB81A9;
-	xedkCpuFuses.fuseLine06 = 0x2C70CE7BDDAB81A9;
+	xedkCpuFuses.fuseLine03 = 0x962212CF67B531A5;
+	xedkCpuFuses.fuseLine04 = 0x962212CF67B531A5;
+	xedkCpuFuses.fuseLine05 = 0x2E185FE3E2BD65BB;
+	xedkCpuFuses.fuseLine06 = 0x2E185FE3E2BD65BB;
 	xedkCpuFuses.fuseLine07 = 0x0000000000000000;
 	xedkCpuFuses.fuseLine08 = 0x0000000000000000;
 	xedkCpuFuses.fuseLine09 = 0x0000000000000000;
@@ -71,8 +65,6 @@ int main(int argc, char* argv[])
 	RootBus RootBus;
 	HostBridge hostBridge;
 	PCIBridge pciBridge;
-	
-	Xe::Xenos::XGPU xenos;
 
 	Xe::PCIDev::ETHERNET::ETHERNET ethernet;
 	Xe::PCIDev::AUDIOCTRLR::AUDIOCTRLR audioController;
@@ -80,13 +72,17 @@ int main(int argc, char* argv[])
 	Xe::PCIDev::OHCI1::OHCI1 ohci1;
 	Xe::PCIDev::EHCI0::EHCI0 ehci0;
 	Xe::PCIDev::EHCI1::EHCI1 ehci1;
-	SFCX sfcx;
+
+	// Create the Secure Flash Cntroller for Xbox Device, and load the Nand dump for emulation.
+	SFCX sfcx("C://Xbox/xenon_xdk.bin", &pciBridge);
+	RAM ram;
 	XMA xma;
 	CDROM cdrom;
 	HDD hdd;
 	SMC smc(&pciBridge);
 	NAND nandDevice;
-	RAM ram;
+
+	Xe::Xenos::XGPU xenos(&ram);
 
 	RootBus.Init();
 
@@ -134,5 +130,6 @@ int main(int argc, char* argv[])
 
 	// CPU Start routine and entry point.
 	xenonCPU.Start(0x20000000100);
+
 	return 0;
 }

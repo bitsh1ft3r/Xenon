@@ -9,7 +9,7 @@ HDD::HDD()
 
 void HDD::Read(u64 readAddress, u64* data, u8 byteCount)
 {
-
+	u32 regOffset = readAddress & 0xFF;
 }
 
 void HDD::Write(u64 writeAddress, u64 data, u8 byteCount)
