@@ -1,6 +1,14 @@
 #pragma once
 
+#include <thread>
+
+#define SDL_MAIN_HANDLED
+#include <SDL.h>
+#pragma comment(lib,"SDL2.lib")
+
+
 #include "Xenon/Base/TypeDefs.h"
+#include "Xenon/Core/RAM/RAM.h"
 #include "Xenon/Core/RootBus/HostBridge/PCIe.h"
 
 /*
@@ -13,6 +21,7 @@ namespace Xe
 	{
 
 #define XGPU_DEVICE_SIZE	0x10000
+#define XE_FB_BASE			0x1e000000
 
 		//
 		// Xenos Registers
@@ -45,19 +54,8 @@ namespace Xe
 #define REG_D1CRTC_TRIGA_CNTL	           0x6060
 #define REG_D1CRTC_TRIGA_MANUAL_TRIG	   0x6064
 #define REG_D1CRTC_TRIGB_CNTL	           0x6068
-#define REG_D1GRPH_FLIP_CONTROL            0x6148
-#define	REG_D1GRPH_UPDATE                  0x6144
-#define	REG_D1GRPH_PITCH                   0x6120
-#define	REG_D1GRPH_CONTROL                 0x6104
-#define	REG_D1GRPH_LUT_SEL                 0x6108
-#define	REG_D1GRPH_SURFACE_OFFSET_X        0x6124
-#define	REG_D1GRPH_SURFACE_OFFSET_Y        0x6128
-#define	REG_D1GRPH_X_START                 0x612c
-#define	REG_D1GRPH_Y_START                 0x6130
-#define	REG_D1GRPH_X_END                   0x6134
-#define	REG_D1GRPH_Y_END                   0x6138
-#define	REG_D1GRPH_PRIMARY_SURFACE_ADDRESS 0x6110  
-#define	REG_D1GRPH_ENABLE                  0x6100
+
+
 #define	REG_D1GRPH_COLOR_MATRIX_TRANSFORMATION_CNTL   0x6380
 #define REG_D1COLOR_MATRIX_COEF_1_1        0x6384
 #define	REG_D1COLOR_MATRIX_COEF_1_2        0x6388
@@ -94,7 +92,7 @@ namespace Xe
 		class XGPU
 		{
 		public:
-			XGPU();
+			XGPU(RAM* ram);
 
 			// Memory Read/Write methods.
 			bool Read(u64 readAddress, u64* data, u8 byteCount);
@@ -108,7 +106,20 @@ namespace Xe
 			// XGPU Config Space Data at address 0xD0010000.
 			GENRAL_PCI_DEVICE_CONFIG_SPACE xgpuConfigSpace = { 0 };
 
+			RAM* ramPtr = nullptr;
+
 			XenosState xenosState = { 0 };
+
+			std::thread renderThread;
+			
+			void XenosThread();
+
+			// Rendering Stuff
+			SDL_Window* mainWindow = nullptr;
+			SDL_Renderer* renderer = nullptr;
+			SDL_Event windowEvent;
+			SDL_Texture* texture;
+			s32 winWidth, winHeight;
 		};
 	}
 }
