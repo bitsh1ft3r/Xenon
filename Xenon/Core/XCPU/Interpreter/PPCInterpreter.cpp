@@ -42,13 +42,13 @@ void PPCInterpreter::ppcExecuteSingleInstruction(PPU_STATE* hCore) {
 	}
 
 	// This is just to set a PC breakpoint in any PPU/Thread.
-	if (hCore->ppuThread[hCore->currentThread].CIA == 0x80099558)
+	if (hCore->ppuThread[hCore->currentThread].CIA == 0x00000000030085ac)
 	{
 		u8 a = 0;
 	}
 	
 	// This is to set a PPU0[Thread0] breakpoint.
-	if (hCore->ppuThread[hCore->currentThread].SPR.PIR == 2)
+	if (hCore->ppuThread[hCore->currentThread].SPR.PIR == 0)
 	{
 		hCore->ppuThread[hCore->currentThread].lastRegValue = hCore->ppuThread[hCore->currentThread].GPR[11];
 	}
@@ -172,9 +172,10 @@ void PPCInterpreter::ppcExecuteSingleInstruction(PPU_STATE* hCore) {
 	case PPCInstruction::divwux:
 		PPCInterpreter_divwux(hCore);
 		break;
-		/*
 	case PPCInstruction::divwx:
+		PPCInterpreter_divwx(hCore);
 		break;
+		/*
 	case PPCInstruction::eciwx:
 		break;
 	case PPCInstruction::ecowx:

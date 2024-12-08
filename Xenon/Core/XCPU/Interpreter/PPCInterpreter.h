@@ -126,6 +126,7 @@ namespace PPCInterpreter
 	void PPCInterpreter_crxor(PPU_STATE* hCore);
 	void PPCInterpreter_divd(PPU_STATE* hCore);
 	void PPCInterpreter_divdu(PPU_STATE* hCore);
+	void PPCInterpreter_divwx(PPU_STATE* hCore);
 	void PPCInterpreter_divwux(PPU_STATE* hCore);
 	void PPCInterpreter_isync(PPU_STATE* hCore);
 	void PPCInterpreter_extsbx(PPU_STATE* hCore);

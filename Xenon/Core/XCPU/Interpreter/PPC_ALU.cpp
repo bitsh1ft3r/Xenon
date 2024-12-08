@@ -342,7 +342,7 @@ void PPCInterpreter::PPCInterpreter_divd(PPU_STATE* hCore)
 
 	if (RC)
 	{
-		u32 CR = CRCompS(hCore, GPR(rA), 0);
+		u32 CR = CRCompS(hCore, GPR(rD), 0);
 		ppcUpdateCR(hCore, 0, CR);
 	}
 }
@@ -363,7 +363,28 @@ void PPCInterpreter::PPCInterpreter_divdu(PPU_STATE* hCore)
 
 	if (RC)
 	{
-		u32 CR = CRCompS(hCore, GPR(rA), 0);
+		u32 CR = CRCompS(hCore, GPR(rD), 0);
+		ppcUpdateCR(hCore, 0, CR);
+	}
+}
+
+void PPCInterpreter::PPCInterpreter_divwx(PPU_STATE* hCore)
+{
+	XO_FORM_rD_rA_rB_OE_RC;
+
+	if (GPR(rB) != 0 && (GPR(rA) != 0x80000000 || GPR(rB) != 0xFFFFFFFF))
+	{
+		GPR(rD) = (UINT32)((INT64)(LONG)GPR(rA) / (INT64)(LONG)GPR(rB));
+	}
+
+	if (OE)
+	{
+		std::cout << "PPC Interpreter: DIVWX-> Fatal error, OE not implemented!" << std::endl;
+	}
+
+	if (RC)
+	{
+		u32 CR = CRCompS(hCore, GPR(rD), 0);
 		ppcUpdateCR(hCore, 0, CR);
 	}
 }
@@ -386,7 +407,7 @@ void PPCInterpreter::PPCInterpreter_divwux(PPU_STATE* hCore)
 
 	if (RC)
 	{
-		u32 CR = CRCompS(hCore, GPR(rA), 0);
+		u32 CR = CRCompS(hCore, GPR(rD), 0);
 		ppcUpdateCR(hCore, 0, CR);
 	}
 }
@@ -523,7 +544,11 @@ void PPCInterpreter::PPCInterpreter_mullw(PPU_STATE* hCore)
 {
 	XO_FORM_rD_rA_rB_OE_RC;
 
-	GPR(rD) = (u32)((s64)(long)GPR(rA) * (s64)(long)GPR(rB));
+	const s64 regA = static_cast<s32>(GPR(rA));
+	const s64 regB = static_cast<s32>(GPR(rB));
+	const s64 res = regA * regB;
+
+	GPR(rD) = static_cast<u32>(res);
 
 	if (OE)
 	{
@@ -834,17 +859,11 @@ void PPCInterpreter::PPCInterpreter_srawx(PPU_STATE* hCore)
 {
 	X_FORM_rS_rA_rB_RC;
 
-	u64 rSReg = GPR(rS);
-	u8 n = rSReg & 0x1F;
-	u64 r = _rotl(static_cast<u32>(rSReg), 64 - n);
-	u64 m = 0;
-	if (QGET(rSReg, 26, 58) == 0)
-	{
-		m = QMASK(n + 32, 63);
-	}
-
-	u64 s = static_cast<u32>(GPR(rS));
-
+	u64 regRs = GPR(rS);
+	u64 n = (u32)GPR(rB) & 63;
+	u64 r = _rotl(static_cast<u32>(regRs), 64 - (n & 31));
+	u64 m = (n & 0x20) ? 0 : QMASK(n + 32, 63);
+	u64 s = BGET(regRs, 32, 0) ? QMASK(0, 63) : 0;
 	GPR(rA) = (r & m) | (s & ~m);
 
 	if (s && (((u32)(r & ~m)) != 0))

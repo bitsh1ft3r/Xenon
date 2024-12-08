@@ -648,7 +648,7 @@ void PPCInterpreter::PPCInterpreter_mtspr(PPU_STATE* hCore)
 	switch (spr)
 	{
 	case SPR_DEC:
-		hCore->ppuThread[hCore->currentThread].SPR.DEC = hCore->ppuThread[hCore->currentThread].GPR[rD];
+		hCore->ppuThread[hCore->currentThread].SPR.DEC = static_cast<u32>(hCore->ppuThread[hCore->currentThread].GPR[rD]);
 		break;
 	case SPR_SDR1:
 		hCore->SPR.SDR1 = hCore->ppuThread[hCore->currentThread].GPR[rD];
