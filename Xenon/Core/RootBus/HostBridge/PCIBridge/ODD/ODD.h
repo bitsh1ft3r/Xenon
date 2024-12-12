@@ -16,9 +16,9 @@ struct READ_CAPACITY_DATA {
     u32 bytesPerBlock;
 };
 
-//**************************/
-//*         BUFFERS        */
-//**************************/
+//
+// Data Buffers
+// 
 
 class DataBuffer {
 public:
@@ -56,10 +56,9 @@ private:
     u32 Pointer;
 };
 
-//**************************/
-//*     R/O STORAGE        */
-//**************************/
-
+//
+// Read Only Storage
+//
 class Storage {
 public:
     Storage(wchar_t* Filename)
@@ -355,9 +354,6 @@ struct XE_ATAPI_DEV_STATE
     XE_CDB scsiCBD = { 0 };
     // Direct Memroy Access Processing
     XE_ATAPI_DMA_STATE dmaState = { 0 };
-
-
-   
 };
 
 class ODD : public PCIDevice
