@@ -558,7 +558,7 @@ void SMC::smcFIFOProcessWrite(u64 writeAddress, u64 data, u8 byteCount)
 				switch (fifoWrittenMsg[1])
 				{
 				case 0x10: // SMC_READ_ANA
-					std::cout << "SMC: ANA READ" << std::endl;
+					//std::cout << "SMC: ANA READ" << std::endl;
 					fifoReadedMsg[0] = SMC_I2C_READ_WRITE;
 					fifoReadedMsg[1] = 0x0;
 					fifoReadedMsg[4] = (HANA_State[fifoWrittenMsg[6]] & 0xFF);

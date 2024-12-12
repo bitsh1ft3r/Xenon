@@ -30,7 +30,7 @@
 #define PRIO_SMM         0x14
 #define PRIO_SFCX        0x18
 #define PRIO_SATA_HDD    0x20
-#define PRIO_SATA_CDROM  0x24
+#define PRIO_SATA_ODD  0x24
 #define PRIO_OHCI_0      0x2C
 #define PRIO_EHCI_0      0x30
 #define PRIO_OHCI_1      0x34

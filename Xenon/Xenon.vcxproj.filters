@@ -47,9 +47,6 @@
     <ClCompile Include="Core\RootBus\HostBridge\PCIBridge\PCIBridge.cpp">
       <Filter>Core\RootBus\HostBridge\PCIBridge</Filter>
     </ClCompile>
-    <ClCompile Include="Core\RootBus\HostBridge\PCIBridge\CDROM\CDROM.cpp">
-      <Filter>Core\RootBus\HostBridge\PCIBridge\CDROM</Filter>
-    </ClCompile>
     <ClCompile Include="Core\RootBus\HostBridge\PCIBridge\HDD\HDD.cpp">
       <Filter>Core\RootBus\HostBridge\PCIBridge\HDD</Filter>
     </ClCompile>
@@ -92,6 +89,9 @@
     <ClCompile Include="Core\RootBus\HostBridge\PCIBridge\OHCI0\OHCI0.cpp">
       <Filter>Core\RootBus\HostBridge\PCIBridge\OHCI0</Filter>
     </ClCompile>
+    <ClCompile Include="Core\RootBus\HostBridge\PCIBridge\ODD\ODD.cpp">
+      <Filter>Core\RootBus\HostBridge\PCIBridge\ODD</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <Filter Include="Base">
@@ -123,9 +123,6 @@
     </Filter>
     <Filter Include="Core\RootBus\HostBridge\PCIBridge">
       <UniqueIdentifier>{90b9d984-aa96-412c-a585-2ce8f817e348}</UniqueIdentifier>
-    </Filter>
-    <Filter Include="Core\RootBus\HostBridge\PCIBridge\CDROM">
-      <UniqueIdentifier>{1db8a2a2-358a-4115-b178-0507d599715a}</UniqueIdentifier>
     </Filter>
     <Filter Include="Core\RootBus\HostBridge\PCIBridge\HDD">
       <UniqueIdentifier>{90081b32-1ef4-4069-8d00-5f396933abf9}</UniqueIdentifier>
@@ -165,6 +162,9 @@
     </Filter>
     <Filter Include="Core\RootBus\HostBridge\PCIBridge\OHCI1">
       <UniqueIdentifier>{ddde28b3-071d-44eb-a939-9bf9b6e5b25b}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Core\RootBus\HostBridge\PCIBridge\ODD">
+      <UniqueIdentifier>{1db8a2a2-358a-4115-b178-0507d599715a}</UniqueIdentifier>
     </Filter>
   </ItemGroup>
   <ItemGroup>
@@ -215,9 +215,6 @@
     </ClInclude>
     <ClInclude Include="Core\RootBus\HostBridge\PCIBridge\PCIDevice.h">
       <Filter>Core\RootBus\HostBridge\PCIBridge</Filter>
-    </ClInclude>
-    <ClInclude Include="Core\RootBus\HostBridge\PCIBridge\CDROM\CDROM.h">
-      <Filter>Core\RootBus\HostBridge\PCIBridge\CDROM</Filter>
     </ClInclude>
     <ClInclude Include="Core\RootBus\HostBridge\PCIBridge\HDD\HDD.h">
       <Filter>Core\RootBus\HostBridge\PCIBridge\HDD</Filter>
@@ -275,6 +272,9 @@
     </ClInclude>
     <ClInclude Include="Core\RootBus\HostBridge\XGPU\XenosRegisters.h">
       <Filter>Core\RootBus\HostBridge\XGPU</Filter>
+    </ClInclude>
+    <ClInclude Include="Core\RootBus\HostBridge\PCIBridge\ODD\ODD.h">
+      <Filter>Core\RootBus\HostBridge\PCIBridge\ODD</Filter>
     </ClInclude>
   </ItemGroup>
 </Project>

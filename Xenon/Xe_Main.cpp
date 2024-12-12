@@ -11,7 +11,7 @@
 #include "Xenon/Core/RootBus/HostBridge/PCIBridge/XMA/XMA.h"
 #include "Xenon/Core/RootBus/HostBridge/PCIBridge/HDD/HDD.h"
 #include "Xenon/Core/RootBus/HostBridge/PCIBridge/SMC/SMC.h"
-#include "Xenon/Core/RootBus/HostBridge/PCIBridge/CDROM/CDROM.h"
+#include "Xenon/Core/RootBus/HostBridge/PCIBridge/ODD/ODD.h"
 #include "Xenon/Core/RootBus/HostBridge/PCIBridge/OHCI0/OHCI0.h"
 #include "Xenon/Core/RootBus/HostBridge/PCIBridge/OHCI1/OHCI1.h"
 #include "Xenon/Core/RootBus/HostBridge/PCIBridge/EHCI0/EHCI0.h"
@@ -35,7 +35,7 @@ int main(int argc, char* argv[])
 
 	eFuses xenonCpuFuses;
 	xenonCpuFuses.fuseLine00 = 0xc0ffffffffffffff;
-	xenonCpuFuses.fuseLine01 = 0x0f0f0f0f0f0f0f0f;
+	xenonCpuFuses.fuseLine01 = 0x0f0f0f0f0f0f0ff0;
 	xenonCpuFuses.fuseLine02 = 0x0000000000000000;
 	xenonCpuFuses.fuseLine03 = 0xF98C9725B2052FE2;
 	xenonCpuFuses.fuseLine04 = 0xF98C9725B2052FE2;
@@ -51,10 +51,10 @@ int main(int argc, char* argv[])
 	xedkCpuFuses.fuseLine00 = 0xc0ffffffffffffff;
 	xedkCpuFuses.fuseLine01 = 0x0f0f0f0f0f0f0ff0;
 	xedkCpuFuses.fuseLine02 = 0x0000000000000000;
-	xedkCpuFuses.fuseLine03 = 0x962212CF67B531A5;
-	xedkCpuFuses.fuseLine04 = 0x962212CF67B531A5;
-	xedkCpuFuses.fuseLine05 = 0x2E185FE3E2BD65BB;
-	xedkCpuFuses.fuseLine06 = 0x2E185FE3E2BD65BB;
+	xedkCpuFuses.fuseLine03 = 0x8CBA33C6B70BF641;
+	xedkCpuFuses.fuseLine04 = 0x8CBA33C6B70BF641;
+	xedkCpuFuses.fuseLine05 = 0x2AC5A81E6B41BFE6;
+	xedkCpuFuses.fuseLine06 = 0x2AC5A81E6B41BFE6;
 	xedkCpuFuses.fuseLine07 = 0x0000000000000000;
 	xedkCpuFuses.fuseLine08 = 0x0000000000000000;
 	xedkCpuFuses.fuseLine09 = 0x0000000000000000;
@@ -74,11 +74,11 @@ int main(int argc, char* argv[])
 	Xe::PCIDev::EHCI1::EHCI1 ehci1;
 
 	// Create the Secure Flash Cntroller for Xbox Device, and load the Nand dump for emulation.
-	SFCX sfcx("C://Xbox/xenon_xdk.bin", &pciBridge);
+	SFCX sfcx("C://Xbox/nandflash.bin", &pciBridge);
 	RAM ram;
 	XMA xma;
-	CDROM cdrom;
-	HDD hdd;
+	ODD odd(&pciBridge, &ram);
+	HDD hdd(&pciBridge);
 	SMC smc(&pciBridge);
 	NAND nandDevice;
 
@@ -94,7 +94,7 @@ int main(int argc, char* argv[])
 	ethernet.Initialize("ETHERNET", ETHERNET_DEV_SIZE);
 	sfcx.Initialize("SFCX", SFCX_DEV_SIZE);
 	xma.Initialize("XMA", XMA_DEV_SIZE);
-	cdrom.Initialize("CDROM", CDROM_DEV_SIZE);
+	odd.Initialize("CDROM", ODD_DEV_SIZE);
 	hdd.Initialize("HDD", HDD_DEV_SIZE);
 	smc.Initialize("SMC", SMC_DEV_SIZE);
 
@@ -106,7 +106,7 @@ int main(int argc, char* argv[])
 	pciBridge.addPCIDevice(&ethernet);
 	pciBridge.addPCIDevice(&sfcx);
 	pciBridge.addPCIDevice(&xma);
-	pciBridge.addPCIDevice(&cdrom);
+	pciBridge.addPCIDevice(&odd);
 	pciBridge.addPCIDevice(&hdd);
 	pciBridge.addPCIDevice(&smc);
 
@@ -121,10 +121,10 @@ int main(int argc, char* argv[])
 	RootBus.AddDevice(&ram);
 
 	// NAND Load Path.
-    nandDevice.Load("C://Xbox/xenon_xdk.bin");
+    nandDevice.Load("C://Xbox/nandflash.bin");
 
 	// Load 1BL here from given path.
-	Xenon xenonCPU(&RootBus, "C://Xbox/1bl.bin", xenonCpuFuses);
+	Xenon xenonCPU(&RootBus, "C://Xbox/1bl.bin", xedkCpuFuses);
 
 	pciBridge.RegisterIIC(xenonCPU.GetIICPointer());
 

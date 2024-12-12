@@ -40,7 +40,7 @@ bool Xe::Xenos::XGPU::Read(u64 readAddress, u64* data, u8 byteCount)
 {
 	if (isAddressMappedInBAR(static_cast<u32>(readAddress)))
 	{
-		std::cout << "Xenos Read Addr = 0x" << readAddress << std::endl;
+		//std::cout << "Xenos Read Addr = 0x" << readAddress << std::endl;
 		u32 regIndex = (readAddress & 0xFFFFF) / 4;
 
 		bool hit = 0;
@@ -67,7 +67,7 @@ bool Xe::Xenos::XGPU::Write(u64 writeAddress, u64 data, u8 byteCount)
 {
 	if (isAddressMappedInBAR(static_cast<u32>(writeAddress)))
 	{
-		std::cout << "Xenos Write Addr = 0x" << writeAddress << " data = 0x" << _byteswap_ulong(static_cast<u32>(data)) << std::endl;
+		//std::cout << "Xenos Write Addr = 0x" << writeAddress << " data = 0x" << _byteswap_ulong(static_cast<u32>(data)) << std::endl;
 		
 		u32 regIndex = (writeAddress & 0xFFFFF) / 4;
 		

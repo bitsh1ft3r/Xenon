@@ -1,9 +1,10 @@
 #pragma once
 
-#include <thread>
+#include <vector>
 #include <iostream>
 
 #include "Xenon/Core/RootBus/HostBridge/PCIBridge/PCIDevice.h"
+#include "Xenon/Core/RootBus/HostBridge/PCIBridge/PCIBridge.h"
 
 #define HDD_DEV_SIZE	0x30
 
@@ -59,7 +60,8 @@
 
 // ATA Identify Data
 // This contains all info and parameters of a specific device.
-struct ATA_IDENTIFY_DATA {
+#include <pshpack1.h>
+typedef struct ATA_IDENTIFY_DATA {
     u16 generalConfiguration;                
     u16 numberOfCylinders;                   
     u16 reserved1;                         
@@ -237,23 +239,28 @@ struct ATA_REG_STATE
 // ATA Device State
 struct ATA_DEV_STATE
 {
-    ATA_REG_STATE ataRegState = { 0 };
+    ATA_REG_STATE ataReadState = { 0 };
+    ATA_REG_STATE ataWriteState = { 0 };
     ATA_IDENTIFY_DATA ataIdentifyData = { 0 };
+    std::vector<u8> readBuffer;
+    std::vector<u8>writeBufferl;
 };
 
 class HDD : public PCIDevice
 {
 public:
-	HDD();
+	HDD(PCIBridge* parentPCIBridge);
 	void Read(u64 readAddress, u64* data, u8 byteCount) override;
 	void ConfigRead(u64 readAddress, u64* data, u8 byteCount) override;
 	void Write(u64 writeAddress, u64 data, u8 byteCount) override;
 	void ConfigWrite(u64 writeAddress, u64 data, u8 byteCount) override;
 
 private:
-    // HDD Thread object.
-    std::thread* hddThread;
+    // PCI Bridge pointer. Used for Interrupts.
+    PCIBridge* parentBus;
+
     // Device State
     ATA_DEV_STATE ataDeviceState = { 0 };
-    void sendATAIdentifyData();
+    
+    void ataCopyIdentifyDeviceData();
 };
