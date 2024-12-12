@@ -779,13 +779,10 @@ bool PPCInterpreter::MMUTranslateAddress(u64* EA, PPU_STATE *hCoreState)
 
             // Get our Virtual Address - 65 bit
             // VSID + 28 bit adress data
-            // VSID is VA 0-52 bit, the remaining 28 bits are adress data
-            // so whe shift 28 bits left here.
-            VSID = VSID << 28;
             u64 PAGE = QGET(*EA, 36, 63 - p);
             PAGE = PAGE << p;
-            u32 OFFSET = QGET(*EA, 64 - p, 63);
-            u64 VA = VSID | PAGE | OFFSET;
+            //u32 OFFSET = QGET(*EA, 64 - p, 63);
+            u64 VA = VSID | PAGE;// | OFFSET;
 
             VA;// |= upperEA;
 
