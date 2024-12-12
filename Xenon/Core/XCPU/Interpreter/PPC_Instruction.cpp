@@ -160,9 +160,6 @@ PPCInstruction PPCInterpreter::getOpcode(u32 instrData)
     case 31: /* Subgroup 31 */
         switch (XO_20to30)
         {
-        case 278: // dcbt
-            return PPCInstruction::dcbt;
-            break;
         case 792: // srawx
             return PPCInstruction::srawx;
             break;
@@ -278,6 +275,9 @@ PPCInstruction PPCInterpreter::getOpcode(u32 instrData)
             return PPCInstruction::stbux;
             break;
         case 246: // dcbt
+            return PPCInstruction::dcbt;
+            break;
+        case 278: // dcbt
             return PPCInstruction::dcbt;
             break;
         case 279: // lhzx
@@ -578,6 +578,9 @@ PPCInstruction PPCInterpreter::getOpcode(u32 instrData)
     case 48: // lfs
         return PPCInstruction::lfs;
         break;
+    case 50: // lfd
+        return PPCInstruction::lfd;
+        break;
     case 52: // stfs
         return PPCInstruction::stfs;
         break;
@@ -797,9 +800,6 @@ std::string PPCInterpreter::getOpcodeName(u32 instrData)
     case 31: /* Subgroup 31 */
         switch (XO_20to30)
         {
-        case 278: // dcbt
-            return "dcbt";
-            break;
         }
         switch (XO_21to30)
         {
@@ -912,6 +912,9 @@ std::string PPCInterpreter::getOpcodeName(u32 instrData)
             return "stbux";
             break;
         case 246: // dcbt
+            return "dcbt";
+            break;
+        case 278: // dcbt
             return "dcbt";
             break;
         case 279: // lhzx

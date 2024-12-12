@@ -101,6 +101,7 @@ namespace PPCInterpreter
 
 	// ALU
 	void PPCInterpreter_addx(PPU_STATE* hCore);
+	void PPCInterpreter_addex(PPU_STATE* hCore);
 	void PPCInterpreter_addi(PPU_STATE* hCore);
 	void PPCInterpreter_addic(PPU_STATE* hCore);
 	void PPCInterpreter_addic_rc(PPU_STATE* hCore);
@@ -140,6 +141,7 @@ namespace PPCInterpreter
 	void PPCInterpreter_mulldx(PPU_STATE* hCore);
 	void PPCInterpreter_mullw(PPU_STATE* hCore);
 	void PPCInterpreter_mulhdux(PPU_STATE* hCore);
+	void PPCInterpreter_nandx(PPU_STATE* hCore);
 	void PPCInterpreter_negx(PPU_STATE* hCore);
 	void PPCInterpreter_norx(PPU_STATE* hCore);
 	void PPCInterpreter_ori(PPU_STATE* hCore);
@@ -211,6 +213,9 @@ namespace PPCInterpreter
 	void PPCInterpreter_sthux(PPU_STATE* hCore);
 	void PPCInterpreter_sthx(PPU_STATE* hCore);
 
+	// Store String Word
+	void PPCInterpreter_stswi(PPU_STATE* hCore);
+
 	// Store Word
 	void PPCInterpreter_stw(PPU_STATE* hCore);
 	void PPCInterpreter_stwbrx(PPU_STATE* hCore);
@@ -245,6 +250,9 @@ namespace PPCInterpreter
 	void PPCInterpreter_lhzux(PPU_STATE* hCore);
 	void PPCInterpreter_lhzx(PPU_STATE* hCore);
 
+	// Load String Word
+	void PPCInterpreter_lswi(PPU_STATE* hCore);
+
 	// Load Word
 	void PPCInterpreter_lwa(PPU_STATE* hCore);
 	void PPCInterpreter_lwax(PPU_STATE* hCore);
@@ -267,6 +275,6 @@ namespace PPCInterpreter
 	// Load Floating
 	//
 
-	// Load Floating Single
+	void PPCInterpreter_lfd(PPU_STATE* hCore);
 	void PPCInterpreter_lfs(PPU_STATE* hCore);
 }

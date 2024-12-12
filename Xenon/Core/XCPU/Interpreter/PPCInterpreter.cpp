@@ -58,9 +58,10 @@ void PPCInterpreter::ppcExecuteSingleInstruction(PPU_STATE* hCore) {
 		/*
 	case PPCInstruction::addcx:
 		break;
-	case PPCInstruction::addex:
-		break;
 		*/
+	case PPCInstruction::addex:
+		PPCInterpreter_addex(hCore);
+		break;
 	case PPCInstruction::addi:
 		PPCInterpreter_addi(hCore);
 		break;
@@ -300,9 +301,10 @@ void PPCInterpreter::ppcExecuteSingleInstruction(PPU_STATE* hCore) {
 	case PPCInstruction::ldx:
 		PPCInterpreter_ldx(hCore);
 		break;
-		/*
 	case PPCInstruction::lfd:
+		PPCInterpreter_lfd(hCore);
 		break;
+		/*
 	case PPCInstruction::lfdu:
 		break;
 	case PPCInstruction::lfdux:
@@ -353,8 +355,11 @@ void PPCInterpreter::ppcExecuteSingleInstruction(PPU_STATE* hCore) {
 		/*
 	case PPCInstruction::lmw:
 		break;
+		*/
 	case PPCInstruction::lswi:
+		PPCInterpreter_lswi(hCore);
 		break;
+		/*
 	case PPCInstruction::lswx:
 		break;
 		*/
@@ -473,10 +478,9 @@ void PPCInterpreter::ppcExecuteSingleInstruction(PPU_STATE* hCore) {
 	case PPCInstruction::mullwx:
 		PPCInterpreter_mullw(hCore);
 		break;
-		/*
 	case PPCInstruction::nandx:
+		PPCInterpreter_nandx(hCore);
 		break;
-		*/
 	case PPCInstruction::negx:
 		PPCInterpreter_negx(hCore);
 		break;
@@ -636,8 +640,11 @@ void PPCInterpreter::ppcExecuteSingleInstruction(PPU_STATE* hCore) {
 		/*
 	case PPCInstruction::stmw:
 		break;
+		*/
 	case PPCInstruction::stswi:
+		PPCInterpreter_stswi(hCore);
 		break;
+		/*
 	case PPCInstruction::stswx:
 		break;
 		*/

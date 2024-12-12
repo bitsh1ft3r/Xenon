@@ -122,6 +122,46 @@ void PPCInterpreter::PPCInterpreter_sthx(PPU_STATE* hCore)
 }
 
 //
+// Store String Word
+//
+
+// Weird string instruction
+void PPCInterpreter::PPCInterpreter_stswi(PPU_STATE* hCore)
+{
+    X_FORM_rS_rA_NB_XO;
+
+    u64 EA = 0;
+    if (rA != 0)
+    {
+        EA = hCore->ppuThread[hCore->currentThread].GPR[rA];
+    }
+
+    u32 n = 32;
+    if (NB != 0)
+    {
+        n = NB;
+    }
+
+    u64 r = rS - 1;
+    u32 i = 0;
+    while (n > 0)
+    {
+        if (i == 0)
+        {
+            r++;
+            r &= 31;
+        }
+        MMUWrite8(hCore, EA, (hCore->ppuThread[hCore->currentThread].GPR[r] >> (24 - i)) & 0xFF);
+
+        i += 8;
+        if (i == 32)
+            i = 0;
+        EA++;
+        n--;
+    }
+}
+
+//
 // Store Word
 //
 
@@ -493,6 +533,51 @@ void PPCInterpreter::PPCInterpreter_lhzx(PPU_STATE* hCore)
 }
 
 //
+// String Word
+//
+
+// Werid intruction
+void PPCInterpreter::PPCInterpreter_lswi(PPU_STATE* hCore)
+{
+    X_FORM_rD_rA_NB_XO;
+
+    u64 EA = 0;
+    if (rA != 0)
+    {
+        EA = hCore->ppuThread[hCore->currentThread].GPR[rA];
+    }
+
+    u32 n = 32;
+    if (NB != 0)
+    {
+        n = NB;
+    }
+
+    u64 r = rD - 1;
+    u32 i = 0;
+
+    while (n > 0)
+    {
+        if (i == 0)
+        {
+            r++;
+            r &= 31;
+            hCore->ppuThread[hCore->currentThread].GPR[r] = 0;
+        }
+
+        const u32 temp_value = MMURead8(hCore, EA) << (24 - i);
+
+        hCore->ppuThread[hCore->currentThread].GPR[r] |= temp_value;
+
+        i += 8;
+        if (i == 32)
+            i = 0;
+        EA++;
+        n--;
+    }
+}
+
+//
 // Load Word
 // 
 
@@ -713,6 +798,20 @@ void PPCInterpreter::PPCInterpreter_ldx(PPU_STATE* hCore)
 
     DBG_LOAD("ldx: Addr 0x" << EA << " data = 0x" << data << std::endl;)
     hCore->ppuThread[hCore->currentThread].GPR[rD] = data;
+}
+
+void PPCInterpreter::PPCInterpreter_lfd(PPU_STATE* hCore)
+{
+
+    D_FORM_FrD_rA_D;
+    D = EXTS(D, 16);
+
+    // Check if Floating Point is available.
+    assert(hCore->ppuThread[hCore->currentThread].SPR.MSR.FP == 1);
+
+    u64 EA = (rA ? hCore->ppuThread[hCore->currentThread].GPR[rA] : 0) + D;
+
+    hCore->ppuThread[hCore->currentThread].FPR[FrD].valueAsDouble = MMURead64(hCore, EA);
 }
 
 void PPCInterpreter::PPCInterpreter_lfs(PPU_STATE* hCore)

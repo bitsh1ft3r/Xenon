@@ -23,6 +23,25 @@ void PPCInterpreter::PPCInterpreter_addx(PPU_STATE* hCore)
 	}
 }
 
+void PPCInterpreter::PPCInterpreter_addex(PPU_STATE* hCore)
+{
+	XO_FORM_rD_rA_rB_OE_RC;
+
+	GPR(rD) = ppcAddCarrying(hCore, GPR(rA), GPR(rB),
+		hCore->ppuThread[hCore->currentThread].SPR.XER.CA);
+
+	if (OE)
+	{
+		std::cout << "PPC Interpreter< ADDEX-> Fatal error, OE not implemented!" << std::endl;
+	}
+
+	if (RC)
+	{
+		u32 CR = CRCompS(hCore, GPR(rD), 0);
+		ppcUpdateCR(hCore, 0, CR);
+	}
+}
+
 void PPCInterpreter::PPCInterpreter_addi(PPU_STATE* hCore)
 {
 	D_FORM_rD_rA_SI;
@@ -575,6 +594,19 @@ void PPCInterpreter::PPCInterpreter_mulhdux(PPU_STATE* hCore)
 	if (RC)
 	{
 		u32 CR = CRCompS(hCore, GPR(rD), 0);
+		ppcUpdateCR(hCore, 0, CR);
+	}
+}
+
+void PPCInterpreter::PPCInterpreter_nandx(PPU_STATE* hCore)
+{
+	X_FORM_rS_rA_rB_RC;
+
+	GPR(rA) = ~(GPR(rS) & GPR(rB));
+
+	if (RC)
+	{
+		u32 CR = CRCompS(hCore, GPR(rA), 0);
 		ppcUpdateCR(hCore, 0, CR);
 	}
 }

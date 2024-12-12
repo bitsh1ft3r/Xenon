@@ -67,13 +67,13 @@ void PPCInterpreter::PPCInterpreter_bclr(PPU_STATE* hCore)
     bool condOk = BO_GET(0) || (CR_GET(BI) == BO_GET(1));
 
     // xdk ARE 0x0000000003003f48 AND 0x0000000003003fdc
-    // xell version are 0x0000000003003dd0 AND 0x0000000003003e64
+    // xell version are 0x0000000003003dc0 AND 0x0000000003003e54
     // 
     // HW_INIT Skip on XDK 17.489.0
-    if (hCore->ppuThread[hCore->currentThread].CIA == 0x0000000003003f48)
+    if (hCore->ppuThread[hCore->currentThread].CIA == 0x0000000003003dc0)
        condOk = false;
 
-    if (hCore->ppuThread[hCore->currentThread].CIA == 0x0000000003003fdc)
+    if (hCore->ppuThread[hCore->currentThread].CIA == 0x0000000003003e54)
        condOk = true;
 
     if (ctrOk && condOk)
