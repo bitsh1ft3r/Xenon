@@ -1,5 +1,6 @@
 #include "NAND.h"
 
+/********************Responsible for loading the NAND file********************/
 bool NAND::Load(std::string filePath)
 {
     std::cout << "NAND: Loading file " << filePath.c_str() << std::endl;
@@ -51,6 +52,7 @@ bool NAND::Load(std::string filePath)
     return true;
 }
 
+/************Responsible for reading the NAND************/
 void NAND::Read(u64 readAddress, u64* data, u8 byteCount)
 {
     u32 offset = (u32)readAddress & 0xffffff;
@@ -58,6 +60,7 @@ void NAND::Read(u64 readAddress, u64* data, u8 byteCount)
     memcpy(data, &rawNANDData[offset], byteCount);
 }
 
+/************Responsible for writing the NAND************/
 void NAND::Write(u64 writeAddress, u64 data, u8 byteCount)
 {
     u32 offset = (u32)writeAddress & 0xffffff;
@@ -65,6 +68,7 @@ void NAND::Write(u64 writeAddress, u64 data, u8 byteCount)
     memcpy(&rawNANDData[offset], &data, byteCount);
 }
 
+//*Checks ECD Page.
 bool NAND::CheckPageECD(u8 *data, s32 offset)
 {
     u8 actualData[4] = { 0 };
@@ -82,6 +86,7 @@ bool NAND::CheckPageECD(u8 *data, s32 offset)
         calculatedECD[3] == actualData[3]);
 }
 
+//*Calculates the ECD.
 void NAND::CalculateECD(u8* data, int offset, u8 ret[])
 {
     u32 i, val = 0, v = 0;
@@ -111,6 +116,7 @@ void NAND::CalculateECD(u8* data, int offset, u8 ret[])
     ret[3] = (val >> 18) & 0xFF;
 }
 
+//*Checks Magic.
 bool NAND::CheckMagic()
 {
     u8 magic[2];
@@ -126,6 +132,7 @@ bool NAND::CheckMagic()
     return false;
 }
 
+//*Checks Spare.
 void NAND::CheckSpare()
 {
     u8 data[0x630] = { 0 };
@@ -144,6 +151,7 @@ void NAND::CheckSpare()
     }
 }
 
+//*Detects Spare Type.
 MetaType NAND::DetectSpareType(bool firstTry)
 {
     if (!hasSpare)
