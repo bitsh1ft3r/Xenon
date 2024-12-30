@@ -38,15 +38,14 @@ struct SMC_STATE
 	u32 reg44;
 	u32 reg48;
 	u32 reg4C;
-	u32 reg50;
+	u32 smiIntPendingReg;
 	u32 reg54;
-	u32 reg58;
-	u32 reg5C;
+	u32 smiIntAckReg;
+	u32 smiIntEnabledReg;
 	u32 reg60;
 	u32 reg64;
 	u32 reg68;
-	// Offset 0x6C
-	u32 clockIntReg;
+	u32 clockIntPendingReg;
 	u32 reg70;
 	u32 reg74;
 	u32 reg78;
@@ -87,6 +86,9 @@ struct SMC_STATE
 	u32 regF4;
 	u32 regF8;
 	u32 regFC;
+	// Tracks the number of times the system has written to the clock, 
+	// useful for handling interrupts correctly.
+	s8 clockWriteNum = 0;
 };
 
 class SMC : public PCIDevice

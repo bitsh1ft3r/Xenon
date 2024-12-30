@@ -394,6 +394,9 @@ void ODD::atapiReset()
     const char vendorIdentification[] = "PLDS   16D2S";
     memcpy(&atapiState.atapiInquiryData.vendorIdentification, vendorIdentification,
         sizeof(vendorIdentification));
+
+    wchar_t* CdImageFilename = (wchar_t*)L"C:/Xbox/xenon.iso";
+    atapiState.mountedCDImage = new Storage(CdImageFilename);
 }
 
 void ODD::atapiIdentifyCommand()
@@ -452,7 +455,7 @@ void ODD::processSCSICommand()
 
         atapiState.dataReadBuffer.Initialize(sectorCount, FALSE);
         atapiState.dataReadBuffer.ResetPtr();
-        CdImage->Read(readOffset, atapiState.dataReadBuffer.Ptr(), sectorCount);
+        atapiState.mountedCDImage->Read(readOffset, atapiState.dataReadBuffer.Ptr(), sectorCount);
       
         break;
     default:
@@ -530,18 +533,15 @@ ODD::ODD(PCIBridge* parentPCIBridge, RAM* ram)
 
     // Reset our State.
     atapiReset();
-
-    wchar_t* CdImageFilename = (wchar_t*)L"C:/Xbox/xenon.iso";
-    this->CdImage = new Storage(CdImageFilename);
 }
 
 void ODD::Read(u64 readAddress, u64* data, u8 byteCount)
 {
     // PCI BAR0 is the Primary Command Block Base Address.
-    u8 atapiCommandReg = (readAddress - pciConfigSpace.configSpaceHeader.BAR0);
+    u8 atapiCommandReg = (u8)(readAddress - pciConfigSpace.configSpaceHeader.BAR0);
     
     // PCI BAR1 is the Primary Control Block Base Address.
-    u8 atapiControlReg = (readAddress - pciConfigSpace.configSpaceHeader.BAR1);
+    u8 atapiControlReg = (u8)(readAddress - pciConfigSpace.configSpaceHeader.BAR1);
 
     // Who are we reading from?
     if (atapiCommandReg < (pciConfigSpace.configSpaceHeader.BAR1 - pciConfigSpace.configSpaceHeader.BAR0))
@@ -599,10 +599,10 @@ void ODD::Read(u64 readAddress, u64* data, u8 byteCount)
 void ODD::Write(u64 writeAddress, u64 data, u8 byteCount)
 {
     // PCI BAR0 is the Primary Command Block Base Address.
-    u8 atapiCommandReg = (writeAddress - pciConfigSpace.configSpaceHeader.BAR0);
+    u8 atapiCommandReg = (u8)(writeAddress - pciConfigSpace.configSpaceHeader.BAR0);
 
     // PCI BAR1 is the Primary Control Block Base Address.
-    u8 atapiControlReg = (writeAddress - pciConfigSpace.configSpaceHeader.BAR1);
+    u8 atapiControlReg = (u8)(writeAddress - pciConfigSpace.configSpaceHeader.BAR1);
 
     // Who are we writing to?
     if (atapiCommandReg < (pciConfigSpace.configSpaceHeader.BAR1 - pciConfigSpace.configSpaceHeader.BAR0))

@@ -235,7 +235,7 @@ void PCIBridge::ConfigRead(u64 readAddress, u64* data, u8 byteCount)
 	if (configAddr.busNum == 0 && configAddr.devNum == 0)
 	{
 		// Reading from our own config space!
-		memcpy(&data, &pciBridgeConfig.data[configAddr.regOffset], byteCount);
+		memcpy(data, &pciBridgeConfig.data[configAddr.regOffset], byteCount);
 		return;
 	}
 

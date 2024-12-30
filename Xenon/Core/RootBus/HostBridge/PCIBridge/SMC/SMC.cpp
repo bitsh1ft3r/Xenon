@@ -212,9 +212,18 @@ void SMC::smcProcessRead(u64 readAddress, u64* data, u8 byteCount)
 		&& readAddress < SMC_AREA_SMI + SMC_AREA_SIZE)
 	{
 		// SMI.
-		std::cout << "SMC: SMI Read, addr 0x" << std::hex <<
-			readAddress << std::endl;
-		*data = intPending;
+		if (readAddress == 0xea001050) // SMI Int Pending?
+		{
+			*data = smcState.smiIntPendingReg;
+		}
+		if (readAddress == 0xea001058) // SMI Int ACK?
+		{
+			*data = smcState.smiIntAckReg;
+		}
+		if (readAddress == 0xea00105C) // SMI Int Enabled?
+		{
+			*data = smcState.smiIntEnabledReg;
+		}
 		return;
 	}
 	else if (readAddress == SMC_FIFO_READ_STATUS_REG || readAddress == SMC_FIFO_READ_MSG_REG
@@ -224,10 +233,13 @@ void SMC::smcProcessRead(u64 readAddress, u64* data, u8 byteCount)
 		smcFIFOProcessRead(readAddress, data, byteCount);
 		return;
 	}
-	else if (readAddress == 0xEA00106C)
+	else if (readAddress == 0xEA001064) // Clock Int ACK?
 	{
-		// Clock interrupt related.
-		*data = smcState.clockIntReg;
+		*data = smcState.reg64;
+	}
+	else if (readAddress == 0xEA00106C) // Clock Int Pending?
+	{
+		*data = smcState.clockIntPendingReg;
 	}
 	else
 	{
@@ -259,7 +271,7 @@ void SMC::smcProcessWrite(u64 writeAddress, u64 data, u8 byteCount)
 	{
 		// GPIO 0.
 		std::cout << "SMC: GPIO 0 Write, addr 0x" << std::hex <<
-			writeAddress << std::endl;
+			writeAddress << " data 0x" << data << std::endl;
 		return;
 	}
 	else if (writeAddress >= SMC_AREA_GPIO_1
@@ -267,7 +279,7 @@ void SMC::smcProcessWrite(u64 writeAddress, u64 data, u8 byteCount)
 	{
 		// GPIO 1.
 		std::cout << "SMC: GPIO 1 Write, addr 0x" << std::hex <<
-			writeAddress << std::endl;
+			writeAddress << " data 0x" << data << std::endl;
 		return;
 	}
 	else if (writeAddress >= SMC_AREA_GPIO_2
@@ -275,16 +287,25 @@ void SMC::smcProcessWrite(u64 writeAddress, u64 data, u8 byteCount)
 	{
 		// GPIO 2.
 		std::cout << "SMC: GPIO 2 Write, addr 0x" << std::hex <<
-			writeAddress << std::endl;
+			writeAddress << " data 0x" << data << std::endl;
 		return;
 	}
 	else if (writeAddress >= SMC_AREA_SMI
 		&& writeAddress < SMC_AREA_SMI + SMC_AREA_SIZE)
 	{
 		// SMI.
-		std::cout << "SMC: SMI Write, addr 0x" << std::hex <<
-			writeAddress << std::endl;
-		intPending = static_cast<u32>(data);
+		if (writeAddress == 0xea001050) // SMI Int Pending
+	{
+		smcState.smiIntPendingReg = static_cast<u32>(data);
+	}
+		 if (writeAddress == 0xea001058) // SMI Int ACK
+	{
+		smcState.smiIntAckReg = static_cast<u32>(data);
+	}
+		 if (writeAddress == 0xea00105C) // SMI Int Enabled?
+	{
+		smcState.smiIntEnabledReg = static_cast<u32>(data);
+	}
 		return;
 	}
 	else if (writeAddress == SMC_FIFO_WRITE_STATUS_REG || writeAddress == SMC_FIFO_WRITE_MSG_REG
@@ -294,10 +315,14 @@ void SMC::smcProcessWrite(u64 writeAddress, u64 data, u8 byteCount)
 		smcFIFOProcessWrite(writeAddress, data, byteCount);
 		return;
 	}
-	else if (writeAddress == 0xEA00106C)
+	else if (writeAddress == 0xEA001064) 
 	{
-		// Clock interrupt related.
-		smcState.clockIntReg = static_cast<u32>(data);
+		smcState.reg64 = static_cast<u32>(data);
+	}
+	else if (writeAddress == 0xEA00106C) // Clock Int Enabled?
+	{
+		smcState.clockIntPendingReg = static_cast<u32>(data);
+		smcState.clockWriteNum++;
 	}
 	else
 	{
@@ -367,7 +392,6 @@ void SMC::initComPort()
 		return;
 	}
 	comPortInitialized = true;
-	//smcThread = std::thread(&SMC::smcLoop, this);
 }
 
 void SMC::uartWrite(u64 writeAddress, u64 data, u8 byteCount)
@@ -532,7 +556,7 @@ void SMC::smcFIFOProcessWrite(u64 writeAddress, u64 data, u8 byteCount)
 			case SMC_PWRON_TYPE:
 				// Change here to not enter Xell on modified nands!
 				fifoReadedMsg[0] = SMC_PWRON_TYPE;
-				fifoReadedMsg[1] = SMC_PWR_REAS_EJECT; // Eject button.
+				fifoReadedMsg[1] = SMC_PWR_REAS_PWRBTN; // Eject button.
 				break;
 			case SMC_QUERY_RTC:
 				std::cout << "SMC: SMC_QUERY_RTC, returning 0."
@@ -688,8 +712,11 @@ void SMC::smcFIFOProcessWrite(u64 writeAddress, u64 data, u8 byteCount)
 			// Clear the written mesage position counter.
 			currentWritePos = 0;
 			// Send Interrupt?
-			intPending = 0x10000000; // Interrupt pending dispatch. If this register contains this value then the kernel issues a dpc routine for reading the smc response.
-			parentBus->RouteInterrupt(PRIO_SMM);
+			if (smcState.smiIntEnabledReg == 0xC)
+			{
+				smcState.smiIntPendingReg = 0x10000000; // Interrupt pending dispatch. If this register contains this value then the kernel issues a dpc routine for reading the smc response.
+				parentBus->RouteInterrupt(PRIO_SMM);
+			}
 			return;
 		}
 		return;
@@ -723,11 +750,13 @@ void SMC::smcLoop()
 void SMC::smcClockTick()
 {
 	// Check for SMC Clock interrupt register? Software writes here after a ClockInterrupt is taken.
-	if (smcState.clockIntReg == 1)
+	if (smcState.clockWriteNum == 1)
 	{
+		smcState.clockWriteNum = 0;
+		smcState.clockIntPendingReg = 0x3;
 		parentBus->RouteInterrupt(PRIO_CLOCK);
-		smcState.clockIntReg = 0;
+
+		// Need to find out what's the best delay here.
+		std::this_thread::sleep_for(std::chrono::milliseconds(500));
 	}
-	// Need to find out what's the best delay here.
-	std::this_thread::sleep_for(std::chrono::milliseconds(50));
 }

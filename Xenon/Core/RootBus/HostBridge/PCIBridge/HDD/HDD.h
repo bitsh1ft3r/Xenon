@@ -61,7 +61,7 @@
 // ATA Identify Data
 // This contains all info and parameters of a specific device.
 #include <pshpack1.h>
-typedef struct ATA_IDENTIFY_DATA {
+struct ATA_IDENTIFY_DATA {
     u16 generalConfiguration;                
     u16 numberOfCylinders;                   
     u16 reserved1;                         

@@ -189,6 +189,7 @@ struct XE_ATAPI_INQUIRY_DATA
 //
 // SCSI Command Descriptor Block
 //
+#include <pshpack1.h>
 union XE_CDB {
 
     //
@@ -354,6 +355,8 @@ struct XE_ATAPI_DEV_STATE
     XE_CDB scsiCBD = { 0 };
     // Direct Memroy Access Processing
     XE_ATAPI_DMA_STATE dmaState = { 0 };
+    // Mounted ISO Image
+    Storage* mountedCDImage;
 };
 
 class ODD : public PCIDevice
@@ -383,6 +386,4 @@ private:
     // Misc
     void atapiReset();
     void atapiIdentifyCommand();
-
-    Storage* CdImage;
 };
