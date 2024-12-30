@@ -64,18 +64,17 @@ int main(int argc, char* argv[])
 	xedkCpuFuses.fuseLine10 = 0x0000000000000000;
 	xedkCpuFuses.fuseLine11 = 0x0000000000000000;
 	
-	/***RootBus, HostBridge and PCI Bridge objects***/
-	RootBus RootBus;
-	HostBridge hostBridge;
-	PCIBridge pciBridge;
+	
+	RootBus RootBus;	//RootBus Object
+	HostBridge hostBridge;	//HostBridge Object
+	PCIBridge pciBridge;	//PCIBridge Object
 
-	/***Ethernet, Audio Controller, OCHI and ECHI objects***/
-	Xe::PCIDev::ETHERNET::ETHERNET ethernet;
-	Xe::PCIDev::AUDIOCTRLR::AUDIOCTRLR audioController;
-	Xe::PCIDev::OHCI0::OHCI0 ohci0;
-	Xe::PCIDev::OHCI1::OHCI1 ohci1;
-	Xe::PCIDev::EHCI0::EHCI0 ehci0;
-	Xe::PCIDev::EHCI1::EHCI1 ehci1;
+	Xe::PCIDev::ETHERNET::ETHERNET ethernet;		//Ethernet Object
+	Xe::PCIDev::AUDIOCTRLR::AUDIOCTRLR audioController;	//Audio Controller Object
+	Xe::PCIDev::OHCI0::OHCI0 ohci0;		//OHCI0 Object
+	Xe::PCIDev::OHCI1::OHCI1 ohci1;		//OHCI1 Object
+	Xe::PCIDev::EHCI0::EHCI0 ehci0;		//EHCI0 Object
+	Xe::PCIDev::EHCI1::EHCI1 ehci1;		//EHCI1 Object
 
 	// Create the Secure Flash Cntroller for Xbox Device, and load the Nand dump for emulation.
 	SFCX sfcx("C://Xbox/nandflash.bin", &pciBridge);
@@ -88,7 +87,7 @@ int main(int argc, char* argv[])
 
 	Xe::Xenos::XGPU xenos(&ram);
 
-	/*************************Initialize all devices*************************/
+	//Initialize all devices
 	RootBus.Init();
 
 	ohci0.Initialize("OHCI0", OHCI0_DEV_SIZE);
@@ -103,7 +102,7 @@ int main(int argc, char* argv[])
 	hdd.Initialize("HDD", HDD_DEV_SIZE);
 	smc.Initialize("SMC", SMC_DEV_SIZE);
 
-	/***************Add PCI devices***************/
+	/*******Add PCI devices*******/
 	pciBridge.addPCIDevice(&ohci0);
 	pciBridge.addPCIDevice(&ohci1);
 	pciBridge.addPCIDevice(&ehci0);
@@ -116,15 +115,15 @@ int main(int argc, char* argv[])
 	pciBridge.addPCIDevice(&hdd);
 	pciBridge.addPCIDevice(&smc);
 
-	/*****Register the Xenos GPU and the PCI Bridge*****/
+	//Register the Xenos GPU and the PCIBridge
 	hostBridge.RegisterXGPU(&xenos);
 	hostBridge.RegisterPCIBridge(&pciBridge);
 
-	/***************************************Initializes the NAND and the RAM***************************************/
+	/*****************Initializes the NAND and the RAM*****************/
 	nandDevice.Initialize("NAND", NAND_START_ADDR, NAND_END_ADDR, true);
 	ram.Initialize("RAM", RAM_START_ADDR, RAM_START_ADDR + RAM_SIZE, false);
 
-	/******Adds the HostBridge, NAND and RAM******/
+	/**Adds the HostBridge, NAND and RAM**/
 	RootBus.AddHostBridge(&hostBridge);
 	RootBus.AddDevice(&nandDevice);
 	RootBus.AddDevice(&ram);
@@ -135,7 +134,7 @@ int main(int argc, char* argv[])
 	// Load 1BL here from given path.
 	Xenon xenonCPU(&RootBus, "C://Xbox/1bl.bin", xedkCpuFuses);
 
-	/********************Registers the IIC********************/
+	/**************Registers the IIC**************/
 	pciBridge.RegisterIIC(xenonCPU.GetIICPointer());
 
 	// CPU Start routine and entry point.
