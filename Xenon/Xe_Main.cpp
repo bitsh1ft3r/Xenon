@@ -64,12 +64,12 @@ int main(int argc, char* argv[])
 	xedkCpuFuses.fuseLine10 = 0x0000000000000000;
 	xedkCpuFuses.fuseLine11 = 0x0000000000000000;
 	
-	/***RootBus, HostBridge and PCi Bridge variables***/
+	/***RootBus, HostBridge and PCi Bridge objects***/
 	RootBus RootBus;
 	HostBridge hostBridge;
 	PCIBridge pciBridge;
 
-	/***Ethernet, Audio Controller, OCHI and ECHI variables***/
+	/***Ethernet, Audio Controller, OCHI and ECHI objects***/
 	Xe::PCIDev::ETHERNET::ETHERNET ethernet;
 	Xe::PCIDev::AUDIOCTRLR::AUDIOCTRLR audioController;
 	Xe::PCIDev::OHCI0::OHCI0 ohci0;
