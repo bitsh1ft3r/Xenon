@@ -64,7 +64,7 @@ int main(int argc, char* argv[])
 	xedkCpuFuses.fuseLine10 = 0x0000000000000000;
 	xedkCpuFuses.fuseLine11 = 0x0000000000000000;
 	
-	/***RootBus, HostBridge and PCi Bridge objects***/
+	/***RootBus, HostBridge and PCI Bridge objects***/
 	RootBus RootBus;
 	HostBridge hostBridge;
 	PCIBridge pciBridge;
@@ -103,7 +103,7 @@ int main(int argc, char* argv[])
 	hdd.Initialize("HDD", HDD_DEV_SIZE);
 	smc.Initialize("SMC", SMC_DEV_SIZE);
 
-	/***************Add PCi devices***************/
+	/***************Add PCI devices***************/
 	pciBridge.addPCIDevice(&ohci0);
 	pciBridge.addPCIDevice(&ohci1);
 	pciBridge.addPCIDevice(&ehci0);
@@ -116,7 +116,7 @@ int main(int argc, char* argv[])
 	pciBridge.addPCIDevice(&hdd);
 	pciBridge.addPCIDevice(&smc);
 
-	/*****Register the Xenos GPU and the PCi Bridge*****/
+	/*****Register the Xenos GPU and the PCI Bridge*****/
 	hostBridge.RegisterXGPU(&xenos);
 	hostBridge.RegisterPCIBridge(&pciBridge);
 
