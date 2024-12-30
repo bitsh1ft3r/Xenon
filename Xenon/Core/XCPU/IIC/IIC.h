@@ -54,11 +54,15 @@ namespace Xe
 				INT_MCACK = 0x70
 			};
 
+			struct XE_INT
+			{
+				bool ack = false;
+				u8 pendingInt = 0;
+			};
+
 			// Each logical thread has its own Interrupt Control Block.
 			struct PPE_INT_CTRL_BLCK
 			{
-				bool IIC_Active;
-				bool extInt;
 				u32 REG_CPU_WHOAMI;
 				u32 REG_CPU_CURRENT_TSK_PRI;
 				u32 REG_CPU_IPI_DISPATCH_0;
@@ -67,7 +71,8 @@ namespace Xe
 				u32 REG_EOI;
 				u32 REG_EOI_SET_CPU_CURRENT_TSK_PRI;
 				u32 REG_INT_MCACK;
-				std::vector<u8> pendingInt;
+				std::vector<XE_INT> pendingInt;
+				bool interruptTaken = false;
 			};
 
 			struct IIC_State
@@ -80,11 +85,9 @@ namespace Xe
 			{
 			public:
 				XenonIIC();
-				bool IICActive(u8 ppuID);
 				void writeInterrupt(u64 intAddress, u64 intData);
 				void readInterrupt(u64 intAddress, u64* intData);
 				bool checkExtInterrupt(u8 ppuID);
-				void clearExtInterrupt(u8 ppuID);
 				void genInterrupt(u8 interruptType, u8 cpusToInterrupt);
 			private:
 				IIC_State iicState;
