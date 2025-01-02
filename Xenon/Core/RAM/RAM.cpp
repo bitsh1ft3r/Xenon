@@ -3,17 +3,20 @@
 
 #include "RAM.h"
 
+/***Sets the destination, value (205) and size (RAMData)***/
 RAM::RAM()
 {
 	memset(RAMData, 0xcd, sizeof(RAMData));
 }
 
+/*****************Responsible for RAM reading*****************/
 void RAM::Read(u64 readAddress, u64* data, u8 byteCount)
 {
 	u64 offset = (u32)(readAddress - RAM_START_ADDR); 
 	memcpy(data, &RAMData[offset], byteCount);
 }
 
+/******************Responsible for RAM writing*****************/
 void RAM::Write(u64 writeAddress, u64 data, u8 byteCount)
 {
 	u64 offset = (u32)(writeAddress - RAM_START_ADDR);
