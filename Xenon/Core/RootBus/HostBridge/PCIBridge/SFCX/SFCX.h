@@ -164,19 +164,14 @@ public:
 private:
 	// Secure Flash Controller for Xbox main loop.
 	void sfcxMainLoop();
-
 	// Magic check
 	bool checkMagic();
-
 	// Thread object
 	std::thread sfcxThread;
-
 	// SFCX State
 	SFCX_STATE sfcxState;
-
 	// I/O File stream.
 	FILE* nandFile;
-
 	// PCI Bridge pointer. Used for Interrupts.
 	PCIBridge* parentBus;
 };

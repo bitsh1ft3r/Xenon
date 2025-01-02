@@ -8,15 +8,27 @@ SFCX::SFCX(std::string nandLoadPath, PCIBridge* parentPCIBridge)
 	// Asign parent PCI Bridge pointer.
 	parentBus = parentPCIBridge;
 
+	// Dev & Vendor ID
+	pciConfigSpace.configSpaceHeader.reg0.vendorID = 0x1414;
+	pciConfigSpace.configSpaceHeader.reg0.deviceID = 0x580B;
+
 	std::cout << "Xenon Secure Flash Controller for Xbox" << std::endl;
 	
 	// Set the registers as a dump from my Corona 16MB. These were dumped at POR via Xell before SFCX Init.
-	sfcxState.configReg = 0x43000; // Config Reg is VERY Important. Tells info about Meta/NAND Type.
-	sfcxState.statusReg = _byteswap_ulong(0x00060000);
-	sfcxState.addressReg = _byteswap_ulong(0x3000f700);
-	sfcxState.dataReg = 0xffffffff;
-	sfcxState.logicalReg = _byteswap_ulong(0x00c5f700);
-	sfcxState.physicalReg = _byteswap_ulong(0x00c5f700);
+	// These are also readable via JRunner and simple360 flasher. 
+	
+	// Xenon Dev Kit ES DD2 64 MB
+	// 0x01198030 
+	
+	// Corona 16 Megs Retail
+	// 0x000043000
+
+	sfcxState.configReg = 0x00043000; // Config Reg is VERY Important. Tells info about Meta/NAND Type.
+	sfcxState.statusReg = 0x00000600;
+	sfcxState.statusReg = 0x00000600;
+	sfcxState.addressReg = 0x00f70030;
+	sfcxState.logicalReg = 0x00000100;
+	sfcxState.physicalReg = 0x0000100;
 	sfcxState.commandReg = NO_CMD;
 
 	// Load the NAND dump.
@@ -115,7 +127,7 @@ void SFCX::Read(u64 readAddress, u64* data, u8 byteCount)
 		*data = sfcxState.addressReg;
 		break;
 	case SFCX_DATA_REG:
-		*data = _byteswap_ulong(sfcxState.dataReg);
+		*data = sfcxState.dataReg;
 		break;
 	case SFCX_LOGICAL_REG:
 		*data = sfcxState.logicalReg;
@@ -196,7 +208,6 @@ void SFCX::ConfigWrite(u64 writeAddress, u64 data, u8 byteCount)
 void SFCX::sfcxMainLoop()
 {
 	// Config register should be initialized by now.
-	u32 offset;
 	while (true)
 	{
 		// Did we got a command?
@@ -209,12 +220,9 @@ void SFCX::sfcxMainLoop()
 			switch (sfcxState.commandReg)
 			{
 			case PAGE_BUF_TO_REG:
-				memcpy(&sfcxState.dataReg, &sfcxState.pageBuffer[sfcxState.currentPageBufferPos], 4);
-				sfcxState.currentPageBufferPos += 4;
-				if (sfcxState.currentPageBufferPos == 0x214)
-				{
-					sfcxState.currentPageBufferPos = 0;
-				}
+				// If we're reading from data buffer to data reg the Address reg becomes our buffer pointer.
+				memcpy(&sfcxState.dataReg, &sfcxState.pageBuffer[sfcxState.addressReg], 4);
+				sfcxState.addressReg += 4;
 				break;
 			//case REG_TO_PAGE_BUF:
 			//	break;
@@ -223,13 +231,13 @@ void SFCX::sfcxMainLoop()
 			case PHY_PAGE_TO_BUF:
 				// Read Phyisical page into page buffer.
 				// Physical pages are 0x210 bytes long, logical page (0x200) + meta data (0x10).
-				offset = sfcxState.addressReg / 0x4200;
-				offset = offset * 0x210;
 				fseek(nandFile, sfcxState.addressReg, SEEK_SET);
 				fread_s(&sfcxState.pageBuffer, 0x210, 1, 0x210, nandFile);
 				// Issue Interrupt.
 				if (sfcxState.configReg & CONFIG_INT_EN)
 				{
+					// Set a delay for our interrupt?
+					std::this_thread::sleep_for(std::chrono::milliseconds(150));
 					parentBus->RouteInterrupt(PRIO_SFCX);
 					sfcxState.statusReg |= STATUS_INT_CP;
 				}
