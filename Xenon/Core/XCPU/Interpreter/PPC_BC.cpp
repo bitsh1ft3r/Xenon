@@ -66,14 +66,14 @@ void PPCInterpreter::PPCInterpreter_bclr(PPU_STATE* hCore)
     bool ctrOk = BO_GET(2) | ((hCore->ppuThread[hCore->currentThread].SPR.CTR != 0) ^ BO_GET(3));
     bool condOk = BO_GET(0) || (CR_GET(BI) == BO_GET(1));
 
-    // xdk ARE 0x0000000003003f48 AND 0x0000000003003fdc
+    // Jrunner XDK build offsets are 0x0000000003003f48 AND 0x0000000003003fdc
     // xell version are 0x0000000003003dc0 AND 0x0000000003003e54
-    // 
+
     // HW_INIT Skip on XDK 17.489.0
-    if (hCore->ppuThread[hCore->currentThread].CIA == 0x0000000003003dc0)
+    if (hCore->ppuThread[hCore->currentThread].CIA == 0x0000000003003f48)
        condOk = false;
 
-    if (hCore->ppuThread[hCore->currentThread].CIA == 0x0000000003003e54)
+    if (hCore->ppuThread[hCore->currentThread].CIA == 0x0000000003003fdc)
        condOk = true;
 
     if (ctrOk && condOk)

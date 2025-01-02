@@ -1,3 +1,4 @@
+#include <chrono>
 #include <fstream>
 
 #include "Xenon.h"
@@ -66,6 +67,6 @@ void Xenon::Start(u64 resetVector)
 
 	while (true)
 	{
-
+		std::this_thread::sleep_for(std::chrono::seconds(60));
 	}
 }
