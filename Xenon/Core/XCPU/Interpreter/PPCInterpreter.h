@@ -27,7 +27,7 @@ namespace PPCInterpreter
 	u64 ppcAddCarrying(PPU_STATE* hCore, u64 op1, u64 op2, u64 carryBit);
 	void ppcMul64(u64 operand0, u64 operand1, u64* u64High, u64* u64Low);
 	void ppcMul64Signed(u64 operand0, u64 operand1, u64* u64High, u64* u64Low);
-	bool ppcDidCarry(u64 input1, u64 input2, u64 input3);
+
 	//
 	// Condition Register
 	//
@@ -57,20 +57,20 @@ namespace PPCInterpreter
 
 	void ppcResetException(PPU_STATE* hCore);
 	void ppcInterpreterTrap(PPU_STATE* hCore, u32 trapNumber);
-	void ppcInstStorageException(PPU_STATE* hCore, u64 SRR1);
-	void ppcDataStorageException(PPU_STATE* hCore, u64 EA, u64 ISR);
-	void ppcDataSegmentException(PPU_STATE* hCore, u64 EA);
+	void ppcInstStorageException(PPU_STATE* hCore);
+	void ppcDataStorageException(PPU_STATE* hCore, u64 ISR);
+	void ppcDataSegmentException(PPU_STATE* hCore);
 	void ppcInstSegmentException(PPU_STATE* hCore);
-	void ppcSystemCallException(PPU_STATE* hCore, bool isHypervisorCall);
+	void ppcSystemCallException(PPU_STATE* hCore);
 	void ppcDecrementerException(PPU_STATE* hCore);
-	void ppcProgramException(PPU_STATE* hCore, u32 trapType);
+	void ppcProgramException(PPU_STATE* hCore);
 	void ppcExternalException(PPU_STATE* hCore);
 
 	//
 	// MMU
 	//
 
-	bool MMUTranslateAddress(u64* EA, PPU_STATE* hCoreState);
+	bool MMUTranslateAddress(u64* EA, PPU_STATE* hCoreState, bool memWrite);
 	u8 mmuGetPageSize(PPU_STATE* hCore, bool L, u8 LP);
 	void mmuAddTlbEntry(PPU_STATE* hCore);
 	bool mmuSearchTlbEntry(PPU_STATE* hCore, u64* RPN, u64 VA, u64 VPN, u8 p, bool LP);

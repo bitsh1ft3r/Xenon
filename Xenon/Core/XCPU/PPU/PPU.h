@@ -29,6 +29,7 @@ private:
 	XENON_CONTEXT *xenonContext = nullptr;
 
 	// Helpers
-	void ppuReadNextInstruction();
+	bool ppuReadNextInstruction();
+	void ppuCheckExceptions();
 	PPU_THREAD getCurrentRunningThreads();
 };

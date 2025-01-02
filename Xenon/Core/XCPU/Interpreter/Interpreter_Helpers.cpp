@@ -251,17 +251,3 @@ void PPCInterpreter::ppcMul64Signed(u64 operand0, u64 operand1, u64* u64High, u6
     *u64High = high;
     *u64Low = low;
 }
-
-bool PPCInterpreter::ppcDidCarry(u64 input1, u64 input2, u64 input3)
-{
-    if ((input1 + input2) < input1)
-    {
-        return true;
-
-    }
-    if ((input1 +input2 + input3) < input3)
-    {
-        return true;
-    }
-    return false;
-}

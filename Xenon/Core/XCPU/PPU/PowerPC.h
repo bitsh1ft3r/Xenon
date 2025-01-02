@@ -164,6 +164,8 @@ struct SLBEntry
 	u64 VSID;
 	u8 V;
 	u64 ESID;
+	u64 vsidReg;
+	u64 esidReg;
 };
 
 // Traslation lookaside buffer
@@ -193,6 +195,8 @@ struct PPU_THREAD_SPRS
 	u64 LR;
 	// Count Register
 	u64 CTR;
+	// CFAR: I dont know the definition.
+	u64 CFAR;
 	// Data Storage Interrupt Status Register
 	u64 DSISR;
 	// Data Address Register
@@ -363,7 +367,26 @@ typedef struct SOCSECENG_BLOCK { //Addr = 80000200_00024000
 #define XE_FUSESET_LOC		0x20000
 #define XE_FUSESET_SIZE		0x17FF
 #define XE_L2_CACHE_SIZE	0x100000
-#define XE_PVR				0x00710500
+#define XE_PVR				0x00710800	// Jasper: 0x00710500
+
+// Exception Bitmasks for Exception Register.
+
+#define PPU_EX_NONE			0x0
+#define PPU_EX_RESET		0x1
+#define PPU_EX_MC			0x2
+#define PPU_EX_DATASTOR		0x4
+#define PPU_EX_DATASEGM		0x8
+#define PPU_EX_INSSTOR		0x10
+#define PPU_EX_INSTSEGM		0x20
+#define PPU_EX_EXT			0x40
+#define PPU_EX_ALIGNM		0x80
+#define PPU_EX_PROG			0x100
+#define PPU_EX_FPU			0x200
+#define PPU_EX_DEC			0x400
+#define PPU_EX_HDEC			0x800
+#define PPU_EX_SC			0x1000
+#define PPU_EX_TRACE		0x2000
+#define PPU_EX_PERFMON		0x4000
 
 // Floating Point Register
 
@@ -404,10 +427,18 @@ struct PPU_THREAD_REGISTERS
 	// Floating-Point Status Control Register
 	FPSCR FPSCR;
 	// Segment Lookaside Buffer
-	SLBEntry SLB[16] = { 0 };
+	SLBEntry SLB[64] = { 0 };
 
-	// Interrupt Flag
-	bool exceptionOcurred = false;
+	// Interrupt Register
+	u16 exceptReg = 0;
+	// Tells wheter we're currently processing an exception.
+	bool exceptionTaken = false;
+	// For use with Data/Instruction Storage/Segment exceptions.
+	u64 exceptEA = 0;
+	// Trap type
+	u16 exceptTrapType = 0;
+	// SystemCall Type
+	bool exceptHVSysCall = false;
 
 	// Interrupt EA for managing Interrupts.
 	u64 intEA = 0;
@@ -470,6 +501,7 @@ struct XENON_CONTEXT
 #define SPR_SDR1		25
 #define SPR_SRR0		26
 #define SPR_SRR1		27
+#define SPR_CFAR		28
 #define SPR_ESR 		62
 #define SPR_IVPR 		63
 #define SPR_PID 		48

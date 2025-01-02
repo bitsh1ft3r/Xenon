@@ -80,7 +80,7 @@ void PPU::StartExecution()
 	while (ppuRunning)
 	{
 		// See if we have any threads active.
-		if (getCurrentRunningThreads() != PPU_THREAD_NONE)
+		while (getCurrentRunningThreads() != PPU_THREAD_NONE)
 		{
 			// We have some threads active!
 			
@@ -90,59 +90,39 @@ void PPU::StartExecution()
 				// Thread 0 is running, process instructions until we reach TTR timeout.
 				ppuState.currentThread = PPU_THREAD_0;
 
-				// Start a timer
-				const auto timerStart{ std::chrono::steady_clock::now() };
-
 				// Loop on this thread for the amount of Instructions that TTR tells us.
 				for (size_t instrCount = 0; instrCount < ppuState.SPR.TTR; instrCount++)
 				{
 					// Main processing loop.
 
-					// Check External Interrupts
-					if (xenonContext->xenonIIC.checkExtInterrupt(ppuState.ppuThread[ppuState.currentThread].SPR.PIR))
+					// Read next intruction from Memory.
+					if (ppuReadNextInstruction())
 					{
-						PPCInterpreter::ppcExternalException(&ppuState);
-						xenonContext->xenonIIC.clearExtInterrupt(ppuState.ppuThread[ppuState.currentThread].SPR.PIR);
+						// Execute next intrucrtion.
+						PPCInterpreter::ppcExecuteSingleInstruction(&ppuState);
+
+						// Increase Time Base Counter
+						if (xenonContext->timeBaseActive)
+						{
+							ppuState.SPR.TB++;
+							// Decrease the Decrementer.
+							ppuState.ppuThread[ppuState.currentThread].SPR.DEC -= 1;
+						}
 					}
 
-					// Check for Decrementer interrupts.
-					// First decrement if time base is active.
-					if (xenonContext->timeBaseActive)
-					{
-						ppuState.ppuThread[ppuState.currentThread].SPR.DEC -= 1;
-					}
-					// Signal the exception if DEC = 0 and MSR[EE] = 1.
-					if (ppuState.ppuThread[ppuState.currentThread].SPR.DEC == 0 && 
+					// Check if the IIC has an external interrupt pending if an exception is not already being processed.
+					if (ppuState.ppuThread[ppuState.currentThread].exceptionTaken == false && 
 						ppuState.ppuThread[ppuState.currentThread].SPR.MSR.EE)
 					{
-						PPCInterpreter::ppcDecrementerException(&ppuState);
-					}
-					
-					// Read Next Intruction from Memory.
-					ppuReadNextInstruction();
-
-					// If interrupts ocurred, process them, else execute next instruction.
-					if (!ppuState.ppuThread[ppuState.currentThread].exceptionOcurred)
-					{
-						PPCInterpreter::ppcExecuteSingleInstruction(&ppuState);
+						if (xenonContext->xenonIIC.checkExtInterrupt(ppuState.ppuThread[ppuState.currentThread].SPR.PIR))
+						{
+							ppuState.ppuThread[ppuState.currentThread].exceptReg |= PPU_EX_EXT;
+						}
 					}
 
-					// Exception raised, we can disbale the flag now.
-					ppuState.ppuThread[ppuState.currentThread].exceptionOcurred = false;
-
-					// Increase Time Base Counter
-					if (xenonContext->timeBaseActive)
-					{
-						ppuState.SPR.TB++;
-						// Decrease the Decrementer.
-					}
+					// Check Exceptions pending.
+					ppuCheckExceptions();
 				}
-
-				const auto timerStop{ std::chrono::steady_clock::now() };
-
-				const std::chrono::duration<double> elapsed_seconds{ timerStop - timerStart };
-				//std::cout << "PPU(" << ppuState.ppuName << ") Thread " << ppuState.currentThread
-				//	<< " Executed " << ppuState.SPR.TTR << " instructions in " << elapsed_seconds << " seconds" << std::endl;
 			}
 			// Check again for the 2nd thread.
 			if (getCurrentRunningThreads() == PPU_THREAD_1 || getCurrentRunningThreads() == PPU_THREAD_BOTH)
@@ -150,60 +130,40 @@ void PPU::StartExecution()
 				// Thread 0 is running, process instructions until we reach TTR timeout.
 				ppuState.currentThread = PPU_THREAD_1;
 
-				// Start a timer
-				const auto timerStart{ std::chrono::steady_clock::now() };
-
 				// Loop on this thread for the amount of Instructions that TTR tells us.
 				for (size_t instrCount = 0; instrCount < ppuState.SPR.TTR; instrCount++)
 				{
 					// Main processing loop.
-
-					// Check External Interrupts
-					if (xenonContext->xenonIIC.checkExtInterrupt(ppuState.ppuThread[ppuState.currentThread].SPR.PIR))
+					// 
+					// Read next intruction from Memory.
+					if (ppuReadNextInstruction())
 					{
-						PPCInterpreter::ppcExternalException(&ppuState);
-						xenonContext->xenonIIC.clearExtInterrupt(ppuState.ppuThread[ppuState.currentThread].SPR.PIR);
-					}
+						// Execute next intrucrtion.
+						PPCInterpreter::ppcExecuteSingleInstruction(&ppuState);
 
-					// Check for Decrementer interrupts.
-					// First decrement if time base is active.
-					if (xenonContext->timeBaseActive)
-					{
-						ppuState.ppuThread[ppuState.currentThread].SPR.DEC -= 1;
-					}
-					// Signal the exception if DEC = 0 and MSR[EE] = 1.
-					if (ppuState.ppuThread[ppuState.currentThread].SPR.DEC == 0 &&
+						// Increase Time Base Counter
+						if (xenonContext->timeBaseActive)
+						{
+							ppuState.SPR.TB++;
+							// Decrease the Decrementer.
+							ppuState.ppuThread[ppuState.currentThread].SPR.DEC -= 1;
+						}
+					}	
+
+					// Check if the IIC has an external interrupt pending if an exception is not already being processed.
+					if (ppuState.ppuThread[ppuState.currentThread].exceptionTaken == false &&
 						ppuState.ppuThread[ppuState.currentThread].SPR.MSR.EE)
 					{
-						PPCInterpreter::ppcDecrementerException(&ppuState);
+						if (xenonContext->xenonIIC.checkExtInterrupt(ppuState.ppuThread[ppuState.currentThread].SPR.PIR))
+						{
+							ppuState.ppuThread[ppuState.currentThread].exceptReg |= PPU_EX_EXT;
+						}
 					}
 
-					// Read Next Intruction from Memory.
-					ppuReadNextInstruction();
-
-					// If interrupts ocurred, process them, else execute next instruction.
-					if (!ppuState.ppuThread[ppuState.currentThread].exceptionOcurred)
-					{
-						PPCInterpreter::ppcExecuteSingleInstruction(&ppuState);
-					}
-
-					// Exception raised, we can disbale the flag now.
-					ppuState.ppuThread[ppuState.currentThread].exceptionOcurred = false;
-
-					// Increase Time Base Counter
-					if (xenonContext->timeBaseActive)
-					{
-						ppuState.SPR.TB++;
-					}
+					// Check Exceptions pending.
+					ppuCheckExceptions();
 				}
-
-				const auto timerStop{ std::chrono::steady_clock::now() };
-
-				const std::chrono::duration<double> elapsed_seconds{ timerStop - timerStart };
-				//std::cout << "PPU(" << ppuState.ppuName << ") Thread " << ppuState.currentThread
-				//	<< " Executed " << ppuState.SPR.TTR << " instructions in " << elapsed_seconds << " seconds" << std::endl;
 			}
-
 		}
 
 		//
@@ -215,14 +175,14 @@ void PPU::StartExecution()
 		if (xenonContext->xenonIIC.checkExtInterrupt(ppuState.ppuThread[ppuState.currentThread].SPR.PIR)
 			&& WEXT)
 		{
-			xenonContext->xenonIIC.clearExtInterrupt(ppuState.ppuThread[ppuState.currentThread].SPR.PIR);
 			// Great, someone started us! Let's enable THRD0.
 			ppuState.SPR.CTRL = 0x800000;
 			// Issue reset!
-			ppuState.ppuThread[ppuState.currentThread].CIA = 0x100;				// Set CIA to 0x100 as per docs.
+			ppuState.ppuThread[PPU_THREAD_0].exceptReg |= PPU_EX_RESET;	
+			ppuState.ppuThread[PPU_THREAD_1].exceptReg |= PPU_EX_RESET;			// Set CIA to 0x100 as per docs.
 			ppuState.ppuThread[ppuState.currentThread].SPR.SRR1 = 0x200000;		// Set SRR1 42-44 = 100
 			// EOI + INT_PRIO = 0
-			xenonContext->xenonIIC.writeInterrupt(0x50000 + ppuState.ppuThread[ppuState.currentThread].SPR.PIR * 0x1000 + 0x68, 0);
+			//xenonContext->xenonIIC.writeInterrupt(0x50000 + ppuState.ppuThread[ppuState.currentThread].SPR.PIR * 0x1000 + 0x68, 0);
 		}
 	}
 }
@@ -232,7 +192,7 @@ PPU_THREAD_REGISTERS* PPU::GetPPUThread(u8 thrdID)
 	return &this->ppuState.ppuThread[thrdID];
 }
 
-void PPU::ppuReadNextInstruction()
+bool PPU::ppuReadNextInstruction()
 {
 	// Update CIA.
 	ppuState.ppuThread[ppuState.currentThread].CIA =
@@ -243,7 +203,210 @@ void PPU::ppuReadNextInstruction()
 	// Fetch the instruction from memory.
 	ppuState.ppuThread[ppuState.currentThread].CI =
 		PPCInterpreter::MMURead32(&ppuState, ppuState.ppuThread[ppuState.currentThread].CIA);
+	if (ppuState.ppuThread[ppuState.currentThread].exceptReg & PPU_EX_INSSTOR ||
+		ppuState.ppuThread[ppuState.currentThread].exceptReg & PPU_EX_INSTSEGM)
+	{
+		return false;
+	}
 	ppuState.ppuThread[ppuState.currentThread].iFetch = false;
+	return true;
+}
+
+void PPU::ppuCheckExceptions()
+{
+	// Check Exceptions pending and process them in order.
+	u16 exceptions = ppuState.ppuThread[ppuState.currentThread].exceptReg;
+	bool exceptionTaken = ppuState.ppuThread[ppuState.currentThread].exceptionTaken;
+	if (exceptions != PPU_EX_NONE)
+	{
+		// Non Maskable:
+
+		//
+		// 1. System Reset
+		//
+		if (exceptions & PPU_EX_RESET)
+		{
+			PPCInterpreter::ppcResetException(&ppuState);
+			exceptions &= ~PPU_EX_RESET;
+			goto end;
+		}
+
+		//
+		// 2. Machine Check
+		//
+		if (exceptions & PPU_EX_MC)
+		{
+			if (ppuState.ppuThread[ppuState.currentThread].SPR.MSR.ME)
+			{
+				PPCInterpreter::ppcResetException(&ppuState);
+				exceptions &= ~PPU_EX_MC;
+				goto end;
+			}
+			else
+			{
+				// Checkstop Mode. Hard Fault.
+				std::cout << "[" << ppuState.ppuName << "] CHECKSTOP!" << std::endl;
+				// TODO: Properly end execution.
+				// A checkstop is a full - stop of the processor that requires a System Reset to
+				// recover.
+				system("PAUSE");
+			}
+		}
+
+		if (ppuState.ppuThread[ppuState.currentThread].exceptionTaken == false)
+		{
+			// Maskable
+			
+			//
+			// 3. Instruction-Dependent
+			//
+
+			// A. Program - Illegal Instruction
+			if (exceptions & PPU_EX_PROG && ppuState.ppuThread[ppuState.currentThread].exceptTrapType == 44)
+			{
+				std::cout << "[" << ppuState.ppuName << "](THRD" << ppuState.currentThread << "): Unhandled Exception: "
+					<< "Illegal Instruction" << std::endl;
+				exceptions &= ~PPU_EX_PROG;
+				exceptionTaken = true;
+				goto end;
+			}			
+			// B. Floating-Point Unavailable
+			if (exceptions & PPU_EX_FPU)
+			{
+				std::cout << "[" << ppuState.ppuName << "](THRD" << ppuState.currentThread << "): Unhandled Exception: "
+					<< "Floating-Point Unavailable" << std::endl;
+				exceptions &= ~PPU_EX_FPU;
+				exceptionTaken = true;
+				goto end;
+			}
+			// C. Data Storage, Data Segment, or Alignment
+			// Data Storage
+			if (exceptions & PPU_EX_DATASTOR)
+			{
+				PPCInterpreter::ppcDataStorageException(&ppuState, DMASK(1,1));
+				exceptions &= ~PPU_EX_DATASTOR;
+				exceptionTaken = true;
+				goto end;
+			}
+			// Data Segment
+			if (exceptions & PPU_EX_DATASEGM)
+			{
+				PPCInterpreter::ppcDataSegmentException(&ppuState);
+				exceptions &= ~PPU_EX_DATASEGM;
+				exceptionTaken = true;
+				goto end;
+			}
+			// Alignment
+			if (exceptions & PPU_EX_ALIGNM)
+			{
+				std::cout << "[" << ppuState.ppuName << "](THRD" << ppuState.currentThread << "): Unhandled Exception: "
+					<< "Alignment" << std::endl;
+				exceptions &= ~PPU_EX_ALIGNM;
+				exceptionTaken = true;
+				goto end;
+			}
+			// D. Trace
+			if (exceptions & PPU_EX_TRACE)
+			{
+				std::cout << "[" << ppuState.ppuName << "](THRD" << ppuState.currentThread << "): Unhandled Exception: "
+					<< "Trace" << std::endl;
+				exceptions &= ~PPU_EX_TRACE;
+				exceptionTaken = true;
+				goto end;
+			}
+			// E. Program Trap, System Call, Program Priv Inst, Program Illegal Inst
+			// Program Trap
+			if (exceptions & PPU_EX_PROG && ppuState.ppuThread[ppuState.currentThread].exceptTrapType == 46)
+			{
+				PPCInterpreter::ppcProgramException(&ppuState);
+				exceptions &= ~PPU_EX_PROG;
+				exceptionTaken = true;
+				goto end;
+			}
+			// System Call
+			if (exceptions & PPU_EX_SC)
+			{
+				PPCInterpreter::ppcSystemCallException(&ppuState);
+				exceptions &= ~PPU_EX_SC;
+				exceptionTaken = true;
+				goto end;
+			}
+			// Program - Privileged Instruction
+			if (exceptions & PPU_EX_PROG && ppuState.ppuThread[ppuState.currentThread].exceptTrapType == 45)
+			{
+				std::cout << "[" << ppuState.ppuName << "](THRD" << ppuState.currentThread << "): Unhandled Exception: "
+					<< "Privileged Instruction" << std::endl;
+				exceptions &= ~PPU_EX_PROG;
+				exceptionTaken = true;
+				goto end;
+			}
+			// F. Instruction Storage and Instruction Segment
+			// Instruction Storage
+			if (exceptions & PPU_EX_INSSTOR)
+			{
+				PPCInterpreter::ppcInstStorageException(&ppuState);
+				exceptions &= ~PPU_EX_INSSTOR;
+				exceptionTaken = true;
+				goto end;
+			}
+			// Instruction Segment
+			if (exceptions & PPU_EX_INSTSEGM)
+			{
+				PPCInterpreter::ppcInstSegmentException(&ppuState);
+				exceptions &= ~PPU_EX_INSTSEGM;
+				exceptionTaken = true;
+				goto end;
+			}
+
+			//
+			// 4. Program - Imprecise Mode Floating-Point Enabled Exception
+			//
+
+			if (exceptions & PPU_EX_PROG)
+			{
+				std::cout << "[" << ppuState.ppuName << "](THRD" << ppuState.currentThread << "): Unhandled Exception: "
+					<< "Imprecise Mode Floating-Point Enabled Exception" << std::endl;
+				exceptions &= ~PPU_EX_PROG;
+				exceptionTaken = true;
+				goto end;
+			}
+
+			//
+			// 5. External, Decrementer, and Hypervisor Decrementer
+			//
+
+			// External
+			if (exceptions & PPU_EX_EXT && ppuState.ppuThread[ppuState.currentThread].SPR.MSR.EE)
+			{
+				PPCInterpreter::ppcExternalException(&ppuState);
+				exceptions &= ~PPU_EX_EXT;
+				exceptionTaken = true;
+				goto end;
+			}
+			// Decrementer
+			if (exceptions & PPU_EX_DEC)
+			{
+				PPCInterpreter::ppcDecrementerException(&ppuState);
+				exceptions &= ~PPU_EX_DEC;
+				exceptionTaken = true;
+				goto end;
+			}
+			// Hypervisor Decrementer
+			if (exceptions & PPU_EX_HDEC)
+			{
+				std::cout << "[" << ppuState.ppuName << "](THRD" << ppuState.currentThread << "): Unhandled Exception: "
+					<< "Hypervisor Decrementer" << std::endl;
+				exceptions &= ~PPU_EX_HDEC;
+				exceptionTaken = true;
+				goto end;
+			}
+		}
+
+		// Set the new value for our exception register and exception taken flag.
+			end:
+		ppuState.ppuThread[ppuState.currentThread].exceptReg = exceptions;
+		ppuState.ppuThread[ppuState.currentThread].exceptionTaken = exceptionTaken;
+	}
 }
 
 // Returns current executing thread by reading CTRL register.

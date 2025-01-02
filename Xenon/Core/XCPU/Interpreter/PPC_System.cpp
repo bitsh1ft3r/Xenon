@@ -11,7 +11,9 @@ void PPCInterpreter::PPCInterpreter_sc(PPU_STATE* hCore)
 {
 	SC_FORM_LEV;
 
-	ppcSystemCallException(hCore, LEV & 1);
+	// Raise the exception.
+	hCore->ppuThread[hCore->currentThread].exceptReg |= PPU_EX_SC;
+	hCore->ppuThread[hCore->currentThread].exceptHVSysCall = LEV & 1;
 
 	u16 syscallNum = (u16)hCore->ppuThread[hCore->currentThread].GPR[0x0];
 	std::string syscallName = "";
@@ -387,13 +389,13 @@ void PPCInterpreter::PPCInterpreter_slbmte(PPU_STATE* hCore)
 	u64 ESID = QGET(hCore->ppuThread[hCore->currentThread].GPR[rB], 0, 35);
 	bool V = QGET(hCore->ppuThread[hCore->currentThread].GPR[rB], 36, 36);
 	u16 Index = QGET(hCore->ppuThread[hCore->currentThread].GPR[rB], 52, 63);
-	
+
 	// VSID is VA 0-52 bit, the remaining 28 bits are adress data
 	// so whe shift 28 bits left here so we only do it once per entry.
 	// This speeds MMU translation since the shift is only done once.
 	VSID = VSID << 28;
 
-	hCore->ppuThread[hCore->currentThread].SLB[Index].ESID = ESID;                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                         	hCore->ppuThread[hCore->currentThread].SLB[Index].ESID = ESID;
+	hCore->ppuThread[hCore->currentThread].SLB[Index].ESID = ESID;
 	hCore->ppuThread[hCore->currentThread].SLB[Index].VSID = VSID;
 	hCore->ppuThread[hCore->currentThread].SLB[Index].V = V;
 	hCore->ppuThread[hCore->currentThread].SLB[Index].Kp = Kp;
@@ -402,6 +404,10 @@ void PPCInterpreter::PPCInterpreter_slbmte(PPU_STATE* hCore)
 	hCore->ppuThread[hCore->currentThread].SLB[Index].L = L;
 	hCore->ppuThread[hCore->currentThread].SLB[Index].C = C;
 	hCore->ppuThread[hCore->currentThread].SLB[Index].LP = LP;
+	hCore->ppuThread[hCore->currentThread].SLB[Index].vsidReg = 
+		hCore->ppuThread[hCore->currentThread].GPR[rS];
+	hCore->ppuThread[hCore->currentThread].SLB[Index].esidReg =
+		hCore->ppuThread[hCore->currentThread].GPR[rB];
 }
 
 void PPCInterpreter::PPCInterpreter_rfid(PPU_STATE* hCore)
@@ -487,6 +493,9 @@ void PPCInterpreter::PPCInterpreter_rfid(PPU_STATE* hCore)
 
 	hCore->ppuThread[hCore->currentThread].SPR.MSR.MSR_Hex = new_msr;
 	hCore->ppuThread[hCore->currentThread].NIA = hCore->ppuThread[hCore->currentThread].SPR.SRR0 & ~3;
+
+	// Clear exception taken flag.
+	hCore->ppuThread[hCore->currentThread].exceptionTaken = false;
 }
 
 void PPCInterpreter::PPCInterpreter_tw(PPU_STATE* hCore)
@@ -558,6 +567,12 @@ void PPCInterpreter::PPCInterpreter_mfspr(PPU_STATE* hCore)
 	case SPR_CTR:
 		value = hCore->ppuThread[hCore->currentThread].SPR.CTR;
 		break;
+	case SPR_DEC:
+		value = hCore->ppuThread[hCore->currentThread].SPR.DEC;
+		break;
+	case SPR_CFAR:
+		value = hCore->ppuThread[hCore->currentThread].SPR.CFAR;
+		break;
 	case SPR_HRMOR:
 		value = hCore->SPR.HRMOR;
 		break;
@@ -605,6 +620,9 @@ void PPCInterpreter::PPCInterpreter_mfspr(PPU_STATE* hCore)
 		break;
 	case SPR_SPRG1:
 		value = hCore->ppuThread[hCore->currentThread].SPR.SPRG1;
+		break;
+	case SPR_SPRG2:
+		value = hCore->ppuThread[hCore->currentThread].SPR.SPRG2;
 		break;
 	case SPR_SPRG3:
 		value = hCore->ppuThread[hCore->currentThread].SPR.SPRG3;
@@ -670,6 +688,9 @@ void PPCInterpreter::PPCInterpreter_mtspr(PPU_STATE* hCore)
 	case SPR_LR:
 		hCore->ppuThread[hCore->currentThread].SPR.LR = hCore->ppuThread[hCore->currentThread].GPR[rD];
 		break;
+	case SPR_CFAR:
+		hCore->ppuThread[hCore->currentThread].SPR.CFAR = hCore->ppuThread[hCore->currentThread].GPR[rD];
+		break;
 	case SPR_LPCR:
 		hCore->SPR.LPCR = hCore->ppuThread[hCore->currentThread].GPR[rD];
 		break;
@@ -733,6 +754,9 @@ void PPCInterpreter::PPCInterpreter_mtspr(PPU_STATE* hCore)
 		break;
 	case SPR_SPRG1:
 		hCore->ppuThread[hCore->currentThread].SPR.SPRG1 = hCore->ppuThread[hCore->currentThread].GPR[rD];
+		break;
+	case SPR_SPRG2:
+		hCore->ppuThread[hCore->currentThread].SPR.SPRG2 = hCore->ppuThread[hCore->currentThread].GPR[rD];
 		break;
 	case SPR_SPRG3:
 		hCore->ppuThread[hCore->currentThread].SPR.SPRG3 = hCore->ppuThread[hCore->currentThread].GPR[rD];

@@ -21,8 +21,6 @@ void PPCInterpreter::PPCInterpreter_dcbz(PPU_STATE* hCore)
 
     u64 EA = (rA ? hCore->ppuThread[hCore->currentThread].GPR[rA] : 0) + hCore->ppuThread[hCore->currentThread].GPR[rB];
     EA = EA & ~(128 - 1); // Cache line size
-    u64 RA = EA;
-    MMUTranslateAddress(&RA, hCore);
 
     // Temporarely diasable caching.
     for (u8 n = 0; n < 128; n += sizeof(u64))     
@@ -48,7 +46,8 @@ void PPCInterpreter::PPCInterpreter_stbu(PPU_STATE* hCore)
     D = EXTS(D, 16);
     u64 EA = hCore->ppuThread[hCore->currentThread].GPR[rA] + D; 
     MMUWrite8(hCore, EA, (u8)hCore->ppuThread[hCore->currentThread].GPR[rS]);
-    if (hCore->ppuThread[hCore->currentThread].exceptionOcurred)
+    if (hCore->ppuThread[hCore->currentThread].exceptReg & PPU_EX_DATASEGM
+        || hCore->ppuThread[hCore->currentThread].exceptReg & PPU_EX_DATASTOR)
         return;
 
     hCore->ppuThread[hCore->currentThread].GPR[rA] = EA;
@@ -59,7 +58,8 @@ void PPCInterpreter::PPCInterpreter_stbux(PPU_STATE* hCore)
     X_FORM_rS_rA_rB;
     u64 EA = hCore->ppuThread[hCore->currentThread].GPR[rA] + hCore->ppuThread[hCore->currentThread].GPR[rB];  
     MMUWrite8(hCore, EA, (u8)hCore->ppuThread[hCore->currentThread].GPR[rS]);
-    if (hCore->ppuThread[hCore->currentThread].exceptionOcurred)
+    if (hCore->ppuThread[hCore->currentThread].exceptReg & PPU_EX_DATASEGM
+        || hCore->ppuThread[hCore->currentThread].exceptReg & PPU_EX_DATASTOR)
         return;
 
     hCore->ppuThread[hCore->currentThread].GPR[rA] = EA;
@@ -97,7 +97,8 @@ void PPCInterpreter::PPCInterpreter_sthu(PPU_STATE* hCore)
     D = EXTS(D, 16);
     u64 EA = hCore->ppuThread[hCore->currentThread].GPR[rA] + D;
     MMUWrite16(hCore, EA, (u16)hCore->ppuThread[hCore->currentThread].GPR[rS]);
-    if (hCore->ppuThread[hCore->currentThread].exceptionOcurred)
+    if (hCore->ppuThread[hCore->currentThread].exceptReg & PPU_EX_DATASEGM
+        || hCore->ppuThread[hCore->currentThread].exceptReg & PPU_EX_DATASTOR)
         return;
 
     hCore->ppuThread[hCore->currentThread].GPR[rA] = EA;
@@ -108,7 +109,8 @@ void PPCInterpreter::PPCInterpreter_sthux(PPU_STATE* hCore)
     X_FORM_rS_rA_rB;
     u64 EA = (rA ? hCore->ppuThread[hCore->currentThread].GPR[rA] : 0) + hCore->ppuThread[hCore->currentThread].GPR[rB];
     MMUWrite16(hCore, EA, (u16)hCore->ppuThread[hCore->currentThread].GPR[rS]);
-    if (hCore->ppuThread[hCore->currentThread].exceptionOcurred)
+    if (hCore->ppuThread[hCore->currentThread].exceptReg & PPU_EX_DATASEGM
+        || hCore->ppuThread[hCore->currentThread].exceptReg & PPU_EX_DATASTOR)
         return;
 
     hCore->ppuThread[hCore->currentThread].GPR[rA] = EA;
@@ -178,10 +180,6 @@ void PPCInterpreter::PPCInterpreter_stwbrx(PPU_STATE* hCore)
     X_FORM_rS_rA_rB;
     u64 EA = (rA ? hCore->ppuThread[hCore->currentThread].GPR[rA] : 0) + hCore->ppuThread[hCore->currentThread].GPR[rB];
     MMUWrite32(hCore, EA, _byteswap_ulong(static_cast<u32>(hCore->ppuThread[hCore->currentThread].GPR[rS])));
-    //MMUTranslateAddress(&EA, hCore);
-    //std::cout << "stwbrx: REA 0x" << EA << " data = 0x" 
-    //    << hCore->ppuThread[hCore->currentThread].GPR[rS]
-    //    << " CIA = 0x" << hCore->ppuThread[hCore->currentThread].CIA << std::endl;
 }
 
 void PPCInterpreter::PPCInterpreter_stwcx(PPU_STATE* hCore)
@@ -197,14 +195,12 @@ void PPCInterpreter::PPCInterpreter_stwcx(PPU_STATE* hCore)
     if (hCore->ppuThread[hCore->currentThread].SPR.XER.SO)
         BSET(CR, 4, CR_BIT_SO);
 
-    //std::cout << hCore->ppuName << "(THRD" << hCore->currentThread << ") stwcx EA 0x"
-    //    << EA << std::endl;
-
     if (hCore->ppuThread[hCore->currentThread].ppuRes->V)
     {
         // Translate address
-        MMUTranslateAddress(&RA, hCore);
-        if (hCore->ppuThread[hCore->currentThread].exceptionOcurred)
+        MMUTranslateAddress(&RA, hCore, true);
+        if (hCore->ppuThread[hCore->currentThread].exceptReg & PPU_EX_DATASEGM
+            || hCore->ppuThread[hCore->currentThread].exceptReg & PPU_EX_DATASTOR)
             return;
 
         intXCPUContext->xenonRes.AcquireLock();
@@ -238,7 +234,8 @@ void PPCInterpreter::PPCInterpreter_stwu(PPU_STATE* hCore)
     D = EXTS(D, 16);
     u64 EA = hCore->ppuThread[hCore->currentThread].GPR[rA] + D;
     MMUWrite32(hCore, EA, (u32)hCore->ppuThread[hCore->currentThread].GPR[rS]);
-    if (hCore->ppuThread[hCore->currentThread].exceptionOcurred)
+    if (hCore->ppuThread[hCore->currentThread].exceptReg & PPU_EX_DATASEGM
+        || hCore->ppuThread[hCore->currentThread].exceptReg & PPU_EX_DATASTOR)
         return;
 
     hCore->ppuThread[hCore->currentThread].GPR[rA] = EA;
@@ -249,7 +246,8 @@ void PPCInterpreter::PPCInterpreter_stwux(PPU_STATE* hCore)
     X_FORM_rS_rA_rB;
     u64 EA = hCore->ppuThread[hCore->currentThread].GPR[rA] + hCore->ppuThread[hCore->currentThread].GPR[rB];
     MMUWrite32(hCore, EA, (u32)hCore->ppuThread[hCore->currentThread].GPR[rS]);
-    if (hCore->ppuThread[hCore->currentThread].exceptionOcurred)
+    if (hCore->ppuThread[hCore->currentThread].exceptReg & PPU_EX_DATASEGM
+        || hCore->ppuThread[hCore->currentThread].exceptReg & PPU_EX_DATASTOR)
         return;
 
     hCore->ppuThread[hCore->currentThread].GPR[rA] = EA;
@@ -289,8 +287,9 @@ void PPCInterpreter::PPCInterpreter_stdcx(PPU_STATE* hCore)
     // If address is not aligned by 4, the we must issue a trap.
     if (hCore->ppuThread[hCore->currentThread].ppuRes->V)
     {
-        MMUTranslateAddress(&RA, hCore);
-        if (hCore->ppuThread[hCore->currentThread].exceptionOcurred)
+        MMUTranslateAddress(&RA, hCore, true);
+        if (hCore->ppuThread[hCore->currentThread].exceptReg & PPU_EX_DATASEGM
+            || hCore->ppuThread[hCore->currentThread].exceptReg & PPU_EX_DATASTOR)
             return;
 
         intXCPUContext->xenonRes.AcquireLock();
@@ -322,7 +321,8 @@ void PPCInterpreter::PPCInterpreter_stdu(PPU_STATE* hCore)
     DS = EXTS(DS, 14) << 2;
     u64 EA = hCore->ppuThread[hCore->currentThread].GPR[rA] + DS;
     MMUWrite64(hCore, EA, hCore->ppuThread[hCore->currentThread].GPR[rD]);
-    if (hCore->ppuThread[hCore->currentThread].exceptionOcurred)
+    if (hCore->ppuThread[hCore->currentThread].exceptReg & PPU_EX_DATASEGM
+        || hCore->ppuThread[hCore->currentThread].exceptReg & PPU_EX_DATASTOR)
         return;
 
     hCore->ppuThread[hCore->currentThread].GPR[rA] = EA;
@@ -333,7 +333,8 @@ void PPCInterpreter::PPCInterpreter_stdux(PPU_STATE* hCore)
     X_FORM_rS_rA_rB;
     u64 EA = (rA ? hCore->ppuThread[hCore->currentThread].GPR[rA] : 0) + hCore->ppuThread[hCore->currentThread].GPR[rB];
     MMUWrite64(hCore, EA, hCore->ppuThread[hCore->currentThread].GPR[rS]);
-    if (hCore->ppuThread[hCore->currentThread].exceptionOcurred)
+    if (hCore->ppuThread[hCore->currentThread].exceptReg & PPU_EX_DATASEGM
+        || hCore->ppuThread[hCore->currentThread].exceptReg & PPU_EX_DATASTOR)
         return;
 
     hCore->ppuThread[hCore->currentThread].GPR[rA] = EA;
@@ -371,7 +372,8 @@ void PPCInterpreter::PPCInterpreter_lbz(PPU_STATE* hCore)
 
     u64 EA = (rA ? hCore->ppuThread[hCore->currentThread].GPR[rA] : 0) + D;
     u8 data = MMURead8(hCore, EA);
-    if (hCore->ppuThread[hCore->currentThread].exceptionOcurred)
+    if (hCore->ppuThread[hCore->currentThread].exceptReg & PPU_EX_DATASEGM
+        || hCore->ppuThread[hCore->currentThread].exceptReg & PPU_EX_DATASTOR)
         return;
 
     DBG_LOAD("lbz: Addr 0x" << EA << " data = 0x" << data << std::endl;)
@@ -385,7 +387,8 @@ void PPCInterpreter::PPCInterpreter_lbzu(PPU_STATE* hCore)
 
     u64 EA = hCore->ppuThread[hCore->currentThread].GPR[rA] + D;
     u8 data = MMURead8(hCore, EA);
-    if (hCore->ppuThread[hCore->currentThread].exceptionOcurred)
+    if (hCore->ppuThread[hCore->currentThread].exceptReg & PPU_EX_DATASEGM
+        || hCore->ppuThread[hCore->currentThread].exceptReg & PPU_EX_DATASTOR)
         return;
 
     DBG_LOAD("lbzu: Addr 0x" << EA << " data = 0x" << data << std::endl;)
@@ -399,7 +402,8 @@ void PPCInterpreter::PPCInterpreter_lbzux(PPU_STATE* hCore)
 
     u64 EA = hCore->ppuThread[hCore->currentThread].GPR[rA] + hCore->ppuThread[hCore->currentThread].GPR[rB];
     u8 data = MMURead8(hCore, EA);
-    if (hCore->ppuThread[hCore->currentThread].exceptionOcurred)
+    if (hCore->ppuThread[hCore->currentThread].exceptReg & PPU_EX_DATASEGM
+        || hCore->ppuThread[hCore->currentThread].exceptReg & PPU_EX_DATASTOR)
         return;
 
     DBG_LOAD("lbzux: Addr 0x" << EA << " data = 0x" << data << std::endl;)
@@ -413,7 +417,8 @@ void PPCInterpreter::PPCInterpreter_lbzx(PPU_STATE* hCore)
 
     u64 EA = (rA ? hCore->ppuThread[hCore->currentThread].GPR[rA] : 0) + hCore->ppuThread[hCore->currentThread].GPR[rB];
     u8 data = MMURead8(hCore, EA);
-    if (hCore->ppuThread[hCore->currentThread].exceptionOcurred)
+    if (hCore->ppuThread[hCore->currentThread].exceptReg & PPU_EX_DATASEGM
+        || hCore->ppuThread[hCore->currentThread].exceptReg & PPU_EX_DATASTOR)
         return;
 
     DBG_LOAD("lbzx: Addr 0x" << EA << " data = 0x" << data << std::endl;)
@@ -430,7 +435,8 @@ void PPCInterpreter::PPCInterpreter_lha(PPU_STATE* hCore)
     D = EXTS(D, 16);
     u64 EA = (rA ? hCore->ppuThread[hCore->currentThread].GPR[rA] : 0) + D;
     u16 unsignedWord = MMURead16(hCore, EA);
-    if (hCore->ppuThread[hCore->currentThread].exceptionOcurred)
+    if (hCore->ppuThread[hCore->currentThread].exceptReg & PPU_EX_DATASEGM
+        || hCore->ppuThread[hCore->currentThread].exceptReg & PPU_EX_DATASTOR)
         return;
 
     DBG_LOAD("lha: Addr 0x" << EA << " data = 0x" << unsignedWord << std::endl;)
@@ -444,7 +450,8 @@ void PPCInterpreter::PPCInterpreter_lhau(PPU_STATE* hCore)
 
     u64 EA = hCore->ppuThread[hCore->currentThread].GPR[rA] + D;
     u16 unsignedWord = MMURead16(hCore, EA);
-    if (hCore->ppuThread[hCore->currentThread].exceptionOcurred)
+    if (hCore->ppuThread[hCore->currentThread].exceptReg & PPU_EX_DATASEGM
+        || hCore->ppuThread[hCore->currentThread].exceptReg & PPU_EX_DATASTOR)
         return;
 
     DBG_LOAD("lhau: Addr 0x" << EA << " data = 0x" << unsignedWord << std::endl;)
@@ -457,7 +464,8 @@ void PPCInterpreter::PPCInterpreter_lhax(PPU_STATE* hCore)
     X_FORM_rD_rA_rB;
     u64 EA = (rA ? hCore->ppuThread[hCore->currentThread].GPR[rA] : 0) + hCore->ppuThread[hCore->currentThread].GPR[rB];
     u16 unsignedWord = MMURead16(hCore, EA);
-    if (hCore->ppuThread[hCore->currentThread].exceptionOcurred)
+    if (hCore->ppuThread[hCore->currentThread].exceptReg & PPU_EX_DATASEGM
+        || hCore->ppuThread[hCore->currentThread].exceptReg & PPU_EX_DATASTOR)
         return;
 
     DBG_LOAD("lhax: Addr 0x" << EA << " data = 0x" << unsignedWord << std::endl;)
@@ -471,7 +479,8 @@ void PPCInterpreter::PPCInterpreter_lhbrx(PPU_STATE* hCore)
     u64 EA = (rA ? hCore->ppuThread[hCore->currentThread].GPR[rA] : 0) + hCore->ppuThread[hCore->currentThread].GPR[rB];
 
     u16 data = MMURead16(hCore, EA);
-    if (hCore->ppuThread[hCore->currentThread].exceptionOcurred)
+    if (hCore->ppuThread[hCore->currentThread].exceptReg & PPU_EX_DATASEGM
+        || hCore->ppuThread[hCore->currentThread].exceptReg & PPU_EX_DATASTOR)
         return;
 
     DBG_LOAD("lhbrx: Addr 0x" << EA << " data = 0x" << data << std::endl;)
@@ -485,7 +494,8 @@ void PPCInterpreter::PPCInterpreter_lhz(PPU_STATE* hCore)
 
     u64 EA = (rA ? hCore->ppuThread[hCore->currentThread].GPR[rA] : 0) + D;
     u16 data = MMURead16(hCore, EA);
-    if (hCore->ppuThread[hCore->currentThread].exceptionOcurred)
+    if (hCore->ppuThread[hCore->currentThread].exceptReg & PPU_EX_DATASEGM
+        || hCore->ppuThread[hCore->currentThread].exceptReg & PPU_EX_DATASTOR)
         return;
     hCore->ppuThread[hCore->currentThread].GPR[rD] = data;
 }
@@ -497,7 +507,8 @@ void PPCInterpreter::PPCInterpreter_lhzu(PPU_STATE* hCore)
 
     u64 EA = hCore->ppuThread[hCore->currentThread].GPR[rA] + D;
     u16 data = MMURead16(hCore, EA);
-    if (hCore->ppuThread[hCore->currentThread].exceptionOcurred)
+    if (hCore->ppuThread[hCore->currentThread].exceptReg & PPU_EX_DATASEGM
+        || hCore->ppuThread[hCore->currentThread].exceptReg & PPU_EX_DATASTOR)
         return;
 
     DBG_LOAD("lhzu: Addr 0x" << EA << " data = 0x" << data << std::endl;)
@@ -511,7 +522,8 @@ void PPCInterpreter::PPCInterpreter_lhzux(PPU_STATE* hCore)
 
     u64 EA = hCore->ppuThread[hCore->currentThread].GPR[rA] + hCore->ppuThread[hCore->currentThread].GPR[rB];
     u16 data = MMURead16(hCore, EA);
-    if (hCore->ppuThread[hCore->currentThread].exceptionOcurred)
+    if (hCore->ppuThread[hCore->currentThread].exceptReg & PPU_EX_DATASEGM
+        || hCore->ppuThread[hCore->currentThread].exceptReg & PPU_EX_DATASTOR)
         return;
 
     DBG_LOAD("lhzux: Addr 0x" << EA << " data = 0x" << data << std::endl;)
@@ -525,9 +537,9 @@ void PPCInterpreter::PPCInterpreter_lhzx(PPU_STATE* hCore)
 
     u64 EA = (rA ? hCore->ppuThread[hCore->currentThread].GPR[rA] : 0) + hCore->ppuThread[hCore->currentThread].GPR[rB];
     u16 data = MMURead16(hCore, EA);
-    if (hCore->ppuThread[hCore->currentThread].exceptionOcurred)
+    if (hCore->ppuThread[hCore->currentThread].exceptReg & PPU_EX_DATASEGM
+        || hCore->ppuThread[hCore->currentThread].exceptReg & PPU_EX_DATASTOR)
         return;
-
     DBG_LOAD("lhzx: Addr 0x" << EA << " data = 0x" << data << std::endl;)
     hCore->ppuThread[hCore->currentThread].GPR[rD] = data;
 }
@@ -588,7 +600,8 @@ void PPCInterpreter::PPCInterpreter_lwa(PPU_STATE* hCore)
 
     u64 EA = (rA ? hCore->ppuThread[hCore->currentThread].GPR[rA] : 0) + DS;
     u32 unsignedWord = MMURead32(hCore, EA);
-    if (hCore->ppuThread[hCore->currentThread].exceptionOcurred)
+    if (hCore->ppuThread[hCore->currentThread].exceptReg & PPU_EX_DATASEGM
+        || hCore->ppuThread[hCore->currentThread].exceptReg & PPU_EX_DATASTOR)
         return;
 
     DBG_LOAD("lwa: Addr 0x" << EA << " data = 0x" << unsignedWord << std::endl;)
@@ -601,7 +614,8 @@ void PPCInterpreter::PPCInterpreter_lwax(PPU_STATE* hCore)
 
     u64 EA = (rA ? hCore->ppuThread[hCore->currentThread].GPR[rA] : 0) + hCore->ppuThread[hCore->currentThread].GPR[rB];
     u32 unsignedWord = MMURead32(hCore, EA);
-    if (hCore->ppuThread[hCore->currentThread].exceptionOcurred)
+    if (hCore->ppuThread[hCore->currentThread].exceptReg & PPU_EX_DATASEGM
+        || hCore->ppuThread[hCore->currentThread].exceptReg & PPU_EX_DATASTOR)
         return;
 
     DBG_LOAD("lwax: Addr 0x" << EA << " data = 0x" << unsignedWord << std::endl;)
@@ -617,18 +631,18 @@ void PPCInterpreter::PPCInterpreter_lwarx(PPU_STATE* hCore)
     // If address is not aligned by 4, the we must issue a trap.
 
     u64 RA = EA;
-    MMUTranslateAddress(&RA, hCore);
-    if (hCore->ppuThread[hCore->currentThread].exceptionOcurred)
-    {
+    MMUTranslateAddress(&RA, hCore, false);
+    if (hCore->ppuThread[hCore->currentThread].exceptReg & PPU_EX_DATASEGM
+        || hCore->ppuThread[hCore->currentThread].exceptReg & PPU_EX_DATASTOR)
         return;
-    }
 
     hCore->ppuThread[hCore->currentThread].ppuRes->V = true;
     hCore->ppuThread[hCore->currentThread].ppuRes->resAddr = RA;
     intXCPUContext->xenonRes.Increment();
     u32 data = MMURead32(hCore, EA);
 
-    if (hCore->ppuThread[hCore->currentThread].exceptionOcurred)
+    if (hCore->ppuThread[hCore->currentThread].exceptReg & PPU_EX_DATASEGM
+        || hCore->ppuThread[hCore->currentThread].exceptReg & PPU_EX_DATASTOR)
         return;
 
     DBG_LOAD("lwarx: Addr 0x" << EA << " data = 0x" << data << std::endl;)
@@ -641,11 +655,10 @@ void PPCInterpreter::PPCInterpreter_lwbrx(PPU_STATE* hCore)
 
     u64 EA = (rA ? hCore->ppuThread[hCore->currentThread].GPR[rA] : 0) + hCore->ppuThread[hCore->currentThread].GPR[rB];
     u32 data = MMURead32(hCore, EA);
-    if (hCore->ppuThread[hCore->currentThread].exceptionOcurred)
+    if (hCore->ppuThread[hCore->currentThread].exceptReg & PPU_EX_DATASEGM
+        || hCore->ppuThread[hCore->currentThread].exceptReg & PPU_EX_DATASTOR)
         return;
-    MMUTranslateAddress(&EA, hCore);
-    //std::cout << "lwbrx: REA 0x" << EA << " data = 0x" << data 
-    //    << " CIA = 0x" << hCore->ppuThread[hCore->currentThread].CIA << std::endl;
+
     hCore->ppuThread[hCore->currentThread].GPR[rD] = _byteswap_ulong(data);
 }
 
@@ -656,12 +669,9 @@ void PPCInterpreter::PPCInterpreter_lwz(PPU_STATE* hCore)
 
     u64 EA = (rA ? hCore->ppuThread[hCore->currentThread].GPR[rA] : 0) + D;
     u32 data = MMURead32(hCore, EA);
-    if (hCore->ppuThread[hCore->currentThread].exceptionOcurred)
+    if (hCore->ppuThread[hCore->currentThread].exceptReg & PPU_EX_DATASEGM
+        || hCore->ppuThread[hCore->currentThread].exceptReg & PPU_EX_DATASTOR)
         return;
-    if ((u32)EA != 0xea001018)
-    {
-        DBG_LOAD("lwz: Addr 0x" << EA << " data = 0x" << data << std::endl;)
-    }
     
     hCore->ppuThread[hCore->currentThread].GPR[rD] = data;
 }
@@ -673,7 +683,8 @@ void PPCInterpreter::PPCInterpreter_lwzu(PPU_STATE* hCore)
 
     u64 EA = hCore->ppuThread[hCore->currentThread].GPR[rA] + D;
     u32 data = MMURead32(hCore, EA);
-    if (hCore->ppuThread[hCore->currentThread].exceptionOcurred)
+    if (hCore->ppuThread[hCore->currentThread].exceptReg & PPU_EX_DATASEGM
+        || hCore->ppuThread[hCore->currentThread].exceptReg & PPU_EX_DATASTOR)
         return;
 
     DBG_LOAD("lwzu: Addr 0x" << EA << " data = 0x" << data << std::endl;)
@@ -688,7 +699,8 @@ void PPCInterpreter::PPCInterpreter_lwzux(PPU_STATE* hCore)
     u64 EA = hCore->ppuThread[hCore->currentThread].GPR[rA] + hCore->ppuThread[hCore->currentThread].GPR[rB];
 
     u32 data = MMURead32(hCore, EA);
-    if (hCore->ppuThread[hCore->currentThread].exceptionOcurred)
+    if (hCore->ppuThread[hCore->currentThread].exceptReg & PPU_EX_DATASEGM
+        || hCore->ppuThread[hCore->currentThread].exceptReg & PPU_EX_DATASTOR)
         return;
 
     DBG_LOAD("lwzux: Addr 0x" << EA << " data = 0x" << data << std::endl;)
@@ -702,7 +714,8 @@ void PPCInterpreter::PPCInterpreter_lwzx(PPU_STATE* hCore)
 
     u64 EA = (rA ? hCore->ppuThread[hCore->currentThread].GPR[rA] : 0) + hCore->ppuThread[hCore->currentThread].GPR[rB];
     u32 data = MMURead32(hCore, EA);
-    if (hCore->ppuThread[hCore->currentThread].exceptionOcurred)
+    if (hCore->ppuThread[hCore->currentThread].exceptReg & PPU_EX_DATASEGM
+        || hCore->ppuThread[hCore->currentThread].exceptReg & PPU_EX_DATASTOR)
         return;
     DBG_LOAD("lwzx: Addr 0x" << EA << " data = 0x" << data << std::endl;)
     hCore->ppuThread[hCore->currentThread].GPR[rD] = data;
@@ -719,7 +732,8 @@ void PPCInterpreter::PPCInterpreter_ld(PPU_STATE* hCore)
 
     u64 EA = (rA ? hCore->ppuThread[hCore->currentThread].GPR[rA] : 0) + DS;
     u64 data = MMURead64(hCore, EA);
-    if (hCore->ppuThread[hCore->currentThread].exceptionOcurred)
+    if (hCore->ppuThread[hCore->currentThread].exceptReg & PPU_EX_DATASEGM
+        || hCore->ppuThread[hCore->currentThread].exceptReg & PPU_EX_DATASTOR)
         return;
 
     DBG_LOAD("ld: Addr 0x" << EA << " data = 0x" << data << std::endl;)
@@ -735,27 +749,21 @@ void PPCInterpreter::PPCInterpreter_ldarx(PPU_STATE* hCore)
     // if not aligned by 8 trap
 
     u64 RA = EA & ~7;
-    MMUTranslateAddress(&RA, hCore);
-    if (hCore->ppuThread[hCore->currentThread].exceptionOcurred)
-    {
+    MMUTranslateAddress(&RA, hCore, false);
+    if (hCore->ppuThread[hCore->currentThread].exceptReg & PPU_EX_DATASEGM
+        || hCore->ppuThread[hCore->currentThread].exceptReg & PPU_EX_DATASTOR)
         return;
-    }
 
     hCore->ppuThread[hCore->currentThread].ppuRes->resAddr = RA;
     hCore->ppuThread[hCore->currentThread].ppuRes->V = true;
     intXCPUContext->xenonRes.Increment();
 
     u64 data = MMURead64(hCore, EA);
-    if (hCore->ppuThread[hCore->currentThread].exceptionOcurred)
+    if (hCore->ppuThread[hCore->currentThread].exceptReg & PPU_EX_DATASEGM
+        || hCore->ppuThread[hCore->currentThread].exceptReg & PPU_EX_DATASTOR)
         return;
-
     DBG_LOAD("ldarx: Addr 0x" << EA << " data = 0x" << data << std::endl;)
     hCore->ppuThread[hCore->currentThread].GPR[rD] = data;
-}
-
-void PPCInterpreter::PPCInterpreter_ldbrx(PPU_STATE* hCore)
-{
-
 }
 
 void PPCInterpreter::PPCInterpreter_ldu(PPU_STATE* hCore)
@@ -765,7 +773,8 @@ void PPCInterpreter::PPCInterpreter_ldu(PPU_STATE* hCore)
 
     u64 EA = hCore->ppuThread[hCore->currentThread].GPR[rA] + DS;
     u64 data = MMURead64(hCore, EA);
-    if (hCore->ppuThread[hCore->currentThread].exceptionOcurred)
+    if (hCore->ppuThread[hCore->currentThread].exceptReg & PPU_EX_DATASEGM
+        || hCore->ppuThread[hCore->currentThread].exceptReg & PPU_EX_DATASTOR)
         return;
 
     DBG_LOAD("ldu: Addr 0x" << EA << " data = 0x" << data << std::endl;)
@@ -779,7 +788,8 @@ void PPCInterpreter::PPCInterpreter_ldux(PPU_STATE* hCore)
 
     u64 EA = hCore->ppuThread[hCore->currentThread].GPR[rA] + hCore->ppuThread[hCore->currentThread].GPR[rB];
     u64 data = MMURead64(hCore, EA);
-    if (hCore->ppuThread[hCore->currentThread].exceptionOcurred)
+    if (hCore->ppuThread[hCore->currentThread].exceptReg & PPU_EX_DATASEGM
+        || hCore->ppuThread[hCore->currentThread].exceptReg & PPU_EX_DATASTOR)
         return;
 
     DBG_LOAD("ldux: Addr 0x" << EA << " data = 0x" << data << std::endl;)
@@ -793,7 +803,8 @@ void PPCInterpreter::PPCInterpreter_ldx(PPU_STATE* hCore)
 
     u64 EA = (rA ? hCore->ppuThread[hCore->currentThread].GPR[rA] : 0) + hCore->ppuThread[hCore->currentThread].GPR[rB];
     u64 data = MMURead64(hCore, EA);
-    if (hCore->ppuThread[hCore->currentThread].exceptionOcurred)
+    if (hCore->ppuThread[hCore->currentThread].exceptReg & PPU_EX_DATASEGM
+        || hCore->ppuThread[hCore->currentThread].exceptReg & PPU_EX_DATASTOR)
         return;
 
     DBG_LOAD("ldx: Addr 0x" << EA << " data = 0x" << data << std::endl;)
@@ -811,7 +822,8 @@ void PPCInterpreter::PPCInterpreter_lfd(PPU_STATE* hCore)
 
     u64 EA = (rA ? hCore->ppuThread[hCore->currentThread].GPR[rA] : 0) + D;
 
-    hCore->ppuThread[hCore->currentThread].FPR[FrD].valueAsDouble = MMURead64(hCore, EA);
+    hCore->ppuThread[hCore->currentThread].FPR[FrD].valueAsDouble 
+        = static_cast<double>(MMURead64(hCore, EA));
 }
 
 void PPCInterpreter::PPCInterpreter_lfs(PPU_STATE* hCore)
