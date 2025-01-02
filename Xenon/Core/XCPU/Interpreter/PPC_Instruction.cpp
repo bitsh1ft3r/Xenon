@@ -798,9 +798,6 @@ std::string PPCInterpreter::getOpcodeName(u32 instrData)
         return "INVALID";
         break;
     case 31: /* Subgroup 31 */
-        switch (XO_20to30)
-        {
-        }
         switch (XO_21to30)
         {
         case 0: // cmp
