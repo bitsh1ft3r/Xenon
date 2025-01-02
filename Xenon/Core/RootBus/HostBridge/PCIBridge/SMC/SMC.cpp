@@ -212,11 +212,11 @@ void SMC::smcProcessRead(u64 readAddress, u64* data, u8 byteCount)
 		&& readAddress < SMC_AREA_SMI + SMC_AREA_SIZE)
 	{
 		// SMI.
-		if (readAddress == 0xea001050) // SMI Int Pending?
+		if (readAddress == 0xea001050) // SMI Int Pending
 		{
 			*data = smcState.smiIntPendingReg;
 		}
-		if (readAddress == 0xea001058) // SMI Int ACK?
+		if (readAddress == 0xea001058) // SMI Int ACK
 		{
 			*data = smcState.smiIntAckReg;
 		}
@@ -714,7 +714,8 @@ void SMC::smcFIFOProcessWrite(u64 writeAddress, u64 data, u8 byteCount)
 			// Send Interrupt?
 			if (smcState.smiIntEnabledReg == 0xC)
 			{
-				smcState.smiIntPendingReg = 0x10000000; // Interrupt pending dispatch. If this register contains this value then the kernel issues a dpc routine for reading the smc response.
+				smcState.smiIntPendingReg = 0x10000000; // Interrupt pending dispatch. If this register 
+				// contains this value then the kernel issues a dpc routine for reading the smc response.
 				parentBus->RouteInterrupt(PRIO_SMM);
 			}
 			return;
@@ -757,6 +758,6 @@ void SMC::smcClockTick()
 		parentBus->RouteInterrupt(PRIO_CLOCK);
 
 		// Need to find out what's the best delay here.
-		std::this_thread::sleep_for(std::chrono::milliseconds(500));
+		std::this_thread::sleep_for(std::chrono::milliseconds(250));
 	}
 }

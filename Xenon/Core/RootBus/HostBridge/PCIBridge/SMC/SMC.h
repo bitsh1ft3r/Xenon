@@ -107,7 +107,7 @@ private:
 	// SMC thread object
 	std::thread smcThread;
 
-	// SMC State
+	// SMC State (PCI)
 	SMC_STATE smcState = {};
 
 	// SMC Device internal state.
@@ -142,9 +142,6 @@ private:
 
 	// UART Status Register.
 	u32 uartStatus = 0x2;
-
-	// SMC @ addr 0x50 must be 1 when an smm interrupt ocurrs, int pending flag??
-	u32 intPending = 0;
 
 	// Character buffer for UART output.
 	std::string uartDataStr = "";
