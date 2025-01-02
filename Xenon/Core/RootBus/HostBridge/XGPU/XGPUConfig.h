@@ -1,9 +1,18 @@
 #pragma once
 
-// Taken from a Jasper XGPU Config dump at address 0xD0010000. First 265 bytes.
+// Dumped from address 0xD0010000. First 265 bytes.
+// GPU Version (first 4 bytes of this data) and revision (last byte from the 3rd word of data) alongside the PCI 
+// Version and rev are important. Software determines console type based on them.
+// Corona
+// * GPU Version: 0x5841
+// * GPU Revision: 0x00
+// Jasper
+// * GPU Version: 0x5831
+// * GPU Revision: 0x11
+
 u32 xgpuConfigMap[64] =
 {
-	0x58311414, 0x00100002, 0x03800011, 0x00000000, 0xec800000, 0xffffffff, 0xffffffff, 0xffffffff,
+	0x58411414, 0x00100002, 0x03800000, 0x00000000, 0xec800000, 0xffffffff, 0xffffffff, 0xffffffff,
 	0xffffffff, 0xffffffff, 0xffffffff, 0x00000000, 0xffffffff, 0x00000050, 0xffffffff, 0xffffffff,
 	0xffffffff, 0xffffffff, 0xffffffff, 0x00000000, 0x06020001, 0x00000000, 0xffffffff, 0x00000000,
 	0xffffffff, 0xffffffff, 0xffffffff, 0xffffffff, 0xffffffff, 0xffffffff, 0xffffffff, 0x00000000,
