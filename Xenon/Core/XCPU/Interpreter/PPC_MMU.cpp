@@ -36,9 +36,80 @@
 
 // 0x8000020000060000 Seems to be the random number generator. Implement this?
 
+/*
+ * SLB definitions
+ */
+
+ /* Bits in the SLB ESID word */
+#define SLB_ESID_ESID           0xFFFFFFFFF0000000ULL
+#define SLB_ESID_V              0x0000000008000000ULL /* valid */
+
+/* Bits in the SLB VSID word */
+#define SLB_VSID_SHIFT          12
+#define SLB_VSID_SHIFT_1T       24
+#define SLB_VSID_SSIZE_SHIFT    62
+#define SLB_VSID_B              0xc000000000000000ULL
+#define SLB_VSID_B_256M         0x0000000000000000ULL
+#define SLB_VSID_B_1T           0x4000000000000000ULL
+#define SLB_VSID_VSID           0x3FFFFFFFFFFFF000ULL
+#define SLB_VSID_VRMA           (0x0001FFFFFF000000ULL | SLB_VSID_B_1T)
+#define SLB_VSID_PTEM           (SLB_VSID_B | SLB_VSID_VSID)
+#define SLB_VSID_KS             0x0000000000000800ULL
+#define SLB_VSID_KP             0x0000000000000400ULL
+#define SLB_VSID_N              0x0000000000000200ULL /* no-execute */
+#define SLB_VSID_L              0x0000000000000100ULL
+
+#define SLB_VSID_C              0x0000000000000080ULL /* class */
+#define SLB_VSID_LP             0x0000000000000030ULL
+
+#define SLB_VSID_ATTR           0x0000000000000FFFULL
+#define SLB_VSID_LLP_MASK       (SLB_VSID_L | SLB_VSID_LP)
+#define SLB_VSID_4K             0x0000000000000000ULL
+#define SLB_VSID_64K            0x0000000000000110ULL
+#define SLB_VSID_16M            0x0000000000000100ULL
+#define SLB_VSID_16G            0x0000000000000120ULL
+
+/*
+ * Hash page table definitions
+ */
+
+#define SDR_64_HTABORG         0x0FFFFFFFFFFC0000ULL
+#define SDR_64_HTABSIZE        0x000000000000001FULL
+
+#define HPTES_PER_GROUP         8
+#define HASH_PTE_SIZE_64        16
+#define HASH_PTEG_SIZE_64       (HASH_PTE_SIZE_64 * HPTES_PER_GROUP)
+
+#define HPTE64_V_SSIZE          SLB_VSID_B
+#define HPTE64_V_SSIZE_256M     SLB_VSID_B_256M
+#define HPTE64_V_SSIZE_SHIFT    62
+#define HPTE64_V_AVPN_SHIFT     7
+#define HPTE64_V_AVPN           0x3fffffffffffff80ULL
+#define HPTE64_V_AVPN_VAL(x)    (((x) & HPTE64_V_AVPN) >> HPTE64_V_AVPN_SHIFT)
+#define HPTE64_V_COMPARE(x, y)  (!(((x) ^ (y)) & 0xffffffffffffff83ULL))
+#define HPTE64_V_BOLTED         0x0000000000000010ULL
+#define HPTE64_V_LARGE          0x0000000000000004ULL
+#define HPTE64_V_SECONDARY      0x0000000000000002ULL
+#define HPTE64_V_VALID          0x0000000000000001ULL
+#define HPTE64_R_RPN_SHIFT      12
+#define HPTE64_R_RPN            0x0ffffffffffff000ULL
+#define HPTE64_R_C              0x0000000000000080ULL
+#define HPTE64_R_R              0x0000000000000100ULL
+
+ /* PTE offsets */
+#define HPTE64_DW1              (HASH_PTE_SIZE_64 / 2)
+#define HPTE64_DW1_R            (HPTE64_DW1 + 6)
+#define HPTE64_DW1_C            (HPTE64_DW1 + 7)
+
+#define SEGMENT_SHIFT_256M      28
+#define SEGMENT_MASK_256M       (~((1ULL << SEGMENT_SHIFT_256M) - 1))
+
+#define DSISR_NOPTE              0x40000000
+
+
 void PPCInterpreter::PPCInterpreter_slbia(PPU_STATE* hCore)
 {
-    for (auto slbEntry : hCore->ppuThread[hCore->currentThread].SLB) {
+    for (auto& slbEntry : hCore->ppuThread[hCore->currentThread].SLB) {
         slbEntry.V = 0;
     }
 }
@@ -628,7 +699,7 @@ u64 PPCInterpreter::mmuContructEndAddressFromSecEngAddr(u64 inputAddress, bool* 
 }
 
 // Main address translation mechanism used on the XCPU.
-bool PPCInterpreter::MMUTranslateAddress(u64* EA, PPU_STATE *hCoreState)
+bool PPCInterpreter::MMUTranslateAddress(u64* EA, PPU_STATE *hCoreState, bool memWrite)
 {
     // Every time the CPU does a load or store, it goes trough the MMU.
     // The MMU decides based on MSR, and some other regs if address translation
@@ -743,6 +814,8 @@ bool PPCInterpreter::MMUTranslateAddress(u64* EA, PPU_STATE *hCoreState)
         // 64 bit EA -> 65 bit VA
         // ESID -> VSID
 
+        SLBEntry currslbEntry;
+
         bool slbHit = false;
         // Search the SLB to get the VSID
         for (auto& slbEntry : hCoreState->ppuThread[hCoreState->currentThread].SLB)
@@ -750,6 +823,7 @@ bool PPCInterpreter::MMUTranslateAddress(u64* EA, PPU_STATE *hCoreState)
             if (slbEntry.V && (slbEntry.ESID == ESID))
             {
                 // Entry valid & SLB->ESID = EA->VSID
+                currslbEntry = slbEntry;
                 VSID = slbEntry.VSID;
                 L = slbEntry.L;
                 LP = slbEntry.LP;
@@ -813,32 +887,157 @@ bool PPCInterpreter::MMUTranslateAddress(u64* EA, PPU_STATE *hCoreState)
                 // interrupt, else do page table search.
                 if (tlbSoftwareManaged)
                 {                  
-                    //std::cout << "XCPU(MMU) " << hCoreState->ppuName << "THRD" << hCoreState->currentThread <<
-                    //   (hCoreState->ppuThread[hCoreState->currentThread].iFetch ? " I" : " D") 
-                    //    << "TLB Miss in Software Managed "
-                    //    << "Mode. Generating Interrupt. Address = 0x" << *EA << std::endl;
-
                     bool hv = hCoreState->ppuThread[hCoreState->currentThread].SPR.MSR.HV;
                     bool sfMode = hCoreState->ppuThread[hCoreState->currentThread].SPR.MSR.SF;
                     u64 CIA = hCoreState->ppuThread[hCoreState->currentThread].CIA;
 
-                    //std::cout << "XCPU[" << hCoreState->ppuName << "(Thrd" << hCoreState->currentThread
-                    //    << ")](MMU) : TLB Search Failed!" << std::endl;
-                    //std::cout << " * EA = 0x" << (*EA | upperEA) << std::endl;
-                    //std::cout << " * VPN = 0x" << VPN << std::endl;
-                    //std::cout << " * CIA = 0x" << CIA << std::endl;
-                    //std::cout << " * MSR(HV) = " << hv << " MSR(SF) = " << sfMode << std::endl;
                     if (hCoreState->ppuThread[hCoreState->currentThread].iFetch)
-                        ppcInstStorageException(hCoreState, QMASK(33, 33));
+                    {
+                        hCoreState->ppuThread[hCoreState->currentThread].exceptReg |= PPU_EX_INSSTOR;
+                    }
                     else
-                        ppcDataStorageException(hCoreState, (*EA), DMASK(1, 1));
+                    {
+
+                        hCoreState->ppuThread[hCoreState->currentThread].exceptReg |= PPU_EX_DATASTOR;
+                        hCoreState->ppuThread[hCoreState->currentThread].exceptEA = *EA;
+                    }
                     return false;
                 }
                 else
                 {
-                    // Page Table lookup TODO.
-                    std::cout << "XCPU (MMU) TLB Miss in Hardware Managed "
-                        << "Mode. System Stopped." << std::endl;
+                    // Page Table lookup
+
+                    // Save MSR DR & IR Bits. When an exception occurs they must be reset to whatever they where.
+                    bool msrDR = hCoreState->ppuThread[hCoreState->currentThread].SPR.MSR.DR;
+                    bool msrIR = hCoreState->ppuThread[hCoreState->currentThread].SPR.MSR.IR;
+
+                    u64 epnmask = ~((1ULL << p) - 1);
+
+                    u64 vsidHWMode = (currslbEntry.vsidReg & SLB_VSID_VSID) >> SLB_VSID_SHIFT;
+                    u64 epn = epn = (*EA & ~SEGMENT_MASK_256M) & epnmask;
+                    u64 hash = vsidHWMode ^ (epn >> p);
+                    u64 ptem = (currslbEntry.vsidReg & SLB_VSID_PTEM) | ((epn >> 16) & HPTE64_V_AVPN);
+                    ptem |= HPTE64_V_VALID;
+
+                    u64 pte0, pte1 =0;
+                    u64 ptex = 0;
+                    u64 pte_offset = 0;
+                    ptex = (hash & ((1ULL << ((hCoreState->SPR.SDR1 & 
+                        SDR_64_HTABSIZE) + 18 - 7)) - 1)) * HPTES_PER_GROUP;
+
+                    pte_offset = ptex * HASH_PTE_SIZE_64;
+                    u64 base;
+                    u64 pagelenght = HPTES_PER_GROUP * HASH_PTE_SIZE_64;
+
+                    base = hCoreState->SPR.SDR1 & SDR_64_HTABORG;
+
+                    u64 hpteg0 = base + pte_offset;
+
+                    hCoreState->ppuThread[hCoreState->currentThread].SPR.MSR.DR = 0;
+                    hCoreState->ppuThread[hCoreState->currentThread].SPR.MSR.IR = 0;
+
+                    // First PTEG
+                    for (u32 i = 0; i < HPTES_PER_GROUP; i++)
+                    {
+                        pte0 = MMURead64(hCoreState, hpteg0 + 8 * i);
+                        pte1 = MMURead64(hCoreState, hpteg0 + 8 * i + 8);
+                        if (HPTE64_V_COMPARE(pte0, ptem))
+                        {
+                            // Match
+
+                            // Update Referenced and Change Bits if necessary.
+                            if (!(pte1 & HPTE64_R_R))
+                            {
+                            // Referenced
+                            MMUWrite64(hCoreState, hpteg0 + 8 * i + 8, (pte1 | 0x100));
+                            }
+                            if (!(pte1 & HPTE64_R_C))
+                            {
+                                // Access is a data write?
+                                if (memWrite) {
+                                    // Change
+                                    MMUWrite64(hCoreState, hpteg0 + 8 * i + 8, (pte1 | 0x80));
+                                }
+                            }
+
+                            if (L) // Large Pages, last bit of RPN is unused
+                            {
+                                RA = pte1 & PPE_TLB_RPN_ARPN_MASK;
+                            }
+                            else
+                            {
+                                RA = pte1 & PPE_TLB_RPN_ARPN_AND_LP_MASK;
+                            }
+                            
+                            hCoreState->ppuThread[hCoreState->currentThread].SPR.MSR.DR = msrDR;
+                            hCoreState->ppuThread[hCoreState->currentThread].SPR.MSR.IR = msrIR;
+
+                            goto end;
+                        }
+                    }
+                    ptex = (~hash & ((1ULL << ((hCoreState->SPR.SDR1 &
+                        SDR_64_HTABSIZE) + 18 - 7)) - 1)) * HPTES_PER_GROUP;
+
+                    pte_offset = ptex * HASH_PTE_SIZE_64;
+                    u64 hpteg1 = base + pte_offset;
+                    // Second PTEG
+                    for (u32 i = 0; i < HPTES_PER_GROUP; i++)
+                    {
+                        pte0 = MMURead64(hCoreState, hpteg1 + 8 * i);
+                        pte1 = MMURead64(hCoreState, hpteg1 + 8 * i + 8);
+                        if (HPTE64_V_COMPARE(pte0, ptem))
+                        {
+                            // Match
+                            
+                            // Update Referenced and Change Bits if necessary.
+                            if (!(pte1 & HPTE64_R_R))
+                            {
+                                // Referenced
+                                MMUWrite64(hCoreState, hpteg0 + 8 * i + 8, (pte1 | 0x100));
+                            }
+                            if (!(pte1 & HPTE64_R_C))
+                            {
+                                // Access is a data write?
+                                if (memWrite) {
+                                    // Change
+                                    MMUWrite64(hCoreState, hpteg0 + 8 * i + 8, (pte1 | 0x80));
+                                }
+                            }
+                            
+                            if (L) // Large Pages, last bit of RPN is unused
+                            {
+                                RA = pte1 & PPE_TLB_RPN_ARPN_MASK;
+                            }
+                            else
+                            {
+                                RA = pte1 & PPE_TLB_RPN_ARPN_AND_LP_MASK;
+                            }
+
+                            hCoreState->ppuThread[hCoreState->currentThread].SPR.MSR.DR = msrDR;
+                            hCoreState->ppuThread[hCoreState->currentThread].SPR.MSR.IR = msrIR;
+
+                            goto end;
+                        }
+                    }
+
+
+                    // Set MSR to IR/DR mode before raising the interrupt to whatever they were.
+                    hCoreState->ppuThread[hCoreState->currentThread].SPR.MSR.DR = msrDR;
+                    hCoreState->ppuThread[hCoreState->currentThread].SPR.MSR.IR = msrIR;
+
+                    goto end;
+
+                    if (hCoreState->ppuThread[hCoreState->currentThread].iFetch)
+                    {
+                        hCoreState->ppuThread[hCoreState->currentThread].exceptReg |= PPU_EX_INSSTOR;
+                    }
+                    else
+                    {
+                     
+                        hCoreState->ppuThread[hCoreState->currentThread].exceptReg |= PPU_EX_DATASTOR;
+                        hCoreState->ppuThread[hCoreState->currentThread].exceptEA = *EA;
+                    }
+                    return false;
                     system("PAUSE");
                 }
             }
@@ -850,9 +1049,14 @@ bool PPCInterpreter::MMUTranslateAddress(u64* EA, PPU_STATE *hCoreState)
             std::cout << "XCPU (MMU): SLB not hit. Generating Interrupt." 
                 << std::endl;
             if (hCoreState->ppuThread[hCoreState->currentThread].iFetch)
-                ppcInstSegmentException(hCoreState);
+            {
+                hCoreState->ppuThread[hCoreState->currentThread].exceptReg |= PPU_EX_INSTSEGM;
+            }
             else
-                ppcDataSegmentException(hCoreState, *EA);
+            {
+                hCoreState->ppuThread[hCoreState->currentThread].exceptReg |= PPU_EX_DATASEGM;
+                hCoreState->ppuThread[hCoreState->currentThread].exceptEA = *EA;
+            }
             return false;
         }
 
@@ -872,13 +1076,13 @@ u64 PPCInterpreter::MMURead(XENON_CONTEXT* cpuContext, PPU_STATE* ppuState, u64 
     u64 data = 0;
     u64 oldEA = EA;
 
-    if (EA == 0x3a07aac4)
+    if (EA == 0xc000000000022794)
     {
         u8 a = 0;
     }
 
     // Exception ocurred?
-    if (MMUTranslateAddress(&EA, ppuState) == false)
+    if (MMUTranslateAddress(&EA, ppuState, false) == false)
         return 0;
 
     bool socRead = false;
@@ -928,7 +1132,7 @@ u64 PPCInterpreter::MMURead(XENON_CONTEXT* cpuContext, PPU_STATE* ppuState, u64 
 
     // SECENG address, CB compares this to 0.
     // Further research required!
-    if (socRead && EA == 0x26000 || EA == 0x26008)
+    if ((socRead && EA == 0x26000) || (socRead && EA == 0x26008))
     {
         data = 0;
         return data;
@@ -1074,6 +1278,11 @@ u64 PPCInterpreter::MMURead(XENON_CONTEXT* cpuContext, PPU_STATE* ppuState, u64 
         return data;
     }
 
+    if (EA == 0x22794)
+    {
+        u8 a = 0;
+    }
+
     // External Read      
     sysBus->Read(EA, &data, byteCount, socRead);
     return data;
@@ -1083,8 +1292,12 @@ u64 PPCInterpreter::MMURead(XENON_CONTEXT* cpuContext, PPU_STATE* ppuState, u64 
 void PPCInterpreter::MMUWrite(XENON_CONTEXT* cpuContext, PPU_STATE* ppuState, u64 data, u64 EA,
     s8 byteCount, bool cacheStore)
 {
+    if (EA == 0xc000000000022794)
+    {
+        u8 a = 0;
+    }
     u64 oldEA = EA;
-    if (MMUTranslateAddress(&EA, ppuState) == false)
+    if (MMUTranslateAddress(&EA, ppuState, true) == false)
         return;
 
     if (oldEA >= 0x9e000000 && oldEA <= 0x9eFFFFFF)
@@ -1192,6 +1405,11 @@ void PPCInterpreter::MMUWrite(XENON_CONTEXT* cpuContext, PPU_STATE* ppuState, u6
 
         std::cout << "MMU: SoC Write to 0x" << EA << ", data = 0x" << data << ", invalidating." << std::endl;
         return;
+    }
+
+    if (EA == 0x22794)
+    {
+        u8 a = 0;
     }
 
     // External Write
