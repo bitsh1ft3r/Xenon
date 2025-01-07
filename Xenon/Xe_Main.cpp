@@ -65,29 +65,43 @@ int main(int argc, char* argv[])
 	xedkCpuFuses.fuseLine11 = 0x0000000000000000;
 	
 	
-	RootBus RootBus;	//RootBus Object
-	HostBridge hostBridge;	//HostBridge Object
-	PCIBridge pciBridge;	//PCIBridge Object
+	RootBus RootBus;		// RootBus Object
+	HostBridge hostBridge;	// HostBridge Object
+	PCIBridge pciBridge;	// PCIBridge Object
 
-	Xe::PCIDev::ETHERNET::ETHERNET ethernet;		//Ethernet Object
-	Xe::PCIDev::AUDIOCTRLR::AUDIOCTRLR audioController;	//Audio Controller Object
-	Xe::PCIDev::OHCI0::OHCI0 ohci0;		//OHCI0 Object
-	Xe::PCIDev::OHCI1::OHCI1 ohci1;		//OHCI1 Object
-	Xe::PCIDev::EHCI0::EHCI0 ehci0;		//EHCI0 Object
-	Xe::PCIDev::EHCI1::EHCI1 ehci1;		//EHCI1 Object
+	// SMCCore State for setting diffrent SMC settings.
+	Xe::PCIDev::SMC::SMC_CORE_STATE smcCoreState;
+
+	// Memset the SMCCore State.
+	memset(&smcCoreState, 0, sizeof(Xe::PCIDev::SMC::SMC_CORE_STATE));
+
+	// Initialize several settings from the struct.
+	smcCoreState.currentCOMPort = const_cast<wchar_t*>(L"\\\\.\\COM2");
+	smcCoreState.currAVPackType = Xe::PCIDev::SMC::SMC_AVPACK_TYPE::HDMI_NO_AUDIO;
+	smcCoreState.currPowerOnReas = Xe::PCIDev::SMC::SMC_PWR_REAS::SMC_PWR_REAS_PWRBTN;
+	smcCoreState.currTrayState = Xe::PCIDev::SMC::SMC_TRAY_STATE::SMC_TRAY_CLOSE;
+
+	// SMCCore Object.
+	Xe::PCIDev::SMC::SMCCore smcCore(&pciBridge, &smcCoreState);
+	
+	Xe::PCIDev::ETHERNET::ETHERNET ethernet;				// Ethernet Object
+	Xe::PCIDev::AUDIOCTRLR::AUDIOCTRLR audioController;		// Audio Controller Object
+	Xe::PCIDev::OHCI0::OHCI0 ohci0;							// OHCI0 Object
+	Xe::PCIDev::OHCI1::OHCI1 ohci1;							// OHCI1 Object
+	Xe::PCIDev::EHCI0::EHCI0 ehci0;							// EHCI0 Object
+	Xe::PCIDev::EHCI1::EHCI1 ehci1;							// EHCI1 Object
 
 	// Create the Secure Flash Cntroller for Xbox Device, and load the Nand dump for emulation.
-	SFCX sfcx("C://Xbox/nandflash.bin", &pciBridge);
+	SFCX sfcx("C://Xbox/xenon_xdk.bin", &pciBridge);
 	RAM ram;
 	XMA xma;
 	ODD odd(&pciBridge, &ram);
 	HDD hdd(&pciBridge);
-	SMC smc(&pciBridge);
 	NAND nandDevice;
 
 	Xe::Xenos::XGPU xenos(&ram);
 
-	//Initialize all devices
+	// Initialize all devices
 	RootBus.Init();
 
 	ohci0.Initialize("OHCI0", OHCI0_DEV_SIZE);
@@ -100,7 +114,7 @@ int main(int argc, char* argv[])
 	xma.Initialize("XMA", XMA_DEV_SIZE);
 	odd.Initialize("CDROM", ODD_DEV_SIZE);
 	hdd.Initialize("HDD", HDD_DEV_SIZE);
-	smc.Initialize("SMC", SMC_DEV_SIZE);
+	smcCore.Initialize("SMC", SMC_DEV_SIZE);
 
 	/*******Add PCI devices*******/
 	pciBridge.addPCIDevice(&ohci0);
@@ -113,7 +127,7 @@ int main(int argc, char* argv[])
 	pciBridge.addPCIDevice(&xma);
 	pciBridge.addPCIDevice(&odd);
 	pciBridge.addPCIDevice(&hdd);
-	pciBridge.addPCIDevice(&smc);
+	pciBridge.addPCIDevice(&smcCore);
 
 	//Register the Xenos GPU and the PCIBridge
 	hostBridge.RegisterXGPU(&xenos);
@@ -129,7 +143,7 @@ int main(int argc, char* argv[])
 	RootBus.AddDevice(&ram);
 
 	// NAND Load Path.
-    nandDevice.Load("C://Xbox/nandflash.bin");
+    nandDevice.Load("C://Xbox/xenon_xdk.bin");
 
 	// Load 1BL here from given path.
 	Xenon xenonCPU(&RootBus, "C://Xbox/1bl.bin", xedkCpuFuses);
