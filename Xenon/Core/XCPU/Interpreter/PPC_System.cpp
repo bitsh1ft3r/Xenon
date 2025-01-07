@@ -801,41 +801,81 @@ void PPCInterpreter::PPCInterpreter_mtmsrd(PPU_STATE* hCore)
 {
 	X_FORM_rS_L;
 
-	u64 qwMSRMask;
-	u64 qwMSRSet;
-
-	if (L == 0)
+	if (L)
 	{
-		qwMSRMask = QMASK(0, 2) | QMASK(4, 50) | QMASK(52, 63);
+		/*
+			Bits 48 and 62 of register RS are placed into the corresponding bits of the MSR. The remaining bits
+			of the MSR are unchanged.
+		*/
 
-		qwMSRSet = hCore->ppuThread[hCore->currentThread].GPR[rS] & (QMASK(1, 2) | QMASK(4, 47) | QMASK(49, 50) | QMASK(52, 57) | QMASK(60, 63));
-
-		if (hCore->ppuThread[hCore->currentThread].GPR[rS] & QMASK(0, 1))
+		// Bit 48 = MSR[EE]
+		if ((hCore->ppuThread[hCore->currentThread].GPR[rS] & 0x8000) == 0x8000)
 		{
-			qwMSRSet |= QMASK(0, 0);
+			hCore->ppuThread[hCore->currentThread].SPR.MSR.EE = 1;
 		}
-
-		if (hCore->ppuThread[hCore->currentThread].GPR[rS] & QMASK(48, 49))
+		else
 		{
-			qwMSRSet |= QMASK(48, 48);
+			hCore->ppuThread[hCore->currentThread].SPR.MSR.EE = 0;
 		}
-
-		if (hCore->ppuThread[hCore->currentThread].GPR[rS] & (QMASK(49, 49) | QMASK(58, 58)))
+		// Bit 62 = MSR[RI]
+		if ((hCore->ppuThread[hCore->currentThread].GPR[rS] & 0x2) == 0x2)
 		{
-			qwMSRSet |= QMASK(58, 58);
+			hCore->ppuThread[hCore->currentThread].SPR.MSR.RI = 1;
 		}
-
-		if (hCore->ppuThread[hCore->currentThread].GPR[rS] & (QMASK(49, 49) | QMASK(59, 59)))
+		else
 		{
-			qwMSRSet |= QMASK(59, 59);
+			hCore->ppuThread[hCore->currentThread].SPR.MSR.RI = 0;
 		}
 	}
-	else // L==1 
+	else // L = 0
 	{
-		qwMSRMask = QMASK(48, 48) | QMASK(62, 62);
-		qwMSRSet = hCore->ppuThread[hCore->currentThread].GPR[rS] & qwMSRMask;
-	}
+		/*
+			The result of ORing bits 0 and 1 of register RS is placed into MSR0. The result of ORing bits 48 and
+			49 of register RS is placed into MSR48. The result of ORing bits 58 and 49 of register RS is placed
+			into MSR58. The result of ORing bits 59 and 49 of register RS is placed into MSR59. Bits 1:2, 4:47,
+			49:50, 52:57, and 60:63 of register RS are placed into the corresponding bits of the MSR.
+		*/
+		u64 regRS = hCore->ppuThread[hCore->currentThread].GPR[rS];
+		hCore->ppuThread[hCore->currentThread].SPR.MSR.MSR_Hex = regRS;
 
-	/* Highly deficient */
-	hCore->ppuThread[hCore->currentThread].SPR.MSR.MSR_Hex = qwMSRSet | (hCore->ppuThread[hCore->currentThread].SPR.MSR.MSR_Hex & ~qwMSRMask);
+		// MSR0 = (RS)0 | (RS)1
+		if ((regRS & 0x8000000000000000) || (regRS & 0x4000000000000000))
+		{
+			hCore->ppuThread[hCore->currentThread].SPR.MSR.SF = 1;
+		}
+		else
+		{
+			hCore->ppuThread[hCore->currentThread].SPR.MSR.SF = 0;
+		}
+
+		// MSR48 = (RS)48 | (RS)49
+		if ((regRS & 0x8000) || (regRS & 0x4000))
+		{
+			hCore->ppuThread[hCore->currentThread].SPR.MSR.EE = 1;
+		}
+		else
+		{
+			hCore->ppuThread[hCore->currentThread].SPR.MSR.EE = 0;
+		}
+
+		// MSR58 = (RS)58 | (RS)49
+		if ((regRS & 0x20) || (regRS & 0x4000))
+		{
+			hCore->ppuThread[hCore->currentThread].SPR.MSR.IR = 1;
+		}
+		else
+		{
+			hCore->ppuThread[hCore->currentThread].SPR.MSR.IR = 0;
+		}
+
+		// MSR59 = (RS)59 | (RS)49
+		if ((regRS & 0x10) || (regRS & 0x4000))
+		{
+			hCore->ppuThread[hCore->currentThread].SPR.MSR.DR = 1;
+		}
+		else
+		{
+			hCore->ppuThread[hCore->currentThread].SPR.MSR.DR = 0;
+		}
+	}
 }
