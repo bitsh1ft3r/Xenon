@@ -222,10 +222,9 @@ namespace Xe
 				SMC_PWR_REAS	currPowerOnReas;
 				SMC_AVPACK_TYPE currAVPackType;
 
-				// FIFO Data Queue (16 Bytes transmitted in 4 32Bit words)
+				// FIFO Data Queue (16 Bytes transmitted in 4 32 Bit words)
 				u8 fifoDataBuffer[16];
 				u8 fifoBufferPos = 0;
-				bool fifoMessageIncomming = false;
 
 				// Default COM Port for opening.
 				LPWSTR currentCOMPort;

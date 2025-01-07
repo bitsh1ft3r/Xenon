@@ -193,8 +193,6 @@ void Xe::PCIDev::SMC::SMCCore::Write(u64 writeAddress, u64 data, u8 byteCount)
 		smcPCIState->fifoInStatusReg = static_cast<u32>(data);
 		if (data == FIFO_STATUS_READY) // We're about to receive a message.
 		{
-			// Signal the  SMC Thread to wait for it.
-			smcCoreState->fifoMessageIncomming = true;
 			// Reset our input buffer and buffer pointer.
 			memset(&smcCoreState->fifoDataBuffer, 0, 16);
 			smcCoreState->fifoBufferPos = 0;
@@ -354,25 +352,17 @@ void Xe::PCIDev::SMC::SMCCore::smcMainThread()
 		// resides on the Registers being used, using FIFO_OUT_STATUS_REG instead of FIFO_IN_STATUS_REG and 
 		// FIFO_OUT_DATA_REG instead of FIFO_IN_DATA_REG.
 
-		// Check wheter we're about to receive a command. If so, loop here while it is being received.
-		if (smcCoreState->fifoMessageIncomming)
+		// Check wheter we've received a command. If so, process it.
+		// Software sets FIFO_IN_STATUS_REG to FIFO_STATUS_BUSY after it has finished sending a command.
+		if (smcPCIState->fifoInStatusReg == FIFO_STATUS_BUSY)
 		{
-			// Data is about to be transmitted. Loop until our input buffer is full.
-			while (smcPCIState->fifoInStatusReg != FIFO_STATUS_BUSY)
-			{
-				// Wait still.
-			}
-
-			// Finished receiving a command.
-			smcCoreState->fifoMessageIncomming = false;
+			// This is set first as software waits for this register to become Ready in order to read a reply.
+			// Set FIFO_OUT_STATUS_REG to FIFO_STATUS_BUSY
+			smcPCIState->fifoOutStatusReg = FIFO_STATUS_BUSY;
 
 			// Set FIFO_IN_STATUS_REG to FIFO_STATUS_READY
 			smcPCIState->fifoInStatusReg = FIFO_STATUS_READY;
 
-			// Set FIFO_OUT_STATUS_REG to FIFO_STATUS_BUSY
-			smcPCIState->fifoOutStatusReg = FIFO_STATUS_BUSY;
-
-			// Sofware finished writing the data to the Input Buffer. Begin message processing.
 			// Note that the first byte in the response is always Command ID.
 
 			switch (smcCoreState->fifoDataBuffer[0]) // Data Buffer[0] is our message ID.
