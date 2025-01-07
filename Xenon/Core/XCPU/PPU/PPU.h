@@ -23,7 +23,7 @@ private:
 	bool systemReset = false;
 
 	// Execution threads inside this PPU.
-	PPU_STATE ppuState;
+	PPU_STATE* ppuState;
 
 	// Main CPU Context.
 	XENON_CONTEXT *xenonContext = nullptr;
