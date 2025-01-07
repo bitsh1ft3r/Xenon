@@ -94,8 +94,8 @@ void Xe::XCPU::IIC::XenonIIC::readInterrupt(u64 intAddress, u64* intData)
 			{
 				if (interrupt.pendingInt >= iicState.ppeIntCtrlBlck[ppeIntCtrlBlckID].REG_CPU_CURRENT_TSK_PRI)
 				{
-					*intData = _byteswap_uint64((u64)iicState.ppeIntCtrlBlck[ppeIntCtrlBlckID].pendingInt[intIndex].pendingInt);
-					iicState.ppeIntCtrlBlck[ppeIntCtrlBlckID].pendingInt[intIndex].ack = true;
+					*intData = _byteswap_uint64(interrupt.pendingInt);
+					interrupt.ack = true;
 					continue;
 				}
 				intIndex++;
@@ -114,14 +114,22 @@ bool Xe::XCPU::IIC::XenonIIC::checkExtInterrupt(u8 ppuID)
 {
 	if (!iicState.ppeIntCtrlBlck[ppuID].pendingInt.empty())
 	{
+		// If there's already an ack'd interrupt we stop signaling any other interrupts until said int is EOI.
+		for (auto& interrupt : iicState.ppeIntCtrlBlck[ppuID].pendingInt)
+		{
+			if (interrupt.ack)
+			{
+				return false;
+			}
+		}
+
+		// No interrupts have been ack'd. Check priority and issue the signal.
 		for (auto& interrupt : iicState.ppeIntCtrlBlck[ppuID].pendingInt)
 		{
 			// Check to se if we have a new interrupt.
 			// Conditions for signaling:
-			// * Interrupt was not ack'd.
 			// * Interrupt priority higher than current task priority.
-			if (interrupt.pendingInt >= iicState.ppeIntCtrlBlck[ppuID].REG_CPU_CURRENT_TSK_PRI
-				&& interrupt.ack != true)
+			if (interrupt.pendingInt >= iicState.ppeIntCtrlBlck[ppuID].REG_CPU_CURRENT_TSK_PRI)
 			{
 				// Signal the interrupt.
 				return true;
