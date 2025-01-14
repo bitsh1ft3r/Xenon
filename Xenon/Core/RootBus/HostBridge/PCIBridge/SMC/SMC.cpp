@@ -120,7 +120,12 @@ void Xe::PCIDev::SMC::SMCCore::Read(u64 readAddress, u64* data, u8 byteCount)
 				// The input queue is empty.
 				smcPCIState->uartStatusReg = UART_STATUS_EMPTY;
 			}
-		}	
+		}
+		else
+		{
+			// XeLL doesn't initialize UART before sending data trough it. Initialize it first then.
+			setupUART(0x1e6); // 115200,8,N,1.
+		}
 		memcpy(data, &smcPCIState->uartStatusReg, byteCount);
 		break;
 	case SMI_INT_STATUS_REG:		// SMI INT Status Register
@@ -508,14 +513,14 @@ void Xe::PCIDev::SMC::SMCCore::smcMainThread()
 		std::chrono::steady_clock::time_point timerNow = std::chrono::steady_clock::now();
 
 		// Check for SMC Clock interrupt register.
-		if (smcPCIState->clockIntEnabledReg == CLCK_INT_ENABLED) // Clock Int Enabled
+		if (smcPCIState->clockIntEnabledReg == CLCK_INT_ENABLED) // Clock Int Enabled.
 		{
 			if (smcPCIState->clockIntStatusReg == CLCK_INT_READY) // Clock Interrupt Not Taken.
 			{
 				// Wait X time before next clock interrupt. TODO: Find the correct delay.
 				if (timerNow >= timerStart + std::chrono::milliseconds(500))
 				{
-					// Update internal timer
+					// Update internal timer.
 					timerStart = std::chrono::steady_clock::now();
 					smcPCIState->clockIntStatusReg = CLCK_INT_TAKEN;
 					pciBridge->RouteInterrupt(PRIO_CLOCK);
