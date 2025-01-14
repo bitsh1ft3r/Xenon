@@ -9,7 +9,7 @@ Xe::XCPU::IIC::XenonIIC::XenonIIC()
 	{
 		// Set pending interrupts to 0.
 		iicState.ppeIntCtrlBlck[idx].REG_ACK = PRIO_NONE;
-	}	
+	}
 }
 
 void Xe::XCPU::IIC::XenonIIC::writeInterrupt(u64 intAddress, u64 intData)
@@ -38,31 +38,16 @@ void Xe::XCPU::IIC::XenonIIC::writeInterrupt(u64 intAddress, u64 intData)
 		genInterrupt(intType, cpusToInterrupt);
 		break;
 	case Xe::XCPU::IIC::EOI:
-		// Remove the last interrupt in the queue that matches our current priority.
-		for (auto& interrupt : iicState.ppeIntCtrlBlck[ppeIntCtrlBlckID].pendingInt)
-		{
-			if (interrupt.ack) // Remove the first interrupt that was ACK'd.
-			{
-				iicState.ppeIntCtrlBlck[ppeIntCtrlBlckID].pendingInt.erase
-				(iicState.ppeIntCtrlBlck[ppeIntCtrlBlckID].pendingInt.begin() + intIndex);
-				continue;
-			}
-			intIndex++;
-		}
+		// Remove the first interrupt in the Interrupt queue.
+		iicState.ppeIntCtrlBlck[ppeIntCtrlBlckID].intQueue.pop();
+		// Clear the ACK flag.
+		iicState.ppeIntCtrlBlck[ppeIntCtrlBlckID].intAck = false;
 		break;
 	case Xe::XCPU::IIC::EOI_SET_CPU_CURRENT_TSK_PRI:
-		// Remove the last interrupt in the queue that matches our current priority.
-		for (auto& interrupt : iicState.ppeIntCtrlBlck[ppeIntCtrlBlckID].pendingInt)
-		{
-			if (interrupt.ack) // Remove the first interrupt that was ACK'd.
-			{
-				iicState.ppeIntCtrlBlck[ppeIntCtrlBlckID].pendingInt.erase
-				(iicState.ppeIntCtrlBlck[ppeIntCtrlBlckID].pendingInt.begin() + intIndex);
-				continue;
-			}
-			intIndex++;
-		}
-
+		// Remove the first interrupt in the Interrupt Queue.
+		iicState.ppeIntCtrlBlck[ppeIntCtrlBlckID].intQueue.pop();
+		// Clear the ACK flag.
+		iicState.ppeIntCtrlBlck[ppeIntCtrlBlckID].intAck = false;
 		// Set new Interrupt priority.
 		iicState.ppeIntCtrlBlck[ppeIntCtrlBlckID].REG_CPU_CURRENT_TSK_PRI = static_cast<u32>(_byteswap_uint64(intData));
 		break;
@@ -70,7 +55,7 @@ void Xe::XCPU::IIC::XenonIIC::writeInterrupt(u64 intAddress, u64 intData)
 		iicState.ppeIntCtrlBlck[ppeIntCtrlBlckID].REG_INT_MCACK = static_cast<u32>(_byteswap_uint64(intData));
 		break;
 	default:
-		std::cout << "Xenon IIC: Unknown CPU Interrupt Ctrl Blck Reg being written: " << ppeIntCtrlBlckReg 
+		std::cout << "Xenon IIC: Unknown CPU Interrupt Ctrl Blck Reg being written: " << ppeIntCtrlBlckReg
 			<< std::endl;
 		break;
 	}
@@ -81,25 +66,19 @@ void Xe::XCPU::IIC::XenonIIC::readInterrupt(u64 intAddress, u64* intData)
 	u32 mask = 0xF000;
 	u8 ppeIntCtrlBlckID = static_cast<u8>((intAddress & mask) >> 12);
 	u8 ppeIntCtrlBlckReg = intAddress & 0xFF;
-	size_t intIndex = 0;
 	switch (ppeIntCtrlBlckReg)
 	{
 	case Xe::XCPU::IIC::CPU_CURRENT_TSK_PRI:
 		*intData = _byteswap_uint64((u64)iicState.ppeIntCtrlBlck[ppeIntCtrlBlckID].REG_CPU_CURRENT_TSK_PRI);
 		break;
 	case Xe::XCPU::IIC::ACK:
-		if (!iicState.ppeIntCtrlBlck[ppeIntCtrlBlckID].pendingInt.empty())
+		// Check if the queue isn't empty (this probably isn't necessary)
+		if (iicState.ppeIntCtrlBlck[ppeIntCtrlBlckID].intQueue.empty() != true)
 		{
-			for (auto& interrupt : iicState.ppeIntCtrlBlck[ppeIntCtrlBlckID].pendingInt)
-			{
-				if (interrupt.pendingInt >= iicState.ppeIntCtrlBlck[ppeIntCtrlBlckID].REG_CPU_CURRENT_TSK_PRI)
-				{
-					*intData = _byteswap_uint64(interrupt.pendingInt);
-					interrupt.ack = true;
-					continue;
-				}
-				intIndex++;
-			}
+			// Signal the Top Priority interrupt.
+			*intData = _byteswap_uint64(iicState.ppeIntCtrlBlck[ppeIntCtrlBlckID].intQueue.top());
+			// Set the ACK flag.
+			iicState.ppeIntCtrlBlck[ppeIntCtrlBlckID].intAck = true;
 			return;
 		}
 		*intData = _byteswap_uint64(PRIO_NONE);
@@ -112,28 +91,20 @@ void Xe::XCPU::IIC::XenonIIC::readInterrupt(u64 intAddress, u64* intData)
 
 bool Xe::XCPU::IIC::XenonIIC::checkExtInterrupt(u8 ppuID)
 {
-	if (!iicState.ppeIntCtrlBlck[ppuID].pendingInt.empty())
+	// 1. Check if there's any interrupt already taken.
+	if (iicState.ppeIntCtrlBlck[ppuID].intAck)
 	{
-		// If there's already an ack'd interrupt we stop signaling any other interrupts until said int is EOI.
-		for (auto& interrupt : iicState.ppeIntCtrlBlck[ppuID].pendingInt)
-		{
-			if (interrupt.ack)
-			{
-				return false;
-			}
-		}
+		return false;
+	}
 
-		// No interrupts have been ack'd. Check priority and issue the signal.
-		for (auto& interrupt : iicState.ppeIntCtrlBlck[ppuID].pendingInt)
+	// Check to see if there are any interrupts in our queue.
+	if (iicState.ppeIntCtrlBlck[ppuID].intQueue.empty() != true)
+	{
+		// Check if the top priority interrupt is higher or equal than current task priority.
+		if (iicState.ppeIntCtrlBlck[ppuID].intQueue.top() >= iicState.ppeIntCtrlBlck[ppuID].REG_CPU_CURRENT_TSK_PRI)
 		{
-			// Check to se if we have a new interrupt.
-			// Conditions for signaling:
-			// * Interrupt priority higher than current task priority.
-			if (interrupt.pendingInt >= iicState.ppeIntCtrlBlck[ppuID].REG_CPU_CURRENT_TSK_PRI)
-			{
-				// Signal the interrupt.
-				return true;
-			}
+			// Signal the interrupt.
+			return true;
 		}
 	}
 	return false;
@@ -144,20 +115,12 @@ void Xe::XCPU::IIC::XenonIIC::genInterrupt(u8 interruptType, u8 cpusToInterrupt)
 	XE_INT newInt;
 	newInt.ack = false;
 	newInt.pendingInt = interruptType;
-	for (u8 ppuID = 0; ppuID < 6; ppuID++) 
+	for (u8 ppuID = 0; ppuID < 6; ppuID++)
 	{
 		if ((cpusToInterrupt & 0x1) == 1)
 		{
-			for (auto& interrupt : iicState.ppeIntCtrlBlck[ppuID].pendingInt)
-			{
-				if (interrupt.pendingInt == newInt.pendingInt)
-				{
-					// An interrupt with the same priority and type exists.
-					return;
-				}
-			}
 			// Store the interrupt.
-			iicState.ppeIntCtrlBlck[ppuID].pendingInt.push_back(newInt);
+			iicState.ppeIntCtrlBlck[ppuID].intQueue.push(static_cast<u64>(interruptType));
 		}
 		cpusToInterrupt = cpusToInterrupt >> 1;
 	}

@@ -1,6 +1,7 @@
 #pragma once
 
 #include <vector>
+#include <queue>
 
 #include "Xenon/Base/TypeDefs.h"
 
@@ -14,9 +15,9 @@ namespace Xe
 #define XE_IIC_BASE 0x50000
 #define XE_IIC_SIZE 0xFF // 1 IIC Ctrl Block?
 
-//
-// Interrupt Types
-//
+			//
+			// Interrupt Types
+			//
 #define PRIO_IPI_4       0x08
 #define PRIO_IPI_3       0x10
 #define PRIO_SMM         0x14
@@ -72,7 +73,10 @@ namespace Xe
 				u32 REG_EOI_SET_CPU_CURRENT_TSK_PRI;
 				u32 REG_INT_MCACK;
 				std::vector<XE_INT> pendingInt;
-				bool interruptTaken = false;
+				// Interrupt Queue (Higher priority interrupts come first).
+				std::priority_queue<u64> intQueue;
+				// Interrupt Ack flag.
+				bool intAck = false;
 			};
 
 			struct IIC_State
