@@ -172,7 +172,7 @@ void PPU::StartExecution()
 		//
 		
 		// If TSCR[WEXT] = ‘1’, wake up at System Reset and set SRR1[42:44] = ‘100’.
-		bool WEXT = ppuState->SPR.TSCR & 0x100000;
+		bool WEXT = (ppuState->SPR.TSCR & 0x100000) >> 20;
 		if (xenonContext->xenonIIC.checkExtInterrupt(ppuState->ppuThread[ppuState->currentThread].SPR.PIR)
 			&& WEXT)
 		{
@@ -182,8 +182,6 @@ void PPU::StartExecution()
 			ppuState->ppuThread[PPU_THREAD_0].exceptReg |= PPU_EX_RESET;	
 			ppuState->ppuThread[PPU_THREAD_1].exceptReg |= PPU_EX_RESET;			// Set CIA to 0x100 as per docs.
 			ppuState->ppuThread[ppuState->currentThread].SPR.SRR1 = 0x200000;		// Set SRR1 42-44 = 100
-			// EOI + INT_PRIO = 0
-			//xenonContext->xenonIIC.writeInterrupt(0x50000 + ppuState->ppuThread[ppuState->currentThread].SPR.PIR * 0x1000 + 0x68, 0);
 		}
 	}
 }
