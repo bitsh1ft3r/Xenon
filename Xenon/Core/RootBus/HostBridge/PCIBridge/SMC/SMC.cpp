@@ -170,8 +170,12 @@ void Xe::PCIDev::SMC::SMCCore::Write(u64 writeAddress, u64 data, u8 byteCount)
 	{
 	case UART_CONFIG_REG:		// UART Config Register
 		memcpy(&smcPCIState->uartConfigReg, &data, byteCount);
-		// Initialize UART!
-		setupUART(static_cast<u32>(data));
+		// Check if UART is already initialized.
+		if (!smcCoreState->uartInitialized)
+		{
+			// Initialize UART.
+			setupUART(static_cast<u32>(data));
+		}
 		break;
 	case UART_BYTE_IN_REG:		// UART Data In Register
 		memcpy(&smcPCIState->uartInReg, &data, byteCount);
