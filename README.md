@@ -1,7 +1,7 @@
 # Xenon - Xbox 360 Low Level Emulator Research Project.
 
-## Join our Discord
-![Discord Shield](https://discord.com/api/guilds/1289565618957193217/widget.png?style=shield)
+### Join our Discord
+[![Discord Shield](https://discord.com/api/guilds/1289565618957193217/widget.png?style=shield)](https://discord.gg/TDvbdXRRQ6)
 
 **Current State**  
 ***Kernel*** (`xboxkrnl.exe`)
