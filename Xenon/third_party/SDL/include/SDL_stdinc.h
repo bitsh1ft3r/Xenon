@@ -1,6 +1,6 @@
 /*
   Simple DirectMedia Layer
-  Copyright (C) 1997-2024 Sam Lantinga <slouken@libsdl.org>
+  Copyright (C) 1997-2025 Sam Lantinga <slouken@libsdl.org>
 
   This software is provided 'as-is', without any express or implied
   warranty.  In no event will the authors be held liable for any damages
@@ -255,8 +255,8 @@ typedef uint64_t Uint64;
 #ifndef SDL_PRIs64
 #if defined(__WIN32__) || defined(__GDK__)
 #define SDL_PRIs64 "I64d"
-#elif defined(PRIs64)
-#define SDL_PRIs64 PRIs64
+#elif defined(PRId64)
+#define SDL_PRIs64 PRId64
 #elif defined(__LP64__) && !defined(__APPLE__) && !defined(__EMSCRIPTEN__)
 #define SDL_PRIs64 "ld"
 #else
