@@ -277,4 +277,7 @@
       <Filter>Core\RootBus\HostBridge\PCIBridge\ODD</Filter>
     </ClInclude>
   </ItemGroup>
+  <ItemGroup>
+    <ResourceCompile Include="Xenon.rc" />
+  </ItemGroup>
 </Project>

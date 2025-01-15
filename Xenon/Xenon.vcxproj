@@ -214,6 +214,9 @@
     <ClInclude Include="Core\XCPU\Xenon.h" />
     <ClInclude Include="Core\XCPU\XenonReservations.h" />
   </ItemGroup>
+  <ItemGroup>
+    <ResourceCompile Include="Xenon.rc" />
+  </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
   <ImportGroup Label="ExtensionTargets">
   </ImportGroup>

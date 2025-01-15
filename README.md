@@ -1,9 +1,18 @@
-# Xenon - Xbox 360 Low Level Emulator Research Project.
+<h1 align="center">
+  <br>
+  <a href="https://discord.gg/TDvbdXRRQ6"><img src="https://github.com/bitsh1ft3r/Xenon/tree/main/Xenon/Assets/images/Xenon.png" width="250"></a>
+  <br>
+  <b>Xbox 360 Low Level Emulator Research Project</b>
+  <br>
+</h1>
 
-### Join our Discord
-[![Discord Shield](https://discord.com/api/guilds/1289565618957193217/widget.png?style=shield)](https://discord.gg/TDvbdXRRQ6)
+## Join our Discord
+ <a href="https://discord.gg/TDvbdXRRQ6">
+        <img src="https://img.shields.io/discord/1289565618957193217?color=5865F2&label=Xenon Discord&logo=Discord&logoColor=white">
+ </a>
 
-**Current State**  
+## Current State
+
 ***Kernel*** (`xboxkrnl.exe`)
 - Proper boot (skipping `HW_INIT` CB Bootloader step) is functional up to the latest Dev kernel: 2.0.17489.0. Kernel boots and reaches INIT_SECURITY boot stage, soon after main thread dies because of unimplemented/improper SFCX routines.
 - Kernel debugging via WindDBG is implemented and works as expected with some minor glitches.
