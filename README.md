@@ -1,6 +1,6 @@
 <h1 align="center">
   <br>
-  <a href="https://discord.gg/TDvbdXRRQ6"><img src="https://github.com/bitsh1ft3r/Xenon/tree/main/Xenon/Assets/images/Xenon.png" width="250"></a>
+  <a href="https://discord.gg/TDvbdXRRQ6"><img src="https://github.com/bitsh1ft3r/Xenon/blob/main/Xenon/Assets/images/Xenon.png" width="250"></a>
   <br>
   <b>Xbox 360 Low Level Emulator Research Project</b>
   <br>
