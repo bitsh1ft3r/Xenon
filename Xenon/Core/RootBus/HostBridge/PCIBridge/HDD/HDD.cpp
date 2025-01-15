@@ -13,7 +13,7 @@ HDD::HDD(PCIBridge* parentPCIBridge)
 	ataDeviceState.ataReadState.status = ATA_STATUS_DRDY;
 }
 
-void HDD::Read(u64 readAddress, u64* data, u8 byteCount)
+void HDD::Read(u64 readAddress, u64* data, size_t byteCount)
 {
 	u32 regOffset = (readAddress & 0xFF) * 4;
 

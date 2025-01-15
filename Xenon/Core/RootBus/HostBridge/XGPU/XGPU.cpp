@@ -143,7 +143,7 @@ void Xe::Xenos::XGPU::XenosThread()
 
 	mainWindow = SDL_CreateWindow("Xenon Xbox 360 LLE", SDL_WINDOWPOS_CENTERED, SDL_WINDOWPOS_CENTERED, winWidth, winHeight, 0);
 	renderer = SDL_CreateRenderer(mainWindow, -1, SDL_RENDERER_PRESENTVSYNC | SDL_RENDERER_ACCELERATED);
-	texture = SDL_CreateTexture(renderer,SDL_PIXELFORMAT_ARGB8888, SDL_TEXTUREACCESS_STREAMING, winWidth, winHeight);
+	texture = SDL_CreateTexture(renderer, SDL_PIXELFORMAT_ARGB8888, SDL_TEXTUREACCESS_STREAMING, winWidth, winHeight);
 
 
 	// Pixel Data pointer.
@@ -157,7 +157,7 @@ void Xe::Xenos::XGPU::XenosThread()
 
 	while (rendering)
 	{
-		while (SDL_PollEvent(&windowEvent));
+		while (SDL_PollEvent(&windowEvent))
 		{
 			if (windowEvent.type == SDL_QUIT)
 				rendering = false;
