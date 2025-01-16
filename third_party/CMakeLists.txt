@@ -11,7 +11,8 @@ set_directory_properties(PROPERTIES
 # Set CMP0069 policy to "NEW" in order to ensure consistent behavior when building external targets with LTO enabled
 set(CMAKE_POLICY_DEFAULT_CMP0069 NEW)
 
-# SDL
-if (NOT TARGET SDL2::SDL2)
+# SDL3
+if (NOT TARGET SDL3::SDL3)
+    set(SDL_PIPEWIRE OFF)
     add_subdirectory(SDL2)
 endif()

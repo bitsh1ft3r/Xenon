@@ -25,7 +25,7 @@ function(create_target_directory_groups target_name)
     endforeach()
 endfunction()
 
-find_package(SDL2 2.30.11 MODULE)
+find_package(SDL3 3.1.8 CONFIG)
 
 add_subdirectory(third_party)
 include_directories(Xenon)
@@ -127,7 +127,7 @@ add_executable(Xenon
 create_target_directory_groups(Xenon)
 
 target_include_directories(Xenon PRIVATE ${CMAKE_CURRENT_SOURCE_DIR})
-target_link_libraries(Xenon PRIVATE SDL2::SDL2)
+target_link_libraries(Xenon PRIVATE SDL3::SDL3)
 
 if (WIN32)
     target_sources(Xenon PRIVATE Xenon/Xenon.rc)
