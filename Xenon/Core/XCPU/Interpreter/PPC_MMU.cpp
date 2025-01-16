@@ -905,7 +905,8 @@ bool PPCInterpreter::MMUTranslateAddress(u64* EA, PPU_STATE *hCoreState, bool me
                 }
                 else
                 {
-                    // Page Table lookup
+                    // Page Table Lookup:
+                    // Walk the Page table to find a Page that translates our current VA.
 
                     // Save MSR DR & IR Bits. When an exception occurs they must be reset to whatever they where.
                     bool msrDR = hCoreState->ppuThread[hCoreState->currentThread].SPR.MSR.DR;
@@ -919,7 +920,11 @@ bool PPCInterpreter::MMUTranslateAddress(u64* EA, PPU_STATE *hCoreState, bool me
                     u64 ptem = (currslbEntry.vsidReg & SLB_VSID_PTEM) | ((epn >> 16) & HPTE64_V_AVPN);
                     ptem |= HPTE64_V_VALID;
 
-                    u64 pte0, pte1 =0;
+                    // First and second PTE doublewords.
+                    // TODO: Make this a union for ease of handling.
+                    u64 PTE0 = 0;
+                    u64 PTE1 = 0;
+
                     u64 ptex = 0;
                     u64 pte_offset = 0;
                     ptex = (hash & ((1ULL << ((hCoreState->SPR.SDR1 & 
@@ -939,80 +944,72 @@ bool PPCInterpreter::MMUTranslateAddress(u64* EA, PPU_STATE *hCoreState, bool me
                     // First PTEG
                     for (u32 i = 0; i < HPTES_PER_GROUP; i++)
                     {
-                        pte0 = MMURead64(hCoreState, hpteg0 + 8 * i);
-                        pte1 = MMURead64(hCoreState, hpteg0 + 8 * i + 8);
-                        if (HPTE64_V_COMPARE(pte0, ptem))
+                        PTE0 = MMURead64(hCoreState, hpteg0 + 8 * i);
+                        PTE1 = MMURead64(hCoreState, hpteg0 + 8 * i + 8);
+                        if (HPTE64_V_COMPARE(PTE0, ptem))
                         {
                             // Match
 
                             // Update Referenced and Change Bits if necessary.
-                            if (!(pte1 & HPTE64_R_R))
+                            if (!(PTE1 & HPTE64_R_R))
                             {
-                            // Referenced
-                            MMUWrite64(hCoreState, hpteg0 + 8 * i + 8, (pte1 | 0x100));
+                                // Referenced
+                                MMUWrite64(hCoreState, hpteg0 + 8 * i + 8, (PTE1 | 0x100));
                             }
-                            if (!(pte1 & HPTE64_R_C))
+                            if (!(PTE1 & HPTE64_R_C))
                             {
                                 // Access is a data write?
                                 if (memWrite) {
                                     // Change
-                                    MMUWrite64(hCoreState, hpteg0 + 8 * i + 8, (pte1 | 0x80));
+                                    MMUWrite64(hCoreState, hpteg0 + 8 * i + 8, (PTE1 | 0x80));
                                 }
                             }
 
-                            if (L) // Large Pages, last bit of RPN is unused
-                            {
-                                RA = pte1 & PPE_TLB_RPN_ARPN_MASK;
-                            }
-                            else
-                            {
-                                RA = pte1 & PPE_TLB_RPN_ARPN_AND_LP_MASK;
-                            }
+                            // Get our RPN from the PTE1
+                            RPN = ((PTE1 & HPTE64_R_RPN) >> p) << p;
                             
+                            // Set our D/I relocation state to whatever it was. 
                             hCoreState->ppuThread[hCoreState->currentThread].SPR.MSR.DR = msrDR;
                             hCoreState->ppuThread[hCoreState->currentThread].SPR.MSR.IR = msrIR;
 
                             goto end;
                         }
                     }
+
                     ptex = (~hash & ((1ULL << ((hCoreState->SPR.SDR1 &
                         SDR_64_HTABSIZE) + 18 - 7)) - 1)) * HPTES_PER_GROUP;
 
                     pte_offset = ptex * HASH_PTE_SIZE_64;
                     u64 hpteg1 = base + pte_offset;
+
                     // Second PTEG
                     for (u32 i = 0; i < HPTES_PER_GROUP; i++)
                     {
-                        pte0 = MMURead64(hCoreState, hpteg1 + 8 * i);
-                        pte1 = MMURead64(hCoreState, hpteg1 + 8 * i + 8);
-                        if (HPTE64_V_COMPARE(pte0, ptem))
+                        PTE0 = MMURead64(hCoreState, hpteg1 + 8 * i);
+                        PTE1 = MMURead64(hCoreState, hpteg1 + 8 * i + 8);
+                        if (HPTE64_V_COMPARE(PTE0, ptem))
                         {
                             // Match
                             
                             // Update Referenced and Change Bits if necessary.
-                            if (!(pte1 & HPTE64_R_R))
+                            if (!(PTE1 & HPTE64_R_R))
                             {
                                 // Referenced
-                                MMUWrite64(hCoreState, hpteg0 + 8 * i + 8, (pte1 | 0x100));
+                                MMUWrite64(hCoreState, hpteg0 + 8 * i + 8, (PTE1 | 0x100));
                             }
-                            if (!(pte1 & HPTE64_R_C))
+                            if (!(PTE1 & HPTE64_R_C))
                             {
                                 // Access is a data write?
                                 if (memWrite) {
                                     // Change
-                                    MMUWrite64(hCoreState, hpteg0 + 8 * i + 8, (pte1 | 0x80));
+                                    MMUWrite64(hCoreState, hpteg0 + 8 * i + 8, (PTE1 | 0x80));
                                 }
                             }
-                            
-                            if (L) // Large Pages, last bit of RPN is unused
-                            {
-                                RA = pte1 & PPE_TLB_RPN_ARPN_MASK;
-                            }
-                            else
-                            {
-                                RA = pte1 & PPE_TLB_RPN_ARPN_AND_LP_MASK;
-                            }
 
+                            // Get our RPN from the PTE1
+                            RPN = ((PTE1 & HPTE64_R_RPN) >> p) << p;
+
+                            // Set our D/I relocation state to whatever it was. 
                             hCoreState->ppuThread[hCoreState->currentThread].SPR.MSR.DR = msrDR;
                             hCoreState->ppuThread[hCoreState->currentThread].SPR.MSR.IR = msrIR;
 
@@ -1025,7 +1022,8 @@ bool PPCInterpreter::MMUTranslateAddress(u64* EA, PPU_STATE *hCoreState, bool me
                     hCoreState->ppuThread[hCoreState->currentThread].SPR.MSR.DR = msrDR;
                     hCoreState->ppuThread[hCoreState->currentThread].SPR.MSR.IR = msrIR;
 
-                    goto end;
+                    // Page Table Lookup Fault.
+                    // Issue Data/Instr Storage interrupt.
 
                     if (hCoreState->ppuThread[hCoreState->currentThread].iFetch)
                     {
@@ -1038,7 +1036,6 @@ bool PPCInterpreter::MMUTranslateAddress(u64* EA, PPU_STATE *hCoreState, bool me
                         hCoreState->ppuThread[hCoreState->currentThread].exceptEA = *EA;
                     }
                     return false;
-                    system("PAUSE");
                 }
             }
         }
