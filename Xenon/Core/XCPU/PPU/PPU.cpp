@@ -68,7 +68,7 @@ void PPU::Initialize(XENON_CONTEXT* inXenonContext, RootBus* mainBus, u32 PVR, u
 	ppuState->SPR.TSCR = 0x100000;
 
 	// If we're PPU0,thread0 then enable THRD 0 and set Reset Vector.
-	if (ppuState->ppuName == "PPU0")
+	if (strcmp(ppuState->ppuName,"PPU0") == false)
 	{
 		ppuState->SPR.CTRL = 0x800000; // CTRL[TE0] = 1;
 		ppuState->SPR.HRMOR = 0x0000020000000000;

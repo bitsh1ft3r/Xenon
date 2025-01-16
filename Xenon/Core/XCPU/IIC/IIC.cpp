@@ -38,16 +38,24 @@ void Xe::XCPU::IIC::XenonIIC::writeInterrupt(u64 intAddress, u64 intData)
 		genInterrupt(intType, cpusToInterrupt);
 		break;
 	case Xe::XCPU::IIC::EOI:
-		// Remove the first interrupt in the Interrupt queue.
-		iicState.ppeIntCtrlBlck[ppeIntCtrlBlckID].intQueue.pop();
-		// Clear the ACK flag.
-		iicState.ppeIntCtrlBlck[ppeIntCtrlBlckID].intAck = false;
+		// Check if we have interrupts in the queue.
+		if (!iicState.ppeIntCtrlBlck[ppeIntCtrlBlckID].intQueue.empty())
+		{
+			// Remove the first interrupt in the Interrupt queue.
+			iicState.ppeIntCtrlBlck[ppeIntCtrlBlckID].intQueue.pop();
+			// Clear the ACK flag.
+			iicState.ppeIntCtrlBlck[ppeIntCtrlBlckID].intAck = false;
+		}		
 		break;
 	case Xe::XCPU::IIC::EOI_SET_CPU_CURRENT_TSK_PRI:
-		// Remove the first interrupt in the Interrupt Queue.
-		iicState.ppeIntCtrlBlck[ppeIntCtrlBlckID].intQueue.pop();
-		// Clear the ACK flag.
-		iicState.ppeIntCtrlBlck[ppeIntCtrlBlckID].intAck = false;
+		// Check if we have interrupts in the queue.
+		if (!iicState.ppeIntCtrlBlck[ppeIntCtrlBlckID].intQueue.empty())
+		{
+			// Remove the first interrupt in the Interrupt Queue.
+			iicState.ppeIntCtrlBlck[ppeIntCtrlBlckID].intQueue.pop();
+			// Clear the ACK flag.
+			iicState.ppeIntCtrlBlck[ppeIntCtrlBlckID].intAck = false;
+		}
 		// Set new Interrupt priority.
 		iicState.ppeIntCtrlBlck[ppeIntCtrlBlckID].REG_CPU_CURRENT_TSK_PRI = static_cast<u32>(_byteswap_uint64(intData));
 		break;
