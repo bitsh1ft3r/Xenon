@@ -11,6 +11,9 @@
         <img src="https://img.shields.io/discord/1289565618957193217?color=5865F2&label=Xenon Discord&logo=Discord&logoColor=white">
  </a>
 
+## Build Status
+[![Build](https://github.com/bitsh1ft3r/Xenon/actions/workflows/build.yml/badge.svg)](https://github.com/bitsh1ft3r/Xenon/actions/workflows/build.yml)
+
 ## Current State
 
 ***Kernel*** (`xboxkrnl.exe`)
