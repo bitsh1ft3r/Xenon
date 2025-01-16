@@ -6,7 +6,7 @@
 /***Sets the destination, value (205) and size (RAMData)***/
 RAM::RAM()
 {
-	memset(RAMData, 0xcd, sizeof(RAMData));
+	memset(RAMData, 0xcd, RAM_SIZE);
 }
 
 /*****************Responsible for RAM reading*****************/

@@ -858,8 +858,6 @@ bool PPCInterpreter::MMUTranslateAddress(u64* EA, PPU_STATE *hCoreState, bool me
             //u32 OFFSET = QGET(*EA, 64 - p, 63);
             u64 VA = VSID | PAGE;// | OFFSET;
 
-            VA;// |= upperEA;
-
             if (VA > 0x7FFFFFFF)
             {
                 VPN = (VA >> 16) & ~0x7F;
