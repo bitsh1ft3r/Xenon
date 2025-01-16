@@ -2,10 +2,7 @@
 
 #include <thread>
 
-#define SDL_MAIN_HANDLED
-#include <SDL.h>
-#pragma comment(lib,"SDL2.lib")
-
+#include <SDL2/SDL.h>
 
 #include "Xenon/Base/TypeDefs.h"
 #include "Xenon/Core/RAM/RAM.h"
