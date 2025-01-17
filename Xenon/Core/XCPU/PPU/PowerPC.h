@@ -367,7 +367,7 @@ typedef struct SOCSECENG_BLOCK { //Addr = 80000200_00024000
 #define XE_FUSESET_LOC		0x20000
 #define XE_FUSESET_SIZE		0x17FF
 #define XE_L2_CACHE_SIZE	0x100000
-#define XE_PVR				0x00710800	// Jasper: 0x00710500
+#define XE_PVR				0x00710500	// Corona: 0x00710800 Jasper: 0x00710500
 
 // Exception Bitmasks for Exception Register.
 
