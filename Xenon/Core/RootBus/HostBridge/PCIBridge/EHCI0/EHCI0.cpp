@@ -1,3 +1,5 @@
+// Copyright 2025 Xenon Emulator Project
+
 #include "EHCI0.h"
 
 Xe::PCIDev::EHCI0::EHCI0::EHCI0()

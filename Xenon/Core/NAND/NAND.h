@@ -1,9 +1,11 @@
+// Copyright 2025 Xenon Emulator Project
+
 #pragma once
 
 #include <fstream>
 #include <iostream>
 
-#include "Xenon/Base/SystemDevice.h"
+#include "Base/SystemDevice.h"
 
 #define NAND_START_ADDR 0xC8000000
 #define NAND_END_ADDR	0xCC000000 // 64 Mb region

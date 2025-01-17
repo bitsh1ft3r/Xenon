@@ -1,6 +1,8 @@
+// Copyright 2025 Xenon Emulator Project
+
 #include <iostream>
 
-#include "Xenon/Core/XCPU/Interpreter/PPCInterpreter.h"
+#include "PPCInterpreter.h"
 
 // Forward Declaration
 XENON_CONTEXT* PPCInterpreter::intXCPUContext = nullptr;

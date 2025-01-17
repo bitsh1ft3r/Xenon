@@ -1,6 +1,8 @@
+// Copyright 2025 Xenon Emulator Project
+
 #pragma once
 
-#include "Xenon/Base/SystemDevice.h"
+#include "Base/SystemDevice.h"
 
 #define RAM_START_ADDR	0
 #define RAM_SIZE		0x20000000

@@ -1,7 +1,9 @@
+// Copyright 2025 Xenon Emulator Project
+
 #include <iostream>
 
 #include "PPC_Instruction.h"
-#include "Xenon/Core/XCPU/Interpreter/PPCInterpreter.h"
+#include "PPCInterpreter.h"
 
 PPCInstruction PPCInterpreter::getOpcode(u32 instrData)
 {

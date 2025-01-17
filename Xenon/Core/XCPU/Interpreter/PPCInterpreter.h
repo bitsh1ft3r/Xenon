@@ -1,9 +1,12 @@
+// Copyright 2025 Xenon Emulator Project
+
 #pragma once
 
-#include "Xenon/Core/RootBus/RootBus.h"
-#include "Xenon/Core/XCPU/PPU/PowerPC.h"
-#include "Xenon/Core/XCPU/Interpreter/PPCInternal.h"
-#include "Xenon/Core/XCPU/Interpreter/PPC_Instruction.h"
+#include "PPCInternal.h"
+#include "PPC_Instruction.h"
+
+#include "Core/RootBus/RootBus.h"
+#include "Core/XCPU/PPU/PowerPC.h"
 
 namespace PPCInterpreter
 {

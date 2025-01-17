@@ -1,9 +1,11 @@
+// Copyright 2025 Xenon Emulator Project
+
 #pragma once
 
 #include <vector>
 
-#include "Xenon/Base/SystemDevice.h"
-#include "Xenon/Core/RootBus/HostBridge/HostBridge.h"
+#include "Base/SystemDevice.h"
+#include "Core/RootBus/HostBridge/HostBridge.h"
 
 // PCI Configuration region
 #define PCI_CONFIG_REGION_ADDRESS	0xD0000000

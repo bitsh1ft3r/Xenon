@@ -1,7 +1,10 @@
+// Copyright 2025 Xenon Emulator Project
+
 #pragma once
+
 #include <iostream>
 
-#include "Xenon/Base/TypeDefs.h"
+#include "Base/TypeDefs.h"
 
 //
 // PowerPC Instruction definitions

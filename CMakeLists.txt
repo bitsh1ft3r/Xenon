@@ -9,6 +9,8 @@ if (NOT CMAKE_BUILD_TYPE)
     set(CMAKE_BUILD_TYPE Release)
 endif()
 
+set(CMAKE_INTERPROCEDURAL_OPTIMIZATION_RELEASE ON)
+
 project(Xenon)
 
 # This function should be passed a list of all files in a target. It will automatically generate file groups
@@ -79,10 +81,6 @@ set(RootBus
     Xenon/Core/RootBus/HostBridge/PCIBridge/SMC/SMC_Config.h
     Xenon/Core/RootBus/HostBridge/PCIBridge/XMA/XMA.cpp
     Xenon/Core/RootBus/HostBridge/PCIBridge/XMA/XMA.h
-    Xenon/Core/RootBus/HostBridge/XGPU/XGPU.cpp
-    Xenon/Core/RootBus/HostBridge/XGPU/XenosRegisters.h
-    Xenon/Core/RootBus/HostBridge/XGPU/XGPU.h
-    Xenon/Core/RootBus/HostBridge/XGPU/XGPUConfig.h
 )
 
 set(XCPU
@@ -111,11 +109,19 @@ set(XCPU
     Xenon/Core/XCPU/PPU/PowerPC.h
 )
 
+set(XGPU
+    Xenon/Core/XGPU/XGPU.cpp
+    Xenon/Core/XGPU/XenosRegisters.h
+    Xenon/Core/XGPU/XGPU.h
+    Xenon/Core/XGPU/XGPUConfig.h
+)
+
 set(CORE
     ${NAND}
     ${RAM}
     ${RootBus}
     ${XCPU}
+    ${XGPU}
 )
 
 add_executable(Xenon

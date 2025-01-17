@@ -1,7 +1,9 @@
+// Copyright 2025 Xenon Emulator Project
+
 #include <assert.h>
 #include <iostream>
 
-#include "Xenon/Core/XCPU/Interpreter/PPCInterpreter.h"
+#include "PPCInterpreter.h"
 
 //
 // Store Byte

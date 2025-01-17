@@ -1,4 +1,6 @@
-#include "Xenon/Core/XCPU/Interpreter/PPCInterpreter.h"
+// Copyright 2025 Xenon Emulator Project
+
+#include "PPCInterpreter.h"
 
 void PPCInterpreter::ppcUpdateCR(PPU_STATE* hCore, s8 crNum, u32 crValue) {
 

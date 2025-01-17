@@ -1,9 +1,11 @@
+// Copyright 2025 Xenon Emulator Project
+
 #pragma once
 
 #include <vector>
 #include <queue>
 
-#include "Xenon/Base/TypeDefs.h"
+#include "Base/TypeDefs.h"
 
 namespace Xe
 {

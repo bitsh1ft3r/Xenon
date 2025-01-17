@@ -1,8 +1,10 @@
+// Copyright 2025 Xenon Emulator Project
+
 #pragma once
 
 #include <Windows.h>
 
-#include "Xenon/Base/TypeDefs.h"
+#include "Base/TypeDefs.h"
 
 #define POST_BUS_ADDR 0x61010
 

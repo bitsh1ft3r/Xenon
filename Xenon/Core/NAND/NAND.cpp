@@ -1,3 +1,5 @@
+// Copyright 2025 Xenon Emulator Project
+
 #include "NAND.h"
 
 /********************Responsible for loading the NAND file********************/

@@ -1,8 +1,10 @@
+// Copyright 2025 Xenon Emulator Project
+
 #pragma once
 
 #include <iostream>
 
-#include "Xenon/Core/RootBus/HostBridge/PCIBridge/PCIDevice.h"
+#include "Core/RootBus/HostBridge/PCIBridge/PCIDevice.h"
 
 namespace Xe
 {

@@ -1,3 +1,5 @@
+// Copyright 2025 Xenon Emulator Project
+
 #pragma once
 
 // Xenos Registers by ID, multiply the ID by 4 to get the register offset.

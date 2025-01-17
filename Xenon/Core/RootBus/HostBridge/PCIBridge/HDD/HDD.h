@@ -1,10 +1,12 @@
+// Copyright 2025 Xenon Emulator Project
+
 #pragma once
 
 #include <vector>
 #include <iostream>
 
-#include "Xenon/Core/RootBus/HostBridge/PCIBridge/PCIDevice.h"
-#include "Xenon/Core/RootBus/HostBridge/PCIBridge/PCIBridge.h"
+#include "Core/RootBus/HostBridge/PCIBridge/PCIDevice.h"
+#include "Core/RootBus/HostBridge/PCIBridge/PCIBridge.h"
 
 #define HDD_DEV_SIZE	0x30
 

@@ -1,6 +1,8 @@
+// Copyright 2025 Xenon Emulator Project
+
 #pragma once
 
-#include "Xenon/Base/TypeDefs.h"
+#include "Base/TypeDefs.h"
 
 // Taken from a Jasper SMC Config Space dump.
 u32 smcConfigSpaceMap[64] =

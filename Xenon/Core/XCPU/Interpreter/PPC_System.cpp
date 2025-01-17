@@ -1,6 +1,8 @@
+// Copyright 2025 Xenon Emulator Project
+
 #include <iostream>
 
-#include "Xenon/Core/XCPU/Interpreter/PPCInterpreter.h"
+#include "PPCInterpreter.h"
 
 void PPCInterpreter::PPCInterpreter_isync(PPU_STATE* hCore)
 {

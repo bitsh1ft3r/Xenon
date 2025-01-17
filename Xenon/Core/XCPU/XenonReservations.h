@@ -1,8 +1,11 @@
+// Copyright 2025 Xenon Emulator Project
+
 #pragma once
 
 #include <vector>
 #include <windows.h>
-#include "Xenon/Base/TypeDefs.h"
+
+#include "Base/TypeDefs.h"
 
 struct PPU_RES
 {

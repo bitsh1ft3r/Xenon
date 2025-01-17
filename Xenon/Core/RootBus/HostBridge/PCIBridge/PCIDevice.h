@@ -1,6 +1,8 @@
+// Copyright 2025 Xenon Emulator Project
+
 #pragma once
 
-#include "Xenon/Core/RootBus/HostBridge/PCIe.h"
+#include "Core/RootBus/HostBridge/PCIe.h"
 
 struct PCIDeviceInfo
 {

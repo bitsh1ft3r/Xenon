@@ -1,8 +1,10 @@
+// Copyright 2025 Xenon Emulator Project
+
 #include <iostream>
 
-#include "Xenon/Core/RootBus/HostBridge/XGPU/XGPU.h"
-#include "Xenon/Core/RootBus/HostBridge/XGPU/XenosRegisters.h"
-#include "Xenon/Core/RootBus/HostBridge/XGPU/XGPUConfig.h"
+#include "XGPU.h"
+#include "XenosRegisters.h"
+#include "XGPUConfig.h"
 
 Xe::Xenos::XGPU::XGPU(RAM* ram)
 {

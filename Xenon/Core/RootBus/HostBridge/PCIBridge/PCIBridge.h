@@ -1,11 +1,14 @@
+// Copyright 2025 Xenon Emulator Project
+
 #pragma once
 
 #include <iostream>
 #include <vector>
 
-#include "Xenon/Core/XCPU/IIC/IIC.h"
-#include "Xenon/Core/RootBus/HostBridge/PCIe.h"
-#include "Xenon/Core/RootBus/HostBridge/PCIBridge/PCIDevice.h"
+#include "PCIDevice.h"
+
+#include "Core/XCPU/IIC/IIC.h"
+#include "Core/RootBus/HostBridge/PCIe.h"
 
 /*	Dev type			Config Address		BAR
 	PCI Host Bridge		D0008000			E0000000

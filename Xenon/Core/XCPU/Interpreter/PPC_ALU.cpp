@@ -1,7 +1,9 @@
+// Copyright 2025 Xenon Emulator Project
+
 #include <stdlib.h>
 #include <iostream>
 
-#include "Xenon/Core/XCPU/Interpreter/PPCInterpreter.h"
+#include "PPCInterpreter.h"
 
 #define GPR(x)	hCore->ppuThread[hCore->currentThread].GPR[x]
 
