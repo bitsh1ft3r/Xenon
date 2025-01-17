@@ -1,3 +1,5 @@
+// Copyright 2025 Xenon Emulator Project
+
 #include "Ethernet.h"
 
 Xe::PCIDev::ETHERNET::ETHERNET::ETHERNET()

@@ -1,3 +1,5 @@
+// Copyright 2025 Xenon Emulator Project
+
 #pragma once
 
 // Xenon - Xbox 360 CPU Implementation.
@@ -12,8 +14,8 @@
 
 #include <thread>
 
-#include "Xenon/Core/RootBus/RootBus.h"
-#include "Xenon/Core/XCPU/PPU/PPU.h"
+#include "Core/RootBus/RootBus.h"
+#include "Core/XCPU/PPU/PPU.h"
 
 
 class Xenon

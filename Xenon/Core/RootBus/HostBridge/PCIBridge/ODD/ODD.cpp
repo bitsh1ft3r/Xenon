@@ -1,6 +1,4 @@
-/*
-	Xenon ATAPI Emulation. 
-*/
+// Copyright 2025 Xenon Emulator Project
 
 #include "ODD.h"
 

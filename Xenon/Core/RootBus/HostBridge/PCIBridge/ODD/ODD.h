@@ -1,12 +1,14 @@
+// Copyright 2025 Xenon Emulator Project
+
 #pragma once
 
 #include <vector>
 #include <iostream>
 #include <Windows.h>
 
-#include "Xenon/Core/RAM/RAM.h"
-#include "Xenon/Core/RootBus/HostBridge/PCIBridge/PCIDevice.h"
-#include "Xenon/Core/RootBus/HostBridge/PCIBridge/PCIBridge.h"
+#include "Core/RAM/RAM.h"
+#include "Core/RootBus/HostBridge/PCIBridge/PCIDevice.h"
+#include "Core/RootBus/HostBridge/PCIBridge/PCIBridge.h"
 
 #define ODD_DEV_SIZE	0x30
 

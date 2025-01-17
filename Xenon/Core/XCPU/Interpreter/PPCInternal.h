@@ -1,4 +1,8 @@
+// Copyright 2025 Xenon Emulator Project
+
 #pragma once
+
+#include "Base/TypeDefs.h"
 
 #define PPC_OPC_RC		1
 #define PPC_OPC_OE		(1<<10)

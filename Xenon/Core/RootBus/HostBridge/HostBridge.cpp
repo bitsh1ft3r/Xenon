@@ -1,3 +1,5 @@
+// Copyright 2025 Xenon Emulator Project
+
 #include "HostBridge.h"
 
 HostBridge::HostBridge()

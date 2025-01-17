@@ -1,8 +1,10 @@
+// Copyright 2025 Xenon Emulator Project
+
 #pragma once
 
-#include "Xenon/Core/XCPU/eFuse.h"
-#include "Xenon/Core/XCPU/IIC/IIC.h"
-#include "Xenon/Core/XCPU/XenonReservations.h"
+#include "Core/XCPU/eFuse.h"
+#include "Core/XCPU/IIC/IIC.h"
+#include "Core/XCPU/XenonReservations.h"
 
 //
 // PowerPC Register definitions

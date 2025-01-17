@@ -1,7 +1,10 @@
+// Copyright 2025 Xenon Emulator Project
+
 #pragma once
 
-#include "Xenon/Core/RootBus/RootBus.h"
-#include "Xenon/Core/XCPU/PPU/PowerPC.h"
+#include "PowerPC.h"
+
+#include "Core/RootBus/RootBus.h"
 
 class PPU
 {

@@ -1,3 +1,4 @@
 [submodule "third_party/SDL3"]
 	path = third_party/SDL3
 	url = https://github.com/libsdl-org/SDL.git
+	shallow = true

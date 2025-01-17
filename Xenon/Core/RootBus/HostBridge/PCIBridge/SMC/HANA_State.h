@@ -1,6 +1,8 @@
+// Copyright 2025 Xenon Emulator Project
+
 #pragma once
 
-#include "Xenon/Base/TypeDefs.h"
+#include "Base/TypeDefs.h"
 
 // HANA Dump before initialization, taken from a Corona v4.
 u32 HANA_State[] =

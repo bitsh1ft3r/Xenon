@@ -1,5 +1,7 @@
-#include "Xenon/Core/RootBus/HostBridge/PCIBridge/PCIBridge.h"
-#include "Xenon/Core/RootBus/HostBridge/PCIBridge/PCIBridgeConfig.h"
+// Copyright 2025 Xenon Emulator Project
+
+#include "PCIBridge.h"
+#include "PCIBridgeConfig.h"
 
 // Device tree, taken from an actual system, Corona V6.
 /*

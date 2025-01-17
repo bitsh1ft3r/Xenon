@@ -1,12 +1,14 @@
+// Copyright 2025 Xenon Emulator Project
+
 #pragma once
 
 #include <thread>
 
 #include <SDL3/SDL.h>
 
-#include "Xenon/Base/TypeDefs.h"
-#include "Xenon/Core/RAM/RAM.h"
-#include "Xenon/Core/RootBus/HostBridge/PCIe.h"
+#include "Base/TypeDefs.h"
+#include "Core/RAM/RAM.h"
+#include "Core/RootBus/HostBridge/PCIe.h"
 
 /*
 *	XGPU.h Basic Xenos implementation.

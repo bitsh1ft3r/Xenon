@@ -1,7 +1,10 @@
+// Copyright 2025 Xenon Emulator Project
+
 #include <iostream>
 
-#include "Xenon/Core/XCPU/PostBus/PostBus.h"
-#include "Xenon/Core/XCPU/Interpreter/PPCInterpreter.h"
+#include "PPCInterpreter.h"
+
+#include "Core/XCPU/PostBus/PostBus.h"
 
 //
 // Xbox 360 Memory map, info taken from various sources.

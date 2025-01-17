@@ -1,3 +1,5 @@
+// Copyright 2025 Xenon Emulator Project
+
 #include "OHCI1.h"
 
 Xe::PCIDev::OHCI1::OHCI1::OHCI1()

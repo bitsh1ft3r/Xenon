@@ -1,10 +1,12 @@
+// Copyright 2025 Xenon Emulator Project
+
 #pragma once
 
 #include <thread>
 #include <iostream>
 
-#include "Xenon/Core/RootBus/HostBridge/PCIBridge/PCIBridge.h"
-#include "Xenon/Core/RootBus/HostBridge/PCIBridge/PCIDevice.h"
+#include "Core/RootBus/HostBridge/PCIBridge/PCIBridge.h"
+#include "Core/RootBus/HostBridge/PCIBridge/PCIDevice.h"
 
 // Device Size (at address 0xEA00C000)
 #define SFCX_DEV_SIZE	0x400

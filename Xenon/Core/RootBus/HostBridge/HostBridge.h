@@ -1,8 +1,12 @@
+// Copyright 2025 Xenon Emulator Project
+
 #pragma once
 
-#include "Xenon/Core/RootBus/HostBridge/PCIe.h"
-#include "Xenon/Core/RootBus/HostBridge/XGPU/XGPU.h"
-#include "Xenon/Core/RootBus/HostBridge/PCIBridge/PCIBridge.h"
+#include "PCIe.h"
+
+#include "Core/RootBus/HostBridge/PCIBridge/PCIBridge.h"
+
+#include "Core/XGPU/XGPU.h"
 
 /*
 	PCI Configuration Space at Address 0xD0000000.

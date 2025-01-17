@@ -1,6 +1,8 @@
+// Copyright 2025 Xenon Emulator Project
+
 #pragma once
 
-#include "Xenon/Base/TypeDefs.h"
+#include "Base/TypeDefs.h"
 
 // Taken from a Corona PCI bridge dump.
 /*

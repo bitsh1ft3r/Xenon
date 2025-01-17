@@ -1,9 +1,12 @@
+// Copyright 2025 Xenon Emulator Project
+
 #include <thread>
 #include <chrono>
 #include <assert.h>
 
 #include "PPU.h"
-#include "Xenon/Core/XCPU/Interpreter/PPCInterpreter.h"
+
+#include "Core/XCPU/Interpreter/PPCInterpreter.h"
 
 PPU::PPU()
 {

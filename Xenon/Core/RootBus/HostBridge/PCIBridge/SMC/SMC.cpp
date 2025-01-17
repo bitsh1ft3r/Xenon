@@ -1,6 +1,8 @@
+// Copyright 2025 Xenon Emulator Project
+
+#include "HANA_State.h"
 #include "SMC.h"
-#include "Xenon/Core/RootBus/HostBridge/PCIBridge/SMC/SMC_Config.h"
-#include "Xenon/Core/RootBus/HostBridge/PCIBridge/SMC/HANA_State.h"
+#include "SMC_Config.h"
 
 //
 // Registers Offsets
@@ -277,7 +279,7 @@ void Xe::PCIDev::SMC::SMCCore::setupUART(u32 uartConfig)
 
 	if (smcCoreState->comPortHandle == INVALID_HANDLE_VALUE)
 	{
-		printf("[ERR] SMCCore: CreateFile failed with error %d. Make sure the Selected COM " 
+		printf("[ERR] SMCCore: CreateFile failed with error %lu. Make sure the Selected COM " 
 			"Port is availeable in your system.\n", GetLastError());
 		return;
 	}
@@ -285,12 +287,12 @@ void Xe::PCIDev::SMC::SMCCore::setupUART(u32 uartConfig)
 	// Get Current COM Port State
 	if (!GetCommState(smcCoreState->comPortHandle, &smcCoreState->comPortDCB))
 	{
-		printf("[ERR] SMCCore: UART: GetCommState failed with error %d.\n", GetLastError());
+		printf("[ERR] SMCCore: UART: GetCommState failed with error %lu.\n", GetLastError());
 	}
 	// Set The COM Port State as per config value.
 	if (!SetCommState(smcCoreState->comPortHandle, &smcCoreState->comPortDCB))
 	{
-		printf("[ERR] SMCCore: UART: SetCommState failed with error %d.\n", GetLastError());
+		printf("[ERR] SMCCore: UART: SetCommState failed with error %lu.\n", GetLastError());
 	}
 
 

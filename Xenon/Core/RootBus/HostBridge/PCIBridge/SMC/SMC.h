@@ -1,3 +1,5 @@
+// Copyright 2025 Xenon Emulator Project
+
 #pragma once
 
 #include <thread>
@@ -7,8 +9,8 @@
 #include <tchar.h>
 #include <stdio.h>
 
-#include "Xenon/Core/RootBus/HostBridge/PCIBridge/PCIDevice.h"
-#include "Xenon/Core/RootBus/HostBridge/PCIBridge/PCIBridge.h"
+#include "Core/RootBus/HostBridge/PCIBridge/PCIDevice.h"
+#include "Core/RootBus/HostBridge/PCIBridge/PCIBridge.h"
 
 /*
 	Xenon System Management Controller (SMC) Emulation.

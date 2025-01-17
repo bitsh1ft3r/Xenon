@@ -1,6 +1,8 @@
+// Copyright 2025 Xenon Emulator Project
+
 #pragma once
 
-#include "Xenon/Base/TypeDefs.h"
+#include "Base/TypeDefs.h"
 
 // IBM's eFuse technology. Used on the Xbox 360 Xenon CPU.
 // Contains console-specific information such as CPU Key, CB and lockdown values.

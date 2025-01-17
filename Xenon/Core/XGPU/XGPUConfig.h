@@ -1,3 +1,5 @@
+// Copyright 2025 Xenon Emulator Project
+
 #pragma once
 
 // Dumped from address 0xD0010000. First 265 bytes.
