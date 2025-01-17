@@ -57,7 +57,7 @@ PPCInstruction PPCInterpreter::getOpcode(u32 instrData)
         return PPCInstruction::bx;
         break;
     case 19: /* Subgroup 19 */
-        switch (XO_20to30)
+        switch (XO_21to30)
         {
         case 0: // mcrf
             return PPCInstruction::mcrf;
