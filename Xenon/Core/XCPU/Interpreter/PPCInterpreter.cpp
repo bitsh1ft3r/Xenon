@@ -471,8 +471,11 @@ void PPCInterpreter::ppcExecuteSingleInstruction(PPU_STATE* hCore) {
 		/*
 	case PPCInstruction::mulhdx:
 		break;
+		*/
 	case PPCInstruction::mulhwux:
+		PPCInterpreter_mulhwux(hCore);
 		break;
+		/*
 	case PPCInstruction::mulhwx:
 		break;
 		*/

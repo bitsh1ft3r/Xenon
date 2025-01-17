@@ -280,7 +280,7 @@ void PPCInterpreter::PPCInterpreter_creqv(PPU_STATE* hCore)
 {
 	XL_FORM_BT_BA_BB;
 
-	u32 crEqv = ~CR_GET(BA) ^ CR_GET(BB);
+	u32 crEqv = ~(CR_GET(BA) ^ CR_GET(BB));
 	if (crEqv & 1)
 		BSET(hCore->ppuThread[hCore->currentThread].CR.CR_Hex, 32, BT);
 	else
@@ -291,7 +291,7 @@ void PPCInterpreter::PPCInterpreter_crnand(PPU_STATE* hCore)
 {
 	XL_FORM_BT_BA_BB;
 
-	u32 crNand = ~CR_GET(BA) & CR_GET(BB);
+	u32 crNand = ~(CR_GET(BA) & CR_GET(BB));
 	if (crNand & 1)
 		BSET(hCore->ppuThread[hCore->currentThread].CR.CR_Hex, 32, BT);
 	else
@@ -302,7 +302,7 @@ void PPCInterpreter::PPCInterpreter_crnor(PPU_STATE* hCore)
 {
 	XL_FORM_BT_BA_BB;
 
-	u32 crNor = ~CR_GET(BA) | CR_GET(BB);
+	u32 crNor = ~(CR_GET(BA) | CR_GET(BB));
 	if (crNor & 1)
 		BSET(hCore->ppuThread[hCore->currentThread].CR.CR_Hex, 32, BT);
 	else
@@ -573,6 +573,22 @@ void PPCInterpreter::PPCInterpreter_mullw(PPU_STATE* hCore)
 	{
 		std::cout << "PPC Interpreter: mullw -> Fatal error, OE not implemented!" << std::endl;
 	}
+
+	if (RC)
+	{
+		u32 CR = CRCompS(hCore, GPR(rD), 0);
+		ppcUpdateCR(hCore, 0, CR);
+	}
+}
+
+void PPCInterpreter::PPCInterpreter_mulhwux(PPU_STATE* hCore)
+{
+	XO_FORM_rD_rA_rB_RC;
+
+	u64 operand0 = (u64)LODW(GPR(rA));
+	u64 operand1 = (u64)LODW(GPR(rB));
+	operand0 = operand0 * operand1;
+	GPR(rD) = HIDW(operand0);
 
 	if (RC)
 	{

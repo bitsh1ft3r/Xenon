@@ -140,6 +140,7 @@ namespace PPCInterpreter
 	void PPCInterpreter_mulli(PPU_STATE* hCore);
 	void PPCInterpreter_mulldx(PPU_STATE* hCore);
 	void PPCInterpreter_mullw(PPU_STATE* hCore);
+	void PPCInterpreter_mulhwux(PPU_STATE* hCore);
 	void PPCInterpreter_mulhdux(PPU_STATE* hCore);
 	void PPCInterpreter_nandx(PPU_STATE* hCore);
 	void PPCInterpreter_negx(PPU_STATE* hCore);
