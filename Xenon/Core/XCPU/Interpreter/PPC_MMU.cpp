@@ -1041,8 +1041,6 @@ bool PPCInterpreter::MMUTranslateAddress(u64* EA, PPU_STATE *hCoreState, bool me
         {
             // SLB Miss
             // Data or Inst Segment Exception
-            std::cout << "XCPU (MMU): SLB not hit. Generating Interrupt." 
-                << std::endl;
             if (hCoreState->ppuThread[hCoreState->currentThread].iFetch)
             {
                 hCoreState->ppuThread[hCoreState->currentThread].exceptReg |= PPU_EX_INSTSEGM;
