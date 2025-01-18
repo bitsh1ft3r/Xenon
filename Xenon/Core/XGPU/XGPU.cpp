@@ -138,14 +138,18 @@ void Xe::Xenos::XGPU::XenosThread()
 	winWidth = 1280;
 	winHeight = 720;
 
-	if (SDL_Init(SDL_INIT_VIDEO) != 0)
+	if (SDL_Init(SDL_INIT_VIDEO) == 0)
 	{
 		std::cout << "SDL Init Failed." << std::endl;
 	}
 
-	mainWindow = SDL_CreateWindow("Xenon Xbox 360 LLE", winWidth, winHeight, 0);
+	mainWindow = SDL_CreateWindow("Xenon", winWidth, winHeight, SDL_WINDOW_MINIMIZED | SDL_WINDOW_RESIZABLE);
 	renderer = SDL_CreateRenderer(mainWindow, NULL);
-	texture = SDL_CreateTexture(renderer, SDL_PIXELFORMAT_ARGB8888, SDL_TEXTUREACCESS_STREAMING, winWidth, winHeight);
+	SDL_SetWindowMinimumSize(mainWindow, 640, 480);
+	// Set VSYNC on.
+	SDL_SetRenderVSync(renderer, 1);
+
+	texture = SDL_CreateTexture(renderer, SDL_PIXELFORMAT_BGRX32, SDL_TEXTUREACCESS_STREAMING, winWidth, winHeight);
 
 
 	// Pixel Data pointer.
@@ -155,32 +159,54 @@ void Xe::Xenos::XGPU::XenosThread()
 	// Framebuffer pointer from main memory.
 	u8 *fbPointer = ramPtr->getPointerToAddress(XE_FB_BASE);
 
+	// Rendering active.
 	bool rendering = true;
+	// Fullscreen Mode.
+	bool fullscreenMode = false;
 
 	while (rendering)
 	{
+		// Process events.
 		while (SDL_PollEvent(&windowEvent))
 		{
-			if (windowEvent.type == SDL_EVENT_QUIT)
-				rendering = false;
-
-			SDL_LockTexture(texture, NULL, (void**)&pixels, &pitch);
-
-			int stdPixPos = 0;
-			int xePixPos = 0;
-			for (int x = 0; x < winWidth; x++)
+			switch (windowEvent.type)
 			{
-				for (int y = 0; y < winHeight; y++)
+			case SDL_EVENT_QUIT:
+				rendering = false;
+				break;
+			case SDL_EVENT_KEY_DOWN:
+				if (windowEvent.key.key == SDLK_F11)
 				{
-					stdPixPos = XE_PIXEL_TO_STD_ADDR(x, y);
-					xePixPos = XE_PIXEL_TO_XE_ADDR(x, y);
-					memcpy(pixels + stdPixPos, fbPointer + xePixPos, 4);
+					SDL_SetWindowFullscreen(mainWindow, !fullscreenMode);
+					fullscreenMode = !fullscreenMode;
 				}
+				break;
+			default:
+				break;
 			}
-
-			SDL_UnlockTexture(texture);
-			SDL_RenderTexture(renderer, texture, NULL, NULL);
-			SDL_RenderPresent(renderer);
 		}
+
+		// Lock the texture to write our pixels on.
+		SDL_LockTexture(texture, NULL, (void**)&pixels, &pitch);
+		// Clear the backbuffer.
+		SDL_RenderClear(renderer);
+		// Copy the pixels.
+		int stdPixPos = 0;
+		int xePixPos = 0;
+		for (int x = 0; x < winWidth; x++)
+		{
+			for (int y = 0; y < winHeight; y++)
+			{
+				stdPixPos = XE_PIXEL_TO_STD_ADDR(x, y);
+				xePixPos = XE_PIXEL_TO_XE_ADDR(x, y);
+				memcpy(pixels + stdPixPos, fbPointer + xePixPos, 4);
+			}
+		}
+		// Unlock the texture.
+		SDL_UnlockTexture(texture);
+		// Render the texture to out backbuffer.
+		SDL_RenderTexture(renderer, texture, NULL, NULL);
+		// Present the new frame.
+		SDL_RenderPresent(renderer);
 	}
 }
