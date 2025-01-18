@@ -81,6 +81,9 @@ Xe::PCIDev::SMC::SMCCore::SMCCore(PCIBridge* parentPCIBridge, SMC_CORE_STATE* ne
 		i++;
 	}
 	
+	// Set UART Presence.
+	smcCoreState->uartPresent = true;
+
 	// Enter main execution thread.
 	smcThread = std::thread(&SMCCore::smcMainThread, this);
 }
@@ -123,7 +126,7 @@ void Xe::PCIDev::SMC::SMCCore::Read(u64 readAddress, u64* data, u8 byteCount)
 				smcPCIState->uartStatusReg = UART_STATUS_EMPTY;
 			}
 		}
-		else
+		else if(smcCoreState->uartPresent) // Init UART if this is our first try.
 		{
 			// XeLL doesn't initialize UART before sending data trough it. Initialize it first then.
 			setupUART(0x1e6); // 115200,8,N,1.
@@ -173,7 +176,7 @@ void Xe::PCIDev::SMC::SMCCore::Write(u64 writeAddress, u64 data, u8 byteCount)
 	case UART_CONFIG_REG:		// UART Config Register
 		memcpy(&smcPCIState->uartConfigReg, &data, byteCount);
 		// Check if UART is already initialized.
-		if (!smcCoreState->uartInitialized)
+		if (!smcCoreState->uartInitialized && smcCoreState->uartPresent)
 		{
 			// Initialize UART.
 			setupUART(static_cast<u32>(data));
@@ -281,6 +284,7 @@ void Xe::PCIDev::SMC::SMCCore::setupUART(u32 uartConfig)
 	{
 		printf("[ERR] SMCCore: CreateFile failed with error %lu. Make sure the Selected COM " 
 			"Port is availeable in your system.\n", GetLastError());
+		smcCoreState->uartPresent = false;
 		return;
 	}
 

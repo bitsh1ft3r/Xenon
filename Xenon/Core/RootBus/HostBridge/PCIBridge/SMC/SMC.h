@@ -230,8 +230,10 @@ namespace Xe
 
 				// Default COM Port for opening.
 				LPWSTR currentCOMPort;
-				// UART Initialized
+				// UART Initialized.
 				bool uartInitialized;
+				// UART Present. Used to do a one time check on UART COM Port on the host system.
+				bool uartPresent;
 				// Current COM Port Device Control Block.
 				// See https://learn.microsoft.com/en-us/windows/win32/api/winbase/ns-winbase-dcb
 				DCB comPortDCB;
