@@ -160,12 +160,6 @@ PPCInstruction PPCInterpreter::getOpcode(u32 instrData)
         return PPCInstruction::invalidInstruction;
         break;
     case 31: /* Subgroup 31 */
-        switch (XO_20to30)
-        {
-        case 792: // srawx
-            return PPCInstruction::srawx;
-            break;
-        }
         switch (XO_21to30)
         {
         case 0: // cmp
@@ -423,7 +417,7 @@ PPCInstruction PPCInterpreter::getOpcode(u32 instrData)
         case 790: // lhbrx
             return PPCInstruction::lhbrx;
             break;
-        case 762: // srawx
+        case 792: // srawx
             return PPCInstruction::srawx;
             break;
         case 794: // sradx
