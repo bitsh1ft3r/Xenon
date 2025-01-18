@@ -4,7 +4,7 @@
 
 #include <iostream>
 
-#include "Base/TypeDefs.h"
+#include "Base/Types.h"
 
 //
 // PowerPC Instruction definitions

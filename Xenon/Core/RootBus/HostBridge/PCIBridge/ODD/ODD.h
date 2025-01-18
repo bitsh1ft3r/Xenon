@@ -191,7 +191,7 @@ struct XE_ATAPI_INQUIRY_DATA
 //
 // SCSI Command Descriptor Block
 //
-#include <pshpack1.h>
+
 union XE_CDB {
 
     //
@@ -262,7 +262,6 @@ union XE_CDB {
     UINT8 AsByte[16];
 
 };
-#include <poppack.h>
 
 //
 // Direct Memory Accesss PRD

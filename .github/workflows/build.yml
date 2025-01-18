@@ -15,9 +15,28 @@ jobs:
   Windows:
     runs-on: windows-2022
     steps:
-    - uses: actions/checkout@v4
+    - uses: actions/checkout@main
       with:
         submodules: recursive
+
+    - name: Cache CMake Configuration
+      uses: actions/cache@main
+      env:
+          cache-name: ${{ runner.os }}-xenon-cache-config
+      with:
+          path: | 
+            ${{github.workspace}}/build
+          key: ${{ env.cache-name }}-${{ hashFiles('**/CMakeLists.txt', 'cmake/**') }}
+          restore-keys: |
+            ${{ env.cache-name }}-
+
+    - name: Cache CMake Build
+      uses: hendrikmuhs/ccache-action@v1.2.16
+      env:
+          cache-name: ${{ runner.os }}-xenon-cache-build
+      with:
+        append-timestamp: false
+        key: ${{ env.cache-name }}-${{ hashFiles('**/CMakeLists.txt', 'cmake/**') }}
 
     - name: Setup VS Environment
       uses: ilammy/msvc-dev-cmd@v1.13.0
@@ -25,13 +44,13 @@ jobs:
         arch: amd64
 
     - name: Configure CMake
-      run: cmake --fresh -G Ninja -B ${{github.workspace}}/build -DCMAKE_BUILD_TYPE=${{env.BUILD_TYPE}} -DCMAKE_INTERPROCEDURAL_OPTIMIZATION_RELEASE=ON -DCMAKE_C_COMPILER=clang-cl -DCMAKE_CXX_COMPILER=clang-cl
+      run: cmake --fresh -G Ninja -B ${{github.workspace}}/build -DCMAKE_BUILD_TYPE=${{env.BUILD_TYPE}} -DCMAKE_C_COMPILER=clang-cl -DCMAKE_CXX_COMPILER=clang-cl -DCMAKE_C_COMPILER_LAUNCHER=ccache -DCMAKE_CXX_COMPILER_LAUNCHER=ccache
 
     - name: Build
       run: cmake --build ${{github.workspace}}/build --config ${{env.BUILD_TYPE}} --parallel $env:NUMBER_OF_PROCESSORS
 
     - name: Upload Windows Artifact
-      uses: actions/upload-artifact@v4
+      uses: actions/upload-artifact@main
       with:
         name: Xenon-win64
         path: ${{github.workspace}}/build/Xenon.exe

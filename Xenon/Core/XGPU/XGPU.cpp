@@ -6,6 +6,8 @@
 #include "XenosRegisters.h"
 #include "XGPUConfig.h"
 
+#include "Base/Version.h"
+
 Xe::Xenos::XGPU::XGPU(RAM* ram)
 {
 	// Assign RAM Pointer
@@ -143,14 +145,15 @@ void Xe::Xenos::XGPU::XenosThread()
 		std::cout << "SDL Init Failed." << std::endl;
 	}
 
-	mainWindow = SDL_CreateWindow("Xenon", winWidth, winHeight, SDL_WINDOW_MINIMIZED | SDL_WINDOW_RESIZABLE);
+	std::string TITLE = "Xenon " + std::string(Base::VERSION);
+
+	mainWindow = SDL_CreateWindow(TITLE.c_str(), winWidth, winHeight, SDL_WINDOW_MINIMIZED | SDL_WINDOW_RESIZABLE);
 	renderer = SDL_CreateRenderer(mainWindow, NULL);
 	SDL_SetWindowMinimumSize(mainWindow, 640, 480);
 	// Set VSYNC on.
 	SDL_SetRenderVSync(renderer, 1);
 
 	texture = SDL_CreateTexture(renderer, SDL_PIXELFORMAT_BGRX32, SDL_TEXTUREACCESS_STREAMING, winWidth, winHeight);
-
 
 	// Pixel Data pointer.
 	uint8_t* pixels;

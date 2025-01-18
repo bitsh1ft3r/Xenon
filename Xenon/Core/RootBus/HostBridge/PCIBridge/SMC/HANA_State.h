@@ -2,7 +2,7 @@
 
 #pragma once
 
-#include "Base/TypeDefs.h"
+#include "Base/Types.h"
 
 // HANA Dump before initialization, taken from a Corona v4.
 u32 HANA_State[] =

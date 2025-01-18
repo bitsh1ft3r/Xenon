@@ -4,7 +4,7 @@
 
 #include <Windows.h>
 
-#include "Base/TypeDefs.h"
+#include "Base/Types.h"
 
 #define POST_BUS_ADDR 0x61010
 

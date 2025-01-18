@@ -2,7 +2,7 @@
 
 #pragma once
 
-#include "Base/TypeDefs.h"
+#include "Base/Types.h"
 
 // Taken from a Corona PCI bridge dump.
 /*
