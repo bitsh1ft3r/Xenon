@@ -2,7 +2,7 @@
 
 #pragma once
 
-#include "Base/TypeDefs.h"
+#include "Base/Types.h"
 
 //
 // Common PCI Config Registers

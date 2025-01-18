@@ -20,27 +20,27 @@
 - Proper boot (skipping `HW_INIT` CB Bootloader step) is functional up to the latest Dev kernel: 2.0.17489.0. Kernel boots and reaches INIT_SECURITY boot stage, soon after main thread dies because of unimplemented/improper SFCX routines.
 - Kernel debugging via WindDBG is implemented and works as expected with some minor glitches.
 
-***Xell Reloaded***  
+***Xell Reloaded***
 ![Xell Reloaded Second Stage.](/Xenon/Assets/images/Xell_Second_Stage.png)
 
-  Xell is successfully loaded from NAND and stages 1 and 2 execute.
-  Linux executables or .elfs are probably runnable, but the lack of a proper USB/HDD/ODD implementation makes it imposible to test ATM.
-  
+Xell is successfully loaded from NAND and stages 1 and 2 execute.
+Linux executables or .elfs are probably runnable, but the lack of a proper USB/HDD/ODD implementation makes it imposible to test ATM.
+
 No binaries are provided so far, so you must build it yourself, you'll also need your own dump of the **1BL**, and a 16/64Mb Retail/XDK NAND dump with its own set of matching CPU key/eFuses.
 
 ### Whats implemented:
 - **XCPU interpreter:** Featuring a custom MMU and a pretty good amount of the PowerPC 64 ISA. Based on the CELL-BE as the PPU inside the Xbox 360 CPU is the same as that, with a few changes/additions. Everything is being implemented as needed, as I find this method more easy for debugging code/instructions.
-- **System Bus:**				
+- **System Bus:**
  ***- Parts of the HostBridge and the BIU.***
 - **PCI Bus:**
  ***- Several PCI devices, mostly stubs ATM. PCI Interrupt routing and proper PCI Bus implementation and auto configuration of PCI Devices via PCI BAR's and registers is also implemented.***
 - **NAND:** Simple nand loading system, able to load 16/64Mb Jasper/Trinity/Corona nands. Further work is needed, as BigBlock/4Gb eMMC's arent yet suported.
-- **I/O:** Proper UART communication via a Virtual Serial Port is implemented. POST output is also implemented.  
-  
+- **I/O:** Proper UART communication via a Virtual Serial Port is implemented. POST output is also implemented.
+
 ### Whats missing:
-- **Proper Memory Controller Handling:** In **CB** in **early** versions it is possible to just let the `HW_INIT` VM execute. It outputs several error messages regarding memory/bit errors but continues sucessfully. In **later** kernel/system versions as of now we just skip the call to HW_INIT because of such unimplemented hardware, as the checks fail and the VM Hangs.  
-- **Xenos GPU:** Basic device skeleton and several registers are implemented, as well as an early form of the Xenos framebuffer with correct Blitting interpretation,this will do it for now, at least until the kernel loads to the point that a most proper GPU emulation is needed.  Hopefully Soon :) 
-- **Xbox 360 Specific Hardware** (H)ANA,  Sonus(?) Sound Chip, XMA Decoder, and several CPU specific undocumented configuration ring registers.
+- **Proper Memory Controller Handling:** In **CB** in **early** versions it is possible to just let the `HW_INIT` VM execute. It outputs several error messages regarding memory/bit errors but continues sucessfully. In **later** kernel/system versions as of now we just skip the call to HW_INIT because of such unimplemented hardware, as the checks fail and the VM Hangs.
+- **Xenos GPU:** Basic device skeleton and several registers are implemented, as well as an early form of the Xenos framebuffer with correct Blitting interpretation,this will do it for now, at least until the kernel loads to the point that a most proper GPU emulation is needed. Hopefully Soon :) 
+- **Xbox 360 Specific Hardware** (H)ANA, Sonus(?) Sound Chip, XMA Decoder, and several CPU specific undocumented configuration ring registers.
 
 ### Setup:
 1. Clone the repo and build as usual using Visual Studio 2022 or later.
@@ -58,12 +58,12 @@ Setting up Windbg to do kernel debugging on the emulated system is pretty straig
 4. Hit Ok, load up Xenon, and wait.
 5. You should be greeted with a debug prompt.
 
-### Feel free to contribute/study the code!   
-#### Any info, help, reverse engeneering skills, documentation and knowledge are more than welcome.  Help in the form of donations, no matter the size is also appreciated, as this directly goes to hw/funding efforts for reverse engeneering/tinkering.
+### Feel free to contribute/study the code!
+#### Any info, help, reverse engeneering skills, documentation and knowledge are more than welcome. Help in the form of donations, no matter the size is also appreciated, as this directly goes to hw/funding efforts for reverse engeneering/tinkering.
 [My Ko-Fi Page, where i'll be posting development advances and info about the 360 HW/Reverse engeneering in general.](https://ko-fi.com/bitsh1ft3r)
 
 ## Showcase
-**1BL** Running on the emulated XCPU. 
+**1BL** Running on the emulated XCPU.
 
 ![1BL,running on an early stage](/Xenon/Assets/images/1bl_boot.png)
 

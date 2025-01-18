@@ -2,7 +2,7 @@
 
 #pragma once
 
-#include "Base/TypeDefs.h"
+#include "Types.h"
 
 struct deviceInfo
 {

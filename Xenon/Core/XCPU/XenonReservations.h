@@ -5,7 +5,7 @@
 #include <vector>
 #include <windows.h>
 
-#include "Base/TypeDefs.h"
+#include "Base/Types.h"
 
 struct PPU_RES
 {

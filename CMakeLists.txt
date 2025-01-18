@@ -27,14 +27,15 @@ function(create_target_directory_groups target_name)
     endforeach()
 endfunction()
 
-find_package(SDL3 3.1.8 CONFIG)
+find_package(SDL3 3.1.10 CONFIG)
 
 add_subdirectory(third_party)
 include_directories(Xenon)
 
 set(Base
     Xenon/Base/SystemDevice.h
-    Xenon/Base/TypeDefs.h
+    Xenon/Base/Types.h
+    Xenon/Base/Version.h
 )
 
 set(NAND
@@ -116,7 +117,7 @@ set(XGPU
     Xenon/Core/XGPU/XGPUConfig.h
 )
 
-set(CORE
+set(Core
     ${NAND}
     ${RAM}
     ${RootBus}
@@ -126,7 +127,7 @@ set(CORE
 
 add_executable(Xenon
     ${Base}
-    ${CORE}
+    ${Core}
     Xenon/Xe_Main.cpp
 )
 

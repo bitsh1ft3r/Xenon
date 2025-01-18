@@ -2,7 +2,7 @@
 
 #pragma once
 
-#include "Base/TypeDefs.h"
+#include "Base/Types.h"
 
 // Taken from a Jasper SMC Config Space dump.
 u32 smcConfigSpaceMap[64] =

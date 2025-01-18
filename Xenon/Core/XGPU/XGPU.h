@@ -6,7 +6,7 @@
 
 #include <SDL3/SDL.h>
 
-#include "Base/TypeDefs.h"
+#include "Base/Types.h"
 #include "Core/RAM/RAM.h"
 #include "Core/RootBus/HostBridge/PCIe.h"
 

@@ -5,7 +5,7 @@
 #include <vector>
 #include <queue>
 
-#include "Base/TypeDefs.h"
+#include "Base/Types.h"
 
 namespace Xe
 {
