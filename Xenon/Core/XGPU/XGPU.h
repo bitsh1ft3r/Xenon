@@ -118,7 +118,6 @@ namespace Xe
 			SDL_Renderer* renderer = nullptr;
 			SDL_Event windowEvent;
 			SDL_Texture* texture;
-			s32 winWidth, winHeight;
 		};
 	}
 }

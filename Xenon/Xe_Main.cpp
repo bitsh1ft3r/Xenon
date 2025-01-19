@@ -1,5 +1,8 @@
 // Copyright 2025 Xenon Emulator Project
 
+#include "Base/Config.h"
+#include "Base/Path_util.h"
+
 #include "Core/RootBus/RootBus.h"
 #include "Core/RAM/RAM.h"
 #include "Core/NAND/NAND.h"
@@ -19,8 +22,12 @@
 #include "Core/RootBus/HostBridge/PCIBridge/EHCI0/EHCI0.h"
 #include "Core/RootBus/HostBridge/PCIBridge/EHCI1/EHCI1.h"
 
-int main(int argc, char* argv[])
-{
+int main(int argc, char* argv[]) {
+
+    // Load configurations
+    const auto user_dir = Base::FS::GetUserPath(Base::FS::PathType::UserDir);
+    Config::load(user_dir / "Xenon.toml");
+
 	/*********Jasper motherboard CPU fuses*********/
 	eFuses jasperCpuFuses;
 	jasperCpuFuses.fuseLine00 = 0xc0ffffffffffffff;
