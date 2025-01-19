@@ -28,11 +28,16 @@ function(create_target_directory_groups target_name)
 endfunction()
 
 find_package(SDL3 3.1.10 CONFIG)
+find_package(toml11 4.3.0 CONFIG)
 
 add_subdirectory(third_party)
 include_directories(Xenon)
 
 set(Base
+    Xenon/Base/Config.cpp
+    Xenon/Base/Config.h
+    Xenon/Base/Path_util.cpp
+    Xenon/Base/Path_util.h
     Xenon/Base/SystemDevice.h
     Xenon/Base/Types.h
     Xenon/Base/Version.h
@@ -134,7 +139,7 @@ add_executable(Xenon
 create_target_directory_groups(Xenon)
 
 target_include_directories(Xenon PRIVATE ${CMAKE_CURRENT_SOURCE_DIR})
-target_link_libraries(Xenon PRIVATE SDL3::SDL3)
+target_link_libraries(Xenon PRIVATE SDL3::SDL3 toml11::toml11)
 
 if (WIN32)
     target_sources(Xenon PRIVATE Xenon/Xenon.rc)

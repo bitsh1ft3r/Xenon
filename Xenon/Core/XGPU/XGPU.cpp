@@ -6,6 +6,7 @@
 #include "XenosRegisters.h"
 #include "XGPUConfig.h"
 
+#include "Base/Config.h"
 #include "Base/Version.h"
 
 Xe::Xenos::XGPU::XGPU(RAM* ram)
@@ -120,7 +121,7 @@ bool Xe::Xenos::XGPU::isAddressMappedInBAR(u32 address)
 	return false;
 }
 
-static inline int xeFbConvert(int winWidth, int addr)
+static inline int xeFbConvert(const int winWidth, const int addr)
 {
 	const int y = addr / (winWidth * 4);
 	const int x = addr % (winWidth * 4) / 4;
@@ -136,8 +137,8 @@ void Xe::Xenos::XGPU::XenosThread()
 	// TODO(bitsh1ft3r):
 	// Change resolution/window size according to current AVPACK, that is according to corresponding registers inside Xenos.
 
-	winWidth = 1280;
-	winHeight = 720;
+	const s32 winWidth = Config::getScreenWidth();
+	const s32 winHeight = Config::getScreenHeight();
 
 	if (!SDL_Init(SDL_INIT_VIDEO))
 	{
@@ -161,8 +162,6 @@ void Xe::Xenos::XGPU::XenosThread()
 
 	// Rendering Mode.
 	bool rendering = true;
-	// Fullscreen Mode.
-	bool fullscreenMode = false;
 	// VSYNC Mode.
 	bool VSYNC = true;
 
@@ -184,8 +183,9 @@ void Xe::Xenos::XGPU::XenosThread()
 				}
 				if (windowEvent.key.key == SDLK_F11)
 				{
+					SDL_WindowFlags flag = SDL_GetWindowFlags(mainWindow);
+					bool fullscreenMode = flag & SDL_WINDOW_FULLSCREEN;
 					SDL_SetWindowFullscreen(mainWindow, !fullscreenMode);
-					fullscreenMode = !fullscreenMode;
 				}
 				break;
 			default:
