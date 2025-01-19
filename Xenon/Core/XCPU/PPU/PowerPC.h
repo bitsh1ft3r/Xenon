@@ -204,7 +204,8 @@ struct PPU_THREAD_SPRS
 	// Data Address Register
 	u64 DAR;
 	// Decrementer Register
-	u32 DEC;
+	// The contents of the Decrementer are treated as a signed integer.
+	s32 DEC;
 	// Machine Status Save/Restore Register 0
 	u64 SRR0;
 	// Machine Status Save/Restore Register 1

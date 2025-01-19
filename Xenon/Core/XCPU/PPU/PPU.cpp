@@ -116,9 +116,17 @@ void PPU::StartExecution()
 						}
 					}
 
-					// Check if the IIC has an external interrupt pending if External interrupts are enabled.
+					// Check if External interrupts are enabled.
 					if (ppuState->ppuThread[ppuState->currentThread].SPR.MSR.EE)
 					{
+						// Check the decrementer.
+						// DEC[0] = 0 and a Decrementer exception does not exist.
+						if (ppuState->ppuThread[ppuState->currentThread].SPR.DEC == 0 &&
+							((ppuState->ppuThread[ppuState->currentThread].exceptReg & PPU_EX_DEC) == 0))
+						{
+							ppuState->ppuThread[ppuState->currentThread].exceptReg |= PPU_EX_DEC;
+						}
+						// Check if the IIC has an external interrupt pending.
 						if (xenonContext->xenonIIC.checkExtInterrupt(ppuState->ppuThread[ppuState->currentThread].SPR.PIR))
 						{
 							ppuState->ppuThread[ppuState->currentThread].exceptReg |= PPU_EX_EXT;
@@ -158,6 +166,13 @@ void PPU::StartExecution()
 					// Check if the IIC has an external interrupt pending if External interrupts are enabled.
 					if (ppuState->ppuThread[ppuState->currentThread].SPR.MSR.EE)
 					{
+						// Check the decrementer.
+						// DEC[0] = 0 and a Decrementer exception does not exist.
+						if (ppuState->ppuThread[ppuState->currentThread].SPR.DEC == 0 &&
+							((ppuState->ppuThread[ppuState->currentThread].exceptReg & PPU_EX_DEC) == 0))
+						{
+							ppuState->ppuThread[ppuState->currentThread].exceptReg |= PPU_EX_DEC;
+						}
 						if (xenonContext->xenonIIC.checkExtInterrupt(ppuState->ppuThread[ppuState->currentThread].SPR.PIR))
 						{
 							ppuState->ppuThread[ppuState->currentThread].exceptReg |= PPU_EX_EXT;

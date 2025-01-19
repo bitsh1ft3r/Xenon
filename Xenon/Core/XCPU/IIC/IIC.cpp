@@ -82,14 +82,22 @@ void Xe::XCPU::IIC::XenonIIC::readInterrupt(u64 intAddress, u64* intData)
 		*intData = _byteswap_uint64((u64)iicState.ppeIntCtrlBlck[ppeIntCtrlBlckID].REG_CPU_CURRENT_TSK_PRI);
 		break;
 	case Xe::XCPU::IIC::ACK:
-		// Check if the queue isn't empty (this probably isn't necessary)
+		// Check if the queue isn't empty (this probably isn't necessary).
 		if (iicState.ppeIntCtrlBlck[ppeIntCtrlBlckID].intQueue.empty() != true)
 		{
-			// Signal the Top Priority interrupt.
-			*intData = _byteswap_uint64(iicState.ppeIntCtrlBlck[ppeIntCtrlBlckID].intQueue.top());
-			// Set the ACK flag.
-			iicState.ppeIntCtrlBlck[ppeIntCtrlBlckID].intAck = true;
-			return;
+			// If the first interrupt is ACK'd we return PRIO_NONE.
+			if (iicState.ppeIntCtrlBlck[ppeIntCtrlBlckID].intAck)
+			{
+				*intData = _byteswap_uint64(PRIO_NONE);
+			}
+			else
+			{
+				// Signal the Top Priority interrupt.
+				*intData = _byteswap_uint64(iicState.ppeIntCtrlBlck[ppeIntCtrlBlckID].intQueue.top());
+				// Set the ACK flag.
+				iicState.ppeIntCtrlBlck[ppeIntCtrlBlckID].intAck = true;
+				return;
+			}
 		}
 		*intData = _byteswap_uint64(PRIO_NONE);
 		break;
