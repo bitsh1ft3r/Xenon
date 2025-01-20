@@ -629,7 +629,7 @@ void Xe::XCPU::POSTBUS::POST(u64 postCode)
     /* KERNEL */
     else if (postCode >= 0x60 && postCode <= 0x79)
     {
-        std::cout << "KENREL > ";
+        std::cout << "KERNEL > ";
         SetConsoleTextAttribute(hConsole, 15);
 
         switch (postCode)

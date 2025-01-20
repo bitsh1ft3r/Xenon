@@ -121,22 +121,29 @@ bool Xe::Xenos::XGPU::isAddressMappedInBAR(u32 address)
 	return false;
 }
 
-static inline int xeFbConvert(const int winWidth, const int addr)
+static inline int xeFbConvert(const int resWidth, const int addr)
 {
-	const int y = addr / (winWidth * 4);
-	const int x = addr % (winWidth * 4) / 4;
-	const unsigned int offset = ((((y & ~31) * winWidth) + (x & ~31) * 32) + (((x & 3) + ((y & 1) << 2) + ((x & 28) << 1) + ((y & 30) << 5)) ^ ((y & 8) << 2))) * 4;
+	const int y = addr / (resWidth * 4);
+	const int x = addr % (resWidth * 4) / 4;
+	const unsigned int offset = ((((y & ~31) * resWidth) + (x & ~31) * 32) + (((x & 3) + ((y & 1) << 2) + ((x & 28) << 1) + ((y & 30) << 5)) ^ ((y & 8) << 2))) * 4;
 	return offset;
 }
 
-#define XE_PIXEL_TO_STD_ADDR(x, y) y * winWidth * 4 + x * 4
-#define XE_PIXEL_TO_XE_ADDR(x, y) xeFbConvert(winWidth, XE_PIXEL_TO_STD_ADDR(x, y))
+#define XE_PIXEL_TO_STD_ADDR(x, y) y * resWidth * 4 + x * 4
+#define XE_PIXEL_TO_XE_ADDR(x, y) xeFbConvert(resWidth, XE_PIXEL_TO_STD_ADDR(x, y))
 
 void Xe::Xenos::XGPU::XenosThread()
 {
 	// TODO(bitsh1ft3r):
 	// Change resolution/window size according to current AVPACK, that is according to corresponding registers inside Xenos.
 
+	// Window Resolution.
+	// TODO(Xphalnos):
+	// Find a way to change the internal resolution without crashing the display.
+	const s32 resWidth = 1280;
+	const s32 resHeight = 720;
+
+	// Window Size.
 	const s32 winWidth = Config::getScreenWidth();
 	const s32 winHeight = Config::getScreenHeight();
 
@@ -151,12 +158,12 @@ void Xe::Xenos::XGPU::XenosThread()
 	renderer = SDL_CreateRenderer(mainWindow, NULL);
 	SDL_SetWindowMinimumSize(mainWindow, 640, 480);
 
-	texture = SDL_CreateTexture(renderer, SDL_PIXELFORMAT_BGRX32, SDL_TEXTUREACCESS_STREAMING, winWidth, winHeight);
+	texture = SDL_CreateTexture(renderer, SDL_PIXELFORMAT_BGRX32, SDL_TEXTUREACCESS_STREAMING, resWidth, resHeight);
 
 	// Pixel Data pointer.
 	u8* pixels;
 	// Texture Pitch
-	int pitch = winWidth * winHeight * 4;
+	int pitch = resWidth * resHeight * 4;
 	// Framebuffer pointer from main memory.
 	u8 *fbPointer = ramPtr->getPointerToAddress(XE_FB_BASE);
 
@@ -200,9 +207,9 @@ void Xe::Xenos::XGPU::XenosThread()
 		// Copy the pixels.
 		int stdPixPos = 0;
 		int xePixPos = 0;
-		for (int x = 0; x < winWidth; x++)
+		for (int x = 0; x < resWidth; x++)
 		{
-			for (int y = 0; y < winHeight; y++)
+			for (int y = 0; y < resHeight; y++)
 			{
 				stdPixPos = XE_PIXEL_TO_STD_ADDR(x, y);
 				xePixPos = XE_PIXEL_TO_XE_ADDR(x, y);
