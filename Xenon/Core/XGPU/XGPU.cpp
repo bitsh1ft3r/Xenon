@@ -6,6 +6,7 @@
 #include "XenosRegisters.h"
 #include "XGPUConfig.h"
 
+#include "Base/Config.h"
 #include "Base/Version.h"
 
 Xe::Xenos::XGPU::XGPU(RAM* ram)
@@ -120,27 +121,26 @@ bool Xe::Xenos::XGPU::isAddressMappedInBAR(u32 address)
 	return false;
 }
 
-static inline int xeFbConvert(int winWidth, int addr)
+static inline int xeFbConvert(const int winWidth, const int addr)
 {
-	int y = addr / (winWidth * 4);
-	int x = addr % (winWidth * 4) / 4;
-	unsigned int offset = ((((y & ~31) * winWidth) + (x & ~31) * 32) +
-		(((x & 3) + ((y & 1) << 2) + ((x & 28) << 1) + ((y & 30) << 5)) ^ ((y & 8) << 2))) * 4;
+	const int y = addr / (winWidth * 4);
+	const int x = addr % (winWidth * 4) / 4;
+	const unsigned int offset = ((((y & ~31) * winWidth) + (x & ~31) * 32) + (((x & 3) + ((y & 1) << 2) + ((x & 28) << 1) + ((y & 30) << 5)) ^ ((y & 8) << 2))) * 4;
 	return offset;
 }
 
-#define XE_PIXEL_TO_STD_ADDR(x,y) y * winWidth * 4 + x * 4
+#define XE_PIXEL_TO_STD_ADDR(x, y) y * winWidth * 4 + x * 4
 #define XE_PIXEL_TO_XE_ADDR(x, y) xeFbConvert(winWidth, XE_PIXEL_TO_STD_ADDR(x, y))
 
 void Xe::Xenos::XGPU::XenosThread()
 {
 	// TODO(bitsh1ft3r):
-	// Change resolution/window size according to current AVPACK, that is according to correspoinding registers inside Xenos.
+	// Change resolution/window size according to current AVPACK, that is according to corresponding registers inside Xenos.
 
-	winWidth = 1280;
-	winHeight = 720;
+	const s32 winWidth = Config::getScreenWidth();
+	const s32 winHeight = Config::getScreenHeight();
 
-	if (SDL_Init(SDL_INIT_VIDEO) == 0)
+	if (!SDL_Init(SDL_INIT_VIDEO))
 	{
 		std::cout << "SDL Init Failed." << std::endl;
 	}
@@ -150,22 +150,20 @@ void Xe::Xenos::XGPU::XenosThread()
 	mainWindow = SDL_CreateWindow(TITLE.c_str(), winWidth, winHeight, SDL_WINDOW_MINIMIZED | SDL_WINDOW_RESIZABLE);
 	renderer = SDL_CreateRenderer(mainWindow, NULL);
 	SDL_SetWindowMinimumSize(mainWindow, 640, 480);
-	// Set VSYNC on.
-	SDL_SetRenderVSync(renderer, 1);
 
 	texture = SDL_CreateTexture(renderer, SDL_PIXELFORMAT_BGRX32, SDL_TEXTUREACCESS_STREAMING, winWidth, winHeight);
 
 	// Pixel Data pointer.
-	uint8_t* pixels;
+	u8* pixels;
 	// Texture Pitch
 	int pitch = winWidth * winHeight * 4;
 	// Framebuffer pointer from main memory.
 	u8 *fbPointer = ramPtr->getPointerToAddress(XE_FB_BASE);
 
-	// Rendering active.
+	// Rendering Mode.
 	bool rendering = true;
-	// Fullscreen Mode.
-	bool fullscreenMode = false;
+	// VSYNC Mode.
+	bool VSYNC = true;
 
 	while (rendering)
 	{
@@ -178,10 +176,16 @@ void Xe::Xenos::XGPU::XenosThread()
 				rendering = false;
 				break;
 			case SDL_EVENT_KEY_DOWN:
+				if (windowEvent.key.key == SDLK_F5)
+				{
+					SDL_SetRenderVSync(renderer, !VSYNC);
+					VSYNC = !VSYNC;
+				}
 				if (windowEvent.key.key == SDLK_F11)
 				{
+					SDL_WindowFlags flag = SDL_GetWindowFlags(mainWindow);
+					bool fullscreenMode = flag & SDL_WINDOW_FULLSCREEN;
 					SDL_SetWindowFullscreen(mainWindow, !fullscreenMode);
-					fullscreenMode = !fullscreenMode;
 				}
 				break;
 			default:

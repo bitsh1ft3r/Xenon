@@ -2,3 +2,7 @@
 	path = third_party/SDL3
 	url = https://github.com/libsdl-org/SDL.git
 	shallow = true
+[submodule "third_party/toml11"]
+	path = third_party/toml11
+	url = https://github.com/ToruNiina/toml11.git
+	shallow = true
