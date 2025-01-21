@@ -11,7 +11,7 @@ namespace Config {
 void load(const std::filesystem::path& path);
 void save(const std::filesystem::path& path);
 
-bool getIsFullscreen();
+bool fullscreenMode();
 
 s32 getScreenWidth();
 s32 getScreenHeight();

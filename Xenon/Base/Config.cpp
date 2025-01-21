@@ -35,7 +35,7 @@ static s32 screenHeight = 720;
 // static s32 gpuId = -1; // Vulkan physical device index. Set to negative for auto select
 
 
-bool getIsFullscreen() {
+bool fullscreenMode() {
     return isFullscreen;
 }
 
