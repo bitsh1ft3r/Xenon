@@ -697,7 +697,7 @@ void PPCInterpreter::PPCInterpreter_mtspr(PPU_STATE* hCore)
 		hCore->ppuThread[hCore->currentThread].SPR.CFAR = hCore->ppuThread[hCore->currentThread].GPR[rD];
 		break;
 	case SPR_VRSAVE:
-		hCore->ppuThread[hCore->currentThread].SPR.VRSAVE = hCore->ppuThread[hCore->currentThread].GPR[rD];
+		hCore->ppuThread[hCore->currentThread].SPR.VRSAVE = static_cast<u32>(hCore->ppuThread[hCore->currentThread].GPR[rD]);
 		break;
 	case SPR_LPCR:
 		hCore->SPR.LPCR = hCore->ppuThread[hCore->currentThread].GPR[rD];

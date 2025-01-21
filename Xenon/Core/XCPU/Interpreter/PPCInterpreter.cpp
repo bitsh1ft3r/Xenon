@@ -549,9 +549,10 @@ void PPCInterpreter::ppcExecuteSingleInstruction(PPU_STATE* hCore) {
 	case PPCInstruction::slbia:
 		PPCInterpreter_slbia(hCore);
 		break;
-		/*
 	case PPCInstruction::slbie:
+		PPCInterpreter_slbie(hCore);
 		break;
+		/*
 	case PPCInstruction::slbmfee:
 		break;
 	case PPCInstruction::slbmfev:

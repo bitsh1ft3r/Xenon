@@ -157,6 +157,7 @@ union PVR
 // Segment Lookaside Buffer Entry
 struct SLBEntry
 {
+	u8 V;
 	u8 LP; // Large Page selector
 	u8 C;
 	u8 L;
@@ -164,7 +165,6 @@ struct SLBEntry
 	u8 Kp;
 	u8 Ks;
 	u64 VSID;
-	u8 V;
 	u64 ESID;
 	u64 vsidReg;
 	u64 esidReg;
@@ -199,8 +199,8 @@ struct PPU_THREAD_SPRS
 	u64 CTR;
 	// CFAR: I dont know the definition.
 	u64 CFAR;
-	// Vector Register Save.
-	u64 VRSAVE;
+	// VXU Register Save.
+	u32 VRSAVE;
 	// Data Storage Interrupt Status Register
 	u64 DSISR;
 	// Data Address Register

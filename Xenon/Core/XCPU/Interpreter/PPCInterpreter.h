@@ -159,7 +159,6 @@ namespace PPCInterpreter
 	void PPCInterpreter_rlwimix(PPU_STATE* hCore);
 	void PPCInterpreter_rlwnmx(PPU_STATE* hCore);
 	void PPCInterpreter_rlwinmx(PPU_STATE* hCore);
-	void PPCInterpreter_slbia(PPU_STATE* hCore);
 	void PPCInterpreter_sldx(PPU_STATE* hCore);
 	void PPCInterpreter_slwx(PPU_STATE* hCore);
 	void PPCInterpreter_sradx(PPU_STATE* hCore);
@@ -184,6 +183,8 @@ namespace PPCInterpreter
 
 	// System instructions
 	void PPCInterpreter_sc(PPU_STATE* hCore);
+	void PPCInterpreter_slbia(PPU_STATE* hCore);
+	void PPCInterpreter_slbie(PPU_STATE* hCore);
 	void PPCInterpreter_slbmte(PPU_STATE* hCore);
 	void PPCInterpreter_rfid(PPU_STATE* hCore);
 	void PPCInterpreter_tw(PPU_STATE* hCore);
