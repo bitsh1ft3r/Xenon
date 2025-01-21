@@ -142,8 +142,8 @@ void Xe::Xenos::XGPU::XenosThread()
 	// Window Resolution.
 	// TODO(Xphalnos):
 	// Find a way to change the internal resolution without crashing the display.
-	const s32 resWidth = 1280;
-	const s32 resHeight = 720;
+	const s32 resWidth = Config::getScreenWidth();
+	const s32 resHeight = Config::getScreenHeight();
 
 	// Window Size.
 	const s32 winWidth = Config::getScreenWidth();
