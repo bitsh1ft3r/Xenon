@@ -11,7 +11,7 @@
         <img src="https://img.shields.io/discord/1289565618957193217?color=5865F2&label=Xenon Discord&logo=Discord&logoColor=white" width="220">
  <a href="https://github.com/bitsh1ft3r/Xenon/actions/workflows/build.yml">
         <img src="https://github.com/bitsh1ft3r/Xenon/actions/workflows/build.yml/badge.svg" width="140">
- <a href="https://github.com/shadps4-emu/shadPS4/stargazers">
+ <a href="https://github.com/bitsh1ft3r/Xenon/stargazers">
         <img src="https://img.shields.io/github/stars/bitsh1ft3r/Xenon" width="110">
 </h1>
 
@@ -28,7 +28,8 @@ If you need help or want to talk about development, there is a [**Discord server
 For those who want to **support** the project, a [**Kofi page**](https://ko-fi.com/bitsh1ft3r) is available for donations!
 
 > [!IMPORTANT]
-> Xenon is an early emulator, so don't expect all games/demos to run ;)
+> Xenon is an early stage emulator, so don't expect games/demos to run.
+> XeLL does work and Linux will soon ;)
 
 # Contributors Wanted!
 We need talented developers more than ever to contribute to the project and move emulation forward!
