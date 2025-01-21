@@ -199,6 +199,8 @@ struct PPU_THREAD_SPRS
 	u64 CTR;
 	// CFAR: I dont know the definition.
 	u64 CFAR;
+	// Vector Register Save.
+	u64 VRSAVE;
 	// Data Storage Interrupt Status Register
 	u64 DSISR;
 	// Data Address Register
@@ -510,6 +512,7 @@ struct XENON_CONTEXT
 #define SPR_PID 		48
 #define SPR_CTRLRD		136		
 #define SPR_CTRLWR		152
+#define SPR_VRSAVE		256
 #define SPR_TBL_RO		268
 #define SPR_TBU_RO		269
 #define SPR_SPRG0		272

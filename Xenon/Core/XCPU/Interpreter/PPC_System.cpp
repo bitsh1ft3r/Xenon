@@ -575,6 +575,9 @@ void PPCInterpreter::PPCInterpreter_mfspr(PPU_STATE* hCore)
 	case SPR_CFAR:
 		value = hCore->ppuThread[hCore->currentThread].SPR.CFAR;
 		break;
+	case SPR_VRSAVE:
+		value = hCore->ppuThread[hCore->currentThread].SPR.VRSAVE;
+		break;
 	case SPR_HRMOR:
 		value = hCore->SPR.HRMOR;
 		break;
@@ -660,7 +663,7 @@ void PPCInterpreter::PPCInterpreter_mfspr(PPU_STATE* hCore)
 		value = hCore->SPR.CTRL;
 		break;
 	default:
-		std::cout << "mfspr: Unknown SPR! " << sprNum << std::endl;
+		std::cout << "mfspr: Unknown SPR: 0x" << std::hex << sprNum << std::endl;
 		break;
 	}
 
@@ -692,6 +695,9 @@ void PPCInterpreter::PPCInterpreter_mtspr(PPU_STATE* hCore)
 		break;
 	case SPR_CFAR:
 		hCore->ppuThread[hCore->currentThread].SPR.CFAR = hCore->ppuThread[hCore->currentThread].GPR[rD];
+		break;
+	case SPR_VRSAVE:
+		hCore->ppuThread[hCore->currentThread].SPR.VRSAVE = hCore->ppuThread[hCore->currentThread].GPR[rD];
 		break;
 	case SPR_LPCR:
 		hCore->SPR.LPCR = hCore->ppuThread[hCore->currentThread].GPR[rD];
