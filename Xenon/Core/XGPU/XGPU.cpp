@@ -37,8 +37,10 @@ Xe::Xenos::XGPU::XGPU(RAM* ram)
 	reg = 0x19100000;
 	memcpy(&xenosState.Regs[REG_MEM_CLK], &reg, 4);
 
-	renderThread = std::thread(&XGPU::XenosThread, this);
-	
+	if (Config::gpuThreadEnabled())
+	{
+		renderThread = std::thread(&XGPU::XenosThread, this);
+	}
 }
 
 bool Xe::Xenos::XGPU::Read(u64 readAddress, u64* data, u8 byteCount)
@@ -171,6 +173,9 @@ void Xe::Xenos::XGPU::XenosThread()
 	bool rendering = true;
 	// VSYNC Mode.
 	bool VSYNC = true;
+
+	// Set VSYNC mode to default.
+	SDL_SetRenderVSync(renderer, VSYNC);
 
 	SDL_SetWindowFullscreen(mainWindow, Config::fullscreenMode());
 

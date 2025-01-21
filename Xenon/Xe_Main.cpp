@@ -24,9 +24,9 @@
 
 int main(int argc, char* argv[]) {
 
-    // Load configurations
+    // Load configuration.
     const auto user_dir = Base::FS::GetUserPath(Base::FS::PathType::UserDir);
-    Config::load(user_dir / "Xenon.toml");
+    Config::loadConfig(user_dir / "xenon_config.toml");
 
 	/*********Jasper motherboard CPU fuses*********/
 	eFuses jasperCpuFuses;
@@ -87,7 +87,7 @@ int main(int argc, char* argv[]) {
 	// Initialize several settings from the struct.
 	smcCoreState.currentCOMPort = const_cast<wchar_t*>(L"\\\\.\\COM2");
 	smcCoreState.currAVPackType = Xe::PCIDev::SMC::SMC_AVPACK_TYPE::HDMI_NO_AUDIO;
-	smcCoreState.currPowerOnReas = Xe::PCIDev::SMC::SMC_PWR_REAS::SMC_PWR_REAS_PWRBTN;
+	smcCoreState.currPowerOnReas = (Xe::PCIDev::SMC::SMC_PWR_REAS)Config::smcPowerOnType();
 	smcCoreState.currTrayState = Xe::PCIDev::SMC::SMC_TRAY_STATE::SMC_TRAY_CLOSE;
 
 	// SMCCore Object.

@@ -8,11 +8,30 @@
 
 namespace Config {
 
-void load(const std::filesystem::path& path);
-void save(const std::filesystem::path& path);
+void loadConfig(const std::filesystem::path& path);
+void saveConfig(const std::filesystem::path& path);
 
+//
+// General Options.
+//
+
+// Show in fullscreen.
 bool fullscreenMode();
+// Enable GPU Render thread.
+bool gpuThreadEnabled();
 
+//
+// SMC Options.
+//
+
+// SMC Power On type (PowerButton, eject button, controller, etc...).
+int smcPowerOnType();
+
+//
+// XGPU Options.
+//
+
+// Screen W/H. 
 s32 getScreenWidth();
 s32 getScreenHeight();
 

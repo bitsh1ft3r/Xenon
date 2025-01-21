@@ -28,7 +28,12 @@ std::filesystem::path find_fs_path_or(const basic_value<TC>& v, const K& ky,
 
 namespace Config {
 
+// General.
+static bool gpuRenderThreadEnabled = true;
 static bool isFullscreen = false;
+
+// SMC.
+static int smcPowerOnReason = 0x11; // Valid values are: 0x11 (SMC_PWR_REAS_PWRBTN) and 0x12 (SMC_PWR_REAS_EJECT). 
 
 static s32 screenWidth = 1280;
 static s32 screenHeight = 720;
@@ -37,6 +42,16 @@ static s32 screenHeight = 720;
 
 bool fullscreenMode() {
     return isFullscreen;
+}
+
+bool gpuThreadEnabled()
+{
+    return gpuRenderThreadEnabled;
+}
+
+int smcPowerOnType()
+{
+    return smcPowerOnReason;
 }
 
 s32 getScreenWidth() {
@@ -51,11 +66,11 @@ s32 getScreenHeight() {
 //     return gpuId;
 // }
 
-void load(const std::filesystem::path& path) {
+void loadConfig(const std::filesystem::path& path) {
     // If the configuration file does not exist, create it and return
     std::error_code error;
     if (!std::filesystem::exists(path, error)) {
-        save(path);
+        saveConfig(path);
         return;
     }
 
@@ -67,11 +82,17 @@ void load(const std::filesystem::path& path) {
 			std::cout << "Got exception trying to load config file. Exception: " << ex.what() << std::endl;
         return;
     }
+
     if (data.contains("General")) {
         const toml::value& general = data.at("General");
-
+        gpuRenderThreadEnabled = toml::find_or<bool>(general, "GPURenderThreadEnabled", false);
         isFullscreen = toml::find_or<bool>(general, "Fullscreen", false);
 	}
+
+    if (data.contains("SMC")) {
+        const toml::value& smc = data.at("SMC");
+        smcPowerOnReason = toml::find_or<int>(smc, "SMCPowerOnType", false);
+    }
 
     if (data.contains("GPU")) {
         const toml::value& gpu = data.at("GPU");
@@ -82,7 +103,7 @@ void load(const std::filesystem::path& path) {
     }
 }
 
-void save(const std::filesystem::path& path) {
+void saveConfig(const std::filesystem::path& path) {
     toml::value data;
 
     std::error_code error;
@@ -100,8 +121,14 @@ void save(const std::filesystem::path& path) {
         std::cout << "Saving new configuration file " << path.string() << std::endl;
     }
 
+    // General.
+    data["General"]["GPURenderThreadEnabled"] = gpuRenderThreadEnabled;
     data["General"]["Fullscreen"] = isFullscreen;
 
+    // SMC.
+    data["SMC"]["SMCPowerOnType"] = smcPowerOnReason;
+
+    // XGPU.
     data["GPU"]["screenWidth"] = screenWidth;
     data["GPU"]["screenHeight"] = screenHeight;
 //    data["GPU"]["gpuId"] = gpuId;
