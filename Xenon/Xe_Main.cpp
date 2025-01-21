@@ -100,7 +100,7 @@ int main(int argc, char* argv[]) {
 	Xe::PCIDev::EHCI0::EHCI0 ehci0;							// EHCI0 Object
 	Xe::PCIDev::EHCI1::EHCI1 ehci1;							// EHCI1 Object
 
-	// Create the Secure Flash Cntroller for Xbox Device, and load the Nand dump for emulation.
+	// Create the Secure Flash Controller for Xbox Device, and load the Nand dump for emulation.
 	SFCX sfcx("C://Xbox/xenon_xdk.bin", &pciBridge);
 	RAM ram;
 	XMA xma;
