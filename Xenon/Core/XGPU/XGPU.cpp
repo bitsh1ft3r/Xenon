@@ -29,7 +29,7 @@ Xe::Xenos::XGPU::XGPU(RAM* ram)
 
 	// Set Clocks speeds.
 	u32 reg = 0x09000000;
-	memcpy(&xenosState.Regs[REG_GPU_CLK],&reg,4);
+	memcpy(&xenosState.Regs[REG_GPU_CLK], &reg, 4);
 	reg = 0x11000c00;
 	memcpy(&xenosState.Regs[REG_EDRAM_CLK], &reg, 4);
 	reg = 0x1a000001;
@@ -46,7 +46,7 @@ bool Xe::Xenos::XGPU::Read(u64 readAddress, u64* data, u8 byteCount)
 	if (isAddressMappedInBAR(static_cast<u32>(readAddress)))
 	{
 		//std::cout << "Xenos Read Addr = 0x" << readAddress << std::endl;
-		u32 regIndex = (readAddress & 0xFFFFF) / 4;
+		const u32 regIndex = (readAddress & 0xFFFFF) / 4;
 
 		bool hit = 0;
 
@@ -125,11 +125,11 @@ static inline int xeFbConvert(const int resWidth, const int addr)
 {
 	const int y = addr / (resWidth * 4);
 	const int x = addr % (resWidth * 4) / 4;
-	const unsigned int offset = ((((y & ~31) * resWidth) + (x & ~31) * 32) + (((x & 3) + ((y & 1) << 2) + ((x & 28) << 1) + ((y & 30) << 5)) ^ ((y & 8) << 2))) * 4;
+	const u64 offset = ((((y & ~31) * resWidth) + (x & ~31) * 32) + (((x & 3) + ((y & 1) << 2) + ((x & 28) << 1) + ((y & 30) << 5)) ^ ((y & 8) << 2))) * 4;
 	return offset;
 }
 
-#define XE_PIXEL_TO_STD_ADDR(x, y) y * resWidth * 4 + x * 4
+#define XE_PIXEL_TO_STD_ADDR(x, y) (y * resWidth + x) * 4
 #define XE_PIXEL_TO_XE_ADDR(x, y) xeFbConvert(resWidth, XE_PIXEL_TO_STD_ADDR(x, y))
 
 void Xe::Xenos::XGPU::XenosThread()
@@ -149,12 +149,12 @@ void Xe::Xenos::XGPU::XenosThread()
 
 	if (!SDL_Init(SDL_INIT_VIDEO))
 	{
-		std::cout << "SDL Init Failed." << std::endl;
+		std::cout << "Failed to initialize SDL video subsystem: " << SDL_GetError() << std::endl;
 	}
 
 	std::string TITLE = "Xenon " + std::string(Base::VERSION);
 
-	mainWindow = SDL_CreateWindow(TITLE.c_str(), winWidth, winHeight, SDL_WINDOW_MINIMIZED | SDL_WINDOW_RESIZABLE);
+	mainWindow = SDL_CreateWindow(TITLE.c_str(), winWidth, winHeight, SDL_WINDOW_RESIZABLE);
 	renderer = SDL_CreateRenderer(mainWindow, NULL);
 	SDL_SetWindowMinimumSize(mainWindow, 640, 480);
 
@@ -171,6 +171,8 @@ void Xe::Xenos::XGPU::XenosThread()
 	bool rendering = true;
 	// VSYNC Mode.
 	bool VSYNC = true;
+
+	SDL_SetWindowFullscreen(mainWindow, Config::fullscreenMode());
 
 	while (rendering)
 	{
