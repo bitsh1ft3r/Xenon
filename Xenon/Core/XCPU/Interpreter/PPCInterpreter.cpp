@@ -771,12 +771,10 @@ void PPCInterpreter::ppcResetException(PPU_STATE* hCore)
 	hCore->ppuThread[hCore->currentThread].SPR.MSR.IR = 0;
 }
 // Data Storage Exception (0x300)
-void PPCInterpreter::ppcDataStorageException(PPU_STATE* hCore, u64 ISR)
+void PPCInterpreter::ppcDataStorageException(PPU_STATE* hCore)
 {
 	hCore->ppuThread[hCore->currentThread].SPR.SRR0 = hCore->ppuThread[hCore->currentThread].CIA;
 	hCore->ppuThread[hCore->currentThread].SPR.SRR1 = hCore->ppuThread[hCore->currentThread].SPR.MSR.MSR_Hex & (QMASK(0, 32) | QMASK(37, 41) | QMASK(48, 63));
-	hCore->ppuThread[hCore->currentThread].SPR.DSISR = ISR;
-	hCore->ppuThread[hCore->currentThread].SPR.DAR = hCore->ppuThread[hCore->currentThread].exceptEA;
 	hCore->ppuThread[hCore->currentThread].SPR.MSR.MSR_Hex = hCore->ppuThread[hCore->currentThread].SPR.MSR.MSR_Hex & ~(QMASK(48, 50) | QMASK(52, 55) | QMASK(58, 59) | QMASK(61, 63));
 	hCore->ppuThread[hCore->currentThread].SPR.MSR.MSR_Hex = hCore->ppuThread[hCore->currentThread].SPR.MSR.MSR_Hex | (QMASK(0, 0) | QMASK(3, 3));
 	hCore->ppuThread[hCore->currentThread].NIA = hCore->SPR.HRMOR + 0x300;
@@ -788,8 +786,6 @@ void PPCInterpreter::ppcDataSegmentException(PPU_STATE* hCore)
 {
 	hCore->ppuThread[hCore->currentThread].SPR.SRR0 = hCore->ppuThread[hCore->currentThread].CIA;
 	hCore->ppuThread[hCore->currentThread].SPR.SRR1 = hCore->ppuThread[hCore->currentThread].SPR.MSR.MSR_Hex & (QMASK(0, 32) | QMASK(37, 41) | QMASK(48, 63));
-	hCore->ppuThread[hCore->currentThread].SPR.DSISR = 0;
-	hCore->ppuThread[hCore->currentThread].SPR.DAR = hCore->ppuThread[hCore->currentThread].exceptEA;
 	hCore->ppuThread[hCore->currentThread].SPR.MSR.MSR_Hex = hCore->ppuThread[hCore->currentThread].SPR.MSR.MSR_Hex & ~(QMASK(48, 50) | QMASK(52, 55) | QMASK(58, 59) | QMASK(61, 63));
 	hCore->ppuThread[hCore->currentThread].SPR.MSR.MSR_Hex = hCore->ppuThread[hCore->currentThread].SPR.MSR.MSR_Hex | (QMASK(0, 0) | QMASK(3, 3));
 	hCore->ppuThread[hCore->currentThread].NIA = hCore->SPR.HRMOR + 0x380;

@@ -61,7 +61,7 @@ namespace PPCInterpreter
 	void ppcResetException(PPU_STATE* hCore);
 	void ppcInterpreterTrap(PPU_STATE* hCore, u32 trapNumber);
 	void ppcInstStorageException(PPU_STATE* hCore);
-	void ppcDataStorageException(PPU_STATE* hCore, u64 ISR);
+	void ppcDataStorageException(PPU_STATE* hCore);
 	void ppcDataSegmentException(PPU_STATE* hCore);
 	void ppcInstSegmentException(PPU_STATE* hCore);
 	void ppcSystemCallException(PPU_STATE* hCore);
