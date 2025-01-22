@@ -31,8 +31,21 @@ private:
 	// Main CPU Context.
 	XENON_CONTEXT *xenonContext = nullptr;
 
+	// Amount of CPU ticks per instruction executed.
+	u32 ticksPerIntruction = 0;
+
 	// Helpers
+	
+	// Returns the number of instructions per second the current 
+	// host computer can process.
+	u32 getIPS();
+	// Read next intruction from memory,
 	bool ppuReadNextInstruction();
+	// Check for pending exceptions.
 	void ppuCheckExceptions();
+	// Updates the current PPU's time base and decrementer based on 
+	// the amount of ticks per instr we should perform.
+	void updateTimeBase();
+	// Gets the current running threads.
 	PPU_THREAD getCurrentRunningThreads();
 };

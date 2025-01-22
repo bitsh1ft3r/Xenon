@@ -43,11 +43,23 @@ void PPU::Initialize(XENON_CONTEXT* inXenonContext, RootBus* mainBus, u32 PVR, u
 	PPCInterpreter::intXCPUContext = xenonContext;
 	PPCInterpreter::sysBus = mainBus;
 
+	// Get the instructions per second that we're able to execute.
+	u32 instrPerSecond = getIPS();
+
+	std::cout << "[INFO][" << ppuName << "] Speed: " << std::dec << instrPerSecond
+		<< std::hex << " instructions per second." << std::endl;
+
+	// Find a way to calculate the right ticks/IPS ratio.
+	ticksPerIntruction = 1;
+
 	for (u8 thrdID = 0; thrdID < 2; thrdID++)
 	{
 		ppuState->ppuThread[thrdID].ppuRes = new PPU_RES;
 		memset(ppuState->ppuThread[thrdID].ppuRes, 0, sizeof(PPU_RES));
 		xenonContext->xenonRes.Register(ppuState->ppuThread[thrdID].ppuRes);
+
+		// Set the decrementer as per docs. See CBE Public Registers pdf in Docs.
+		ppuState->ppuThread[ppuState->currentThread].SPR.DEC = 0x7FFFFFFF;
 	}
 
 	// Set PPU Name
@@ -89,7 +101,7 @@ void PPU::StartExecution()
 		while (getCurrentRunningThreads() != PPU_THREAD_NONE)
 		{
 			// We have some threads active!
-			
+
 			// Check if the 1st thread is active and process instructions on it.
 			if (getCurrentRunningThreads() == PPU_THREAD_0 || getCurrentRunningThreads() == PPU_THREAD_BOTH)
 			{
@@ -105,28 +117,24 @@ void PPU::StartExecution()
 					if (ppuReadNextInstruction())
 					{
 						// Execute next intrucrtion.
-						PPCInterpreter::ppcExecuteSingleInstruction(ppuState);
+						PPCInterpreter::ppcExecuteSingleInstruction(ppuState);			
+					}
 
-						// Increase Time Base Counter
-						if (xenonContext->timeBaseActive)
+					// Increase Time Base Counter
+					if (xenonContext->timeBaseActive)
+					{
+						// HID6[15]: Time-base and decrementer facility enable.
+						// 0 -> TBU, TBL, DEC, HDEC, and the hang-detection logic do not update.
+						// 1 -> TBU, TBL, DEC, HDEC, and the hang-detection logic are enabled to update.
+						if (ppuState->SPR.HID6 & 0x1000000000000)
 						{
-							ppuState->SPR.TB++;
-							// Decrease the Decrementer.
-							ppuState->ppuThread[ppuState->currentThread].SPR.DEC -= 1;
+							updateTimeBase();
 						}
 					}
 
-					// Check if External interrupts are enabled.
+					// Check if External interrupts are enabled and the IIC has a pending interrupt.
 					if (ppuState->ppuThread[ppuState->currentThread].SPR.MSR.EE)
 					{
-						// Check the decrementer.
-						// DEC[0] = 0 and a Decrementer exception does not exist.
-						if (ppuState->ppuThread[ppuState->currentThread].SPR.DEC == 0 &&
-							((ppuState->ppuThread[ppuState->currentThread].exceptReg & PPU_EX_DEC) == 0))
-						{
-							ppuState->ppuThread[ppuState->currentThread].exceptReg |= PPU_EX_DEC;
-						}
-						// Check if the IIC has an external interrupt pending.
 						if (xenonContext->xenonIIC.checkExtInterrupt(ppuState->ppuThread[ppuState->currentThread].SPR.PIR))
 						{
 							ppuState->ppuThread[ppuState->currentThread].exceptReg |= PPU_EX_EXT;
@@ -135,7 +143,7 @@ void PPU::StartExecution()
 
 					// Check Exceptions pending.
 					ppuCheckExceptions();
-				}
+				}				
 			}
 			// Check again for the 2nd thread.
 			if (getCurrentRunningThreads() == PPU_THREAD_1 || getCurrentRunningThreads() == PPU_THREAD_BOTH)
@@ -147,32 +155,29 @@ void PPU::StartExecution()
 				for (size_t instrCount = 0; instrCount < ppuState->SPR.TTR; instrCount++)
 				{
 					// Main processing loop.
-					// 
+
 					// Read next intruction from Memory.
 					if (ppuReadNextInstruction())
 					{
 						// Execute next intrucrtion.
-						PPCInterpreter::ppcExecuteSingleInstruction(ppuState);
-
-						// Increase Time Base Counter
-						if (xenonContext->timeBaseActive)
-						{
-							ppuState->SPR.TB++;
-							// Decrease the Decrementer.
-							ppuState->ppuThread[ppuState->currentThread].SPR.DEC -= 1;
-						}
+						PPCInterpreter::ppcExecuteSingleInstruction(ppuState);					
 					}	
 
-					// Check if the IIC has an external interrupt pending if External interrupts are enabled.
+					// Check if time base is active.
+					if (xenonContext->timeBaseActive)
+					{
+						// HID6[15]: Time-base and decrementer facility enable.
+						// 0 -> TBU, TBL, DEC, HDEC, and the hang-detection logic do not update.
+						// 1 -> TBU, TBL, DEC, HDEC, and the hang-detection logic are enabled to update.
+						if (ppuState->SPR.HID6 & 0x1000000000000)
+						{
+							updateTimeBase();
+						}		
+					}
+
+					// Check if External interrupts are enabled and the IIC has a pending interrupt.
 					if (ppuState->ppuThread[ppuState->currentThread].SPR.MSR.EE)
 					{
-						// Check the decrementer.
-						// DEC[0] = 0 and a Decrementer exception does not exist.
-						if (ppuState->ppuThread[ppuState->currentThread].SPR.DEC == 0 &&
-							((ppuState->ppuThread[ppuState->currentThread].exceptReg & PPU_EX_DEC) == 0))
-						{
-							ppuState->ppuThread[ppuState->currentThread].exceptReg |= PPU_EX_DEC;
-						}
 						if (xenonContext->xenonIIC.checkExtInterrupt(ppuState->ppuThread[ppuState->currentThread].SPR.PIR))
 						{
 							ppuState->ppuThread[ppuState->currentThread].exceptReg |= PPU_EX_EXT;
@@ -204,11 +209,69 @@ void PPU::StartExecution()
 	}
 }
 
+// Returns a pointer to the specified thread.
 PPU_THREAD_REGISTERS* PPU::GetPPUThread(u8 thrdID)
 {
 	return &this->ppuState->ppuThread[thrdID];
 }
 
+// This is the calibration code for the getIPS() function. It branches to the 0x4 location in memory.
+static u32 ipsCalibrationCode[] = {
+	0x55726220, //  rlwinm   r18,r11,12,8,16
+	0x723D7825, //  andi.    r29,r17,0x7825
+	0x65723D78, //  oris     r18,r11,0x3D78
+	0x4BFFFFF4  //  b        ipsCalibrationCode
+};
+
+// Performs a test using a loop to check the amount of IPS we're able to execute.
+u32 PPU::getIPS()
+{
+	// Instr Count: The amount of instructions to execute in order to test.
+
+	// Write the calibration code to main memory.
+	for (int i = 0; i < 4; i++)
+	{
+		PPCInterpreter::MMUWrite32(ppuState, 4 + (i * 4), ipsCalibrationCode[i]);
+	}
+
+	// Set our NIP to our calibration code address.
+	ppuState->ppuThread[ppuState->currentThread].NIA = 4;
+
+	// Start a timer.
+	auto timerStart = std::chrono::steady_clock::now();
+
+	// Instruction count.
+	u64 instrCount = 0;
+
+	// Execute the amount of cycles we're requested.
+	while (auto timerEnd = std::chrono::steady_clock::now() <= timerStart + std::chrono::seconds(1))
+	{
+		ppuReadNextInstruction();
+		PPCInterpreter::ppcExecuteSingleInstruction(ppuState);
+		instrCount++;
+	}
+	
+	// Reset our state.
+	
+	// Set the main memory to 0.
+	for (int i = 0; i < 4; i++)
+	{
+		PPCInterpreter::MMUWrite32(ppuState, 4 + (i * 4), 0x00000000);
+	}
+
+	// Set the NIP back to default.
+	ppuState->ppuThread[ppuState->currentThread].NIA = 0x100;
+
+	// Set the registers back to 0.
+	for (int i = 0; i < 32; i++)
+	{
+		ppuState->ppuThread[ppuState->currentThread].GPR[i] = 0;
+	}
+
+	return instrCount;
+}
+
+// Reads the next instruction from memory and advances the NIP accordingly.
 bool PPU::ppuReadNextInstruction()
 {
 	// Update CIA.
@@ -229,6 +292,7 @@ bool PPU::ppuReadNextInstruction()
 	return true;
 }
 
+// Checks for exceptions and process them in the correct order.
 void PPU::ppuCheckExceptions()
 {
 	// Check Exceptions pending and process them in order.
@@ -295,7 +359,7 @@ void PPU::ppuCheckExceptions()
 		// Data Storage
 		if (exceptions & PPU_EX_DATASTOR)
 		{
-			PPCInterpreter::ppcDataStorageException(ppuState, DMASK(1,1));
+			PPCInterpreter::ppcDataStorageException(ppuState);
 			exceptions &= ~PPU_EX_DATASTOR;
 			goto end;
 		}
@@ -384,8 +448,8 @@ void PPU::ppuCheckExceptions()
 			exceptions &= ~PPU_EX_EXT;
 			goto end;
 		}
-		// Decrementer
-		if (exceptions & PPU_EX_DEC)
+		// Decrementer. A dec exception may be present but will only be taken when the EE bit of MSR is set.
+		if (exceptions & PPU_EX_DEC && ppuState->ppuThread[ppuState->currentThread].SPR.MSR.EE)
 		{
 			PPCInterpreter::ppcDecrementerException(ppuState);
 			exceptions &= ~PPU_EX_DEC;
@@ -403,6 +467,28 @@ void PPU::ppuCheckExceptions()
 		// Set the new value for our exception register.
 			end:
 		ppuState->ppuThread[ppuState->currentThread].exceptReg = exceptions;
+	}
+}
+
+// Updates the time base based on the amount of ticks and checks for decrementer interrupts if enabled.
+void PPU::updateTimeBase()
+{
+	// The Decrementer and the Time Base are driven by the same time frequency.
+	u32 newDec = 0;
+	u32 dec = 0; 
+	// Update the Time Base.
+	ppuState->SPR.TB += ticksPerIntruction;
+	// Get the decrementer value.
+	dec = ppuState->ppuThread[ppuState->currentThread].SPR.DEC;
+	newDec = dec - ticksPerIntruction;
+	// Update the new decrementer value.
+	ppuState->ppuThread[ppuState->currentThread].SPR.DEC = newDec;
+	// Check if Previous decrementer measurement is smaller than current and a decrementer exception
+	// is not pending.
+	if (newDec > dec && ((ppuState->ppuThread[ppuState->currentThread].exceptReg & PPU_EX_DEC) == 0))
+	{
+		// The decrementer must issue an interrupt.
+		ppuState->ppuThread[ppuState->currentThread].exceptReg |= PPU_EX_DEC;
 	}
 }
 
