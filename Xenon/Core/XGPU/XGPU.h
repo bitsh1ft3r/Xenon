@@ -114,8 +114,8 @@ namespace Xe
 			void XenosThread();
 
 			// Rendering Stuff
-			SDL_Window* mainWindow = nullptr;
-			SDL_Renderer* renderer = nullptr;
+			SDL_Window* mainWindow{};
+			SDL_Renderer* renderer{};
 			SDL_Event windowEvent;
 			SDL_Texture* texture;
 		};
