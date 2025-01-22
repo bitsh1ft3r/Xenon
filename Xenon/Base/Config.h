@@ -32,8 +32,8 @@ int smcPowerOnType();
 //
 
 // Screen W/H. 
-s32 getScreenWidth();
-s32 getScreenHeight();
+s32 windowWidth();
+s32 windowHeight();
 
 // s32 getGpuId();
 

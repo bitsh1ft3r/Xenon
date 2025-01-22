@@ -27,7 +27,7 @@ function(create_target_directory_groups target_name)
     endforeach()
 endfunction()
 
-find_package(SDL3 3.1.10 CONFIG)
+find_package(SDL3 3.2.0 CONFIG)
 find_package(toml11 4.3.0 CONFIG)
 
 add_subdirectory(third_party)

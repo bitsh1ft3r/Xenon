@@ -44,21 +44,19 @@ bool fullscreenMode() {
     return isFullscreen;
 }
 
-bool gpuThreadEnabled()
-{
+bool gpuThreadEnabled() {
     return gpuRenderThreadEnabled;
 }
 
-int smcPowerOnType()
-{
+int smcPowerOnType() {
     return smcPowerOnReason;
 }
 
-s32 getScreenWidth() {
+s32 windowWidth() {
     return screenWidth;
 }
 
-s32 getScreenHeight() {
+s32 windowHeight() {
     return screenHeight;
 }
 
