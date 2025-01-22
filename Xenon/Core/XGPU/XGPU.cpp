@@ -76,7 +76,7 @@ bool Xe::Xenos::XGPU::Write(u64 writeAddress, u64 data, u8 byteCount)
 	{
 		//std::cout << "Xenos Write Addr = 0x" << writeAddress << " data = 0x" << _byteswap_ulong(static_cast<u32>(data)) << std::endl;
 		
-		u32 regIndex = (writeAddress & 0xFFFFF) / 4;
+		const u32 regIndex = (writeAddress & 0xFFFFF) / 4;
 		
 		bool hit = 0;
 
@@ -139,44 +139,51 @@ void Xe::Xenos::XGPU::XenosThread()
 	// TODO(bitsh1ft3r):
 	// Change resolution/window size according to current AVPACK, that is according to corresponding registers inside Xenos.
 
-	// Window Resolution.
 	// TODO(Xphalnos):
 	// Find a way to change the internal resolution without crashing the display.
-	const s32 resWidth = Config::getScreenWidth();
-	const s32 resHeight = Config::getScreenHeight();
-
-	// Window Size.
-	const s32 winWidth = Config::getScreenWidth();
-	const s32 winHeight = Config::getScreenHeight();
+	// Window Resolution.
+	const u32 resWidth = 1280;
+	const u32 resHeight = 720;
 
 	if (!SDL_Init(SDL_INIT_VIDEO))
 	{
 		std::cout << "Failed to initialize SDL video subsystem: " << SDL_GetError() << std::endl;
 	}
 
+//	Set the title.
 	std::string TITLE = "Xenon " + std::string(Base::VERSION);
 
-	mainWindow = SDL_CreateWindow(TITLE.c_str(), winWidth, winHeight, SDL_WINDOW_RESIZABLE);
-	renderer = SDL_CreateRenderer(mainWindow, NULL);
+//	SDL3 window properties.
+	SDL_PropertiesID props = SDL_CreateProperties();
+	SDL_SetStringProperty(props, SDL_PROP_WINDOW_CREATE_TITLE_STRING, std::string(TITLE).c_str());
+	SDL_SetNumberProperty(props, SDL_PROP_WINDOW_CREATE_X_NUMBER, SDL_WINDOWPOS_CENTERED);
+	SDL_SetNumberProperty(props, SDL_PROP_WINDOW_CREATE_Y_NUMBER, SDL_WINDOWPOS_CENTERED);
+	SDL_SetNumberProperty(props, SDL_PROP_WINDOW_CREATE_WIDTH_NUMBER, Config::windowWidth());
+	SDL_SetNumberProperty(props, SDL_PROP_WINDOW_CREATE_HEIGHT_NUMBER, Config::windowHeight());
+//	Only putting this back when a Vulkan implementation is done.
+//	SDL_SetNumberProperty(props, "flags", SDL_WINDOW_VULKAN);
+	SDL_SetBooleanProperty(props, SDL_PROP_WINDOW_CREATE_RESIZABLE_BOOLEAN, true);
+	mainWindow = SDL_CreateWindowWithProperties(props);
+	SDL_DestroyProperties(props);
+
 	SDL_SetWindowMinimumSize(mainWindow, 640, 480);
 
+	renderer = SDL_CreateRenderer(mainWindow, NULL);
 	texture = SDL_CreateTexture(renderer, SDL_PIXELFORMAT_BGRX32, SDL_TEXTUREACCESS_STREAMING, resWidth, resHeight);
 
 	// Pixel Data pointer.
 	u8* pixels;
-	// Texture Pitch
+	// Texture Pitch.
 	int pitch = resWidth * resHeight * 4;
 	// Framebuffer pointer from main memory.
 	u8 *fbPointer = ramPtr->getPointerToAddress(XE_FB_BASE);
-
 	// Rendering Mode.
 	bool rendering = true;
 	// VSYNC Mode.
 	bool VSYNC = true;
-
 	// Set VSYNC mode to default.
 	SDL_SetRenderVSync(renderer, VSYNC);
-
+	// Fullscreen Mode.
 	SDL_SetWindowFullscreen(mainWindow, Config::fullscreenMode());
 
 	while (rendering)
