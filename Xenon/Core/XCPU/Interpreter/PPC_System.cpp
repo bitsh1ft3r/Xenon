@@ -412,6 +412,24 @@ void PPCInterpreter::PPCInterpreter_slbmte(PPU_STATE* hCore)
 		hCore->ppuThread[hCore->currentThread].GPR[rB];
 }
 
+void PPCInterpreter::PPCInterpreter_slbie(PPU_STATE* hCore)
+{
+	X_FORM_rB;
+
+	// ESID.
+	const u64 ESID = QGET(hCore->ppuThread[hCore->currentThread].GPR[rB], 0, 35);
+	// Class.
+	const u8 C = QGET(hCore->ppuThread[hCore->currentThread].GPR[rB], 36, 36);
+
+
+	for (auto& slbEntry : hCore->ppuThread[hCore->currentThread].SLB) {
+		if (slbEntry.V && slbEntry.C == C && slbEntry.ESID == ESID)
+		{
+			slbEntry.V = false;
+		}
+	}
+}
+
 void PPCInterpreter::PPCInterpreter_rfid(PPU_STATE* hCore)
 {
 	u64 srr1, new_msr, diff_msr;
