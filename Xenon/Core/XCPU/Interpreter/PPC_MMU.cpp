@@ -107,6 +107,8 @@
 #define SEGMENT_SHIFT_256M      28
 #define SEGMENT_MASK_256M       (~((1ULL << SEGMENT_SHIFT_256M) - 1))
 
+// DSISR Flags.
+#define DSISR_ISSTORE            0x02000000
 #define DSISR_NOPTE              0x40000000
 
 
@@ -900,7 +902,8 @@ bool PPCInterpreter::MMUTranslateAddress(u64* EA, PPU_STATE *hCoreState, bool me
                     {
 
                         hCoreState->ppuThread[hCoreState->currentThread].exceptReg |= PPU_EX_DATASTOR;
-                        hCoreState->ppuThread[hCoreState->currentThread].exceptEA = *EA;
+                        hCoreState->ppuThread[hCoreState->currentThread].SPR.DAR = *EA;
+                        hCoreState->ppuThread[hCoreState->currentThread].SPR.DSISR = DSISR_NOPTE;
                     }
                     return false;
                 }
@@ -1026,15 +1029,25 @@ bool PPCInterpreter::MMUTranslateAddress(u64* EA, PPU_STATE *hCoreState, bool me
                     // Page Table Lookup Fault.
                     // Issue Data/Instr Storage interrupt.
 
+                    // Instruction read.
                     if (hCoreState->ppuThread[hCoreState->currentThread].iFetch)
                     {
                         hCoreState->ppuThread[hCoreState->currentThread].exceptReg |= PPU_EX_INSSTOR;
+
+                    }
+                    else if (memWrite)
+                    {
+                        // Data write.
+                        hCoreState->ppuThread[hCoreState->currentThread].exceptReg |= PPU_EX_DATASTOR;
+                        hCoreState->ppuThread[hCoreState->currentThread].SPR.DAR = *EA;
+                        hCoreState->ppuThread[hCoreState->currentThread].SPR.DSISR = DSISR_NOPTE | DSISR_ISSTORE;
                     }
                     else
                     {
-                     
+                        // Data read.
                         hCoreState->ppuThread[hCoreState->currentThread].exceptReg |= PPU_EX_DATASTOR;
-                        hCoreState->ppuThread[hCoreState->currentThread].exceptEA = *EA;
+                        hCoreState->ppuThread[hCoreState->currentThread].SPR.DAR = *EA;
+                        hCoreState->ppuThread[hCoreState->currentThread].SPR.DSISR = DSISR_NOPTE;
                     }
                     return false;
                 }
@@ -1051,7 +1064,7 @@ bool PPCInterpreter::MMUTranslateAddress(u64* EA, PPU_STATE *hCoreState, bool me
             else
             {
                 hCoreState->ppuThread[hCoreState->currentThread].exceptReg |= PPU_EX_DATASEGM;
-                hCoreState->ppuThread[hCoreState->currentThread].exceptEA = *EA;
+                hCoreState->ppuThread[hCoreState->currentThread].SPR.DAR = *EA;
             }
             return false;
         }
