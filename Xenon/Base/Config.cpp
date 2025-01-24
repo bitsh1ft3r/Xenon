@@ -33,7 +33,11 @@ static bool gpuRenderThreadEnabled = true;
 static bool isFullscreen = false;
 
 // SMC.
-static int smcPowerOnReason = 0x11; // Valid values are: 0x11 (SMC_PWR_REAS_PWRBTN) and 0x12 (SMC_PWR_REAS_EJECT). 
+static int smcPowerOnReason = 0x11; // Valid values are: 0x11 (SMC_PWR_REAS_PWRBTN) and 0x12 (SMC_PWR_REAS_EJECT).
+
+// PowerPC.
+static u64 SKIP_HW_INIT_1 = 0;
+static u64 SKIP_HW_INIT_2 = 0;
 
 static s32 screenWidth = 1280;
 static s32 screenHeight = 720;
@@ -50,6 +54,14 @@ bool gpuThreadEnabled() {
 
 int smcPowerOnType() {
     return smcPowerOnReason;
+}
+
+u64 HW_INIT_SKIP1() {
+    return SKIP_HW_INIT_1;
+}
+
+u64 HW_INIT_SKIP2() {
+    return SKIP_HW_INIT_2;
 }
 
 s32 windowWidth() {
@@ -92,6 +104,12 @@ void loadConfig(const std::filesystem::path& path) {
         smcPowerOnReason = toml::find_or<int>(smc, "SMCPowerOnType", false);
     }
 
+    if (data.contains("PowerPC")) {
+        const toml::value& powerpc = data.at("PowerPC");
+        SKIP_HW_INIT_1 = toml::find_or<u64>(powerpc, "HW_INIT_SKIP1", false);
+        SKIP_HW_INIT_2 = toml::find_or<u64>(powerpc, "HW_INIT_SKIP2", false);
+    }
+
     if (data.contains("GPU")) {
         const toml::value& gpu = data.at("GPU");
 
@@ -125,6 +143,10 @@ void saveConfig(const std::filesystem::path& path) {
 
     // SMC.
     data["SMC"]["SMCPowerOnType"] = smcPowerOnReason;
+
+    // PowerPC.
+    data["PowerPC"]["HW_INIT_SKIP1"] = SKIP_HW_INIT_1;
+    data["PowerPC"]["HW_INIT_SKIP2"] = SKIP_HW_INIT_2;
 
     // XGPU.
     data["GPU"]["screenWidth"] = screenWidth;

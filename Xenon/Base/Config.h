@@ -28,10 +28,18 @@ bool gpuThreadEnabled();
 int smcPowerOnType();
 
 //
+// PowerPC Options.
+//
+
+// HW_INIT_SKIP
+u64 HW_INIT_SKIP1();
+u64 HW_INIT_SKIP2();
+
+//
 // XGPU Options.
 //
 
-// Screen W/H. 
+// Screen W/H.
 s32 windowWidth();
 s32 windowHeight();
 
