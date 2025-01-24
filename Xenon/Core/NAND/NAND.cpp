@@ -3,7 +3,7 @@
 #include "NAND.h"
 
 /********************Responsible for loading the NAND file********************/
-bool NAND::Load(std::string filePath)
+bool NAND::Load(const std::string filePath)
 {
     std::cout << "NAND: Loading file " << filePath.c_str() << std::endl;
 
@@ -29,7 +29,7 @@ bool NAND::Load(std::string filePath)
         return false;
     }
 
-    u32 blockSize = 0x4000;
+    const u32 blockSize = 0x4000;
 
     for (int currentBlock = 0; currentBlock < rawFileSize; currentBlock += blockSize)
     {
