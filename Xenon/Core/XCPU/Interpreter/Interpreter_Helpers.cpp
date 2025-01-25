@@ -117,50 +117,52 @@ void PPCInterpreter::ppcDebugUnloadImageSymbols(PPU_STATE* hCore, u64 moduleName
 u64 PPCInterpreter::ppcAddCarrying(PPU_STATE* hCore, u64 op1, u64 op2, u64 carryBit)
 {
     u64 operand1 = (u64)op1;
+    u32 operand1_low32bit = (u32)op1;
     u64 operand2 = (u64)op2;
+    u32 operand2_low32bit = (u32)op2;
     u64 carry = (u64)carryBit;
 
-    bool SF = hCore->ppuThread[hCore->currentThread].SPR.MSR.SF;
+    // We need to reflect the carry of 32bit even tho we're in 64 bit mode.
+    // We do both calculations although the result is always in 64 bit mode.
 
     hCore->ppuThread[hCore->currentThread].SPR.XER.CA = 0;
 
+    // Add in 64 bit.
     operand1 += operand2;
 
-    if (SF)
+    // Add in 32 bit.
+    operand1_low32bit += operand2_low32bit;
+
+    // Check for both 64 and 32 bit mode.
+    if (operand1 < operand2)
     {
-        if (operand1 < operand2)
-        {
-            hCore->ppuThread[hCore->currentThread].SPR.XER.CA = 1;
-        }
-    }
-    else
-    {
-        // 32 bit mode, reflect operation as in 32 bit systems
-        if ((u32)operand1 < (u32)operand2)
-        {
-            hCore->ppuThread[hCore->currentThread].SPR.XER.CA = 1;
-        }
+        hCore->ppuThread[hCore->currentThread].SPR.XER.CA = 1;
     }
 
+    // 32 bit mode, reflect operation as in 32 bit systems.
+    if (operand1_low32bit < operand2_low32bit)
+    {
+        hCore->ppuThread[hCore->currentThread].SPR.XER.CA = 1;
+    }
+
+    // Add 64 bit Op with carry.
     operand1 += carry;
+    // Add 32 bit Op with carry.
+    operand1_low32bit += carry;
 
-    if (SF)
+    // Check again for both 64 and 32 bit mode.
+    if (operand1 < carry)
     {
-        if (operand1 < carry)
-        {
-            hCore->ppuThread[hCore->currentThread].SPR.XER.CA = 1;
-        }
-    }
-    else
-    {
-        // 32 bit mode, reflect operation as in 32 bit systems
-        if ((u32)operand1 < (u32)carry)
-        {
-            hCore->ppuThread[hCore->currentThread].SPR.XER.CA = 1;
-        }
+        hCore->ppuThread[hCore->currentThread].SPR.XER.CA = 1;
     }
 
-    return(EXTS(operand1, 32));
+    // 32 bit mode, reflect operation as in 32 bit systems.
+    if (operand1_low32bit < (u32)carry)
+    {
+        hCore->ppuThread[hCore->currentThread].SPR.XER.CA = 1;
+    }
+
+    return operand1;
 }
 
 void PPCInterpreter::ppcMul64(u64 operand0, u64 operand1, u64* u64High, u64* u64Low)
