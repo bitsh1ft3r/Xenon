@@ -1,5 +1,7 @@
 // Copyright 2025 Xenon Emulator Project
 
+#include "Base/Config.h"
+
 #include "PPCInterpreter.h"
 
 void PPCInterpreter::PPCInterpreter_bc(PPU_STATE* hCore)
@@ -68,12 +70,19 @@ void PPCInterpreter::PPCInterpreter_bclr(PPU_STATE* hCore)
     // Jrunner XDK build offsets are 0x0000000003003f48 AND 0x0000000003003fdc
     // xell version are 0x0000000003003dc0 AND 0x0000000003003e54
 
-    // HW_INIT Skip on XDK 17.489.0
-    if (hCore->ppuThread[hCore->currentThread].CIA == 0x0000000003003f48)
-       condOk = false;
+	if (Config::HW_INIT_SKIP1() != 0) {
+		if (hCore->ppuThread[hCore->currentThread].CIA == Config::HW_INIT_SKIP1())
+		condOk = false;
 
-    if (hCore->ppuThread[hCore->currentThread].CIA == 0x0000000003003fdc)
-       condOk = true;
+		if (hCore->ppuThread[hCore->currentThread].CIA == Config::HW_INIT_SKIP2())
+		condOk = true;
+	} else {
+		if (hCore->ppuThread[hCore->currentThread].CIA == 0x0000000003003f48)
+		condOk = false;
+
+		if (hCore->ppuThread[hCore->currentThread].CIA == 0x0000000003003fdc)
+		condOk = true;
+	}
 
     if (ctrOk && condOk)
     {

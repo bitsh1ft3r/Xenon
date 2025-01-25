@@ -194,6 +194,8 @@ void Xe::Xenos::XGPU::XenosThread()
 			switch (windowEvent.type)
 			{
 			case SDL_EVENT_QUIT:
+				SDL_DestroyRenderer(renderer);
+				SDL_DestroyWindow(mainWindow);
 				rendering = false;
 				break;
 			case SDL_EVENT_KEY_DOWN:
