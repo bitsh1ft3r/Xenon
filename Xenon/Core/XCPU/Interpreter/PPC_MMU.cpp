@@ -40,77 +40,56 @@
 // 0x8000020000060000 Seems to be the random number generator. Implement this?
 
 /*
- * SLB definitions
- */
-
- /* Bits in the SLB ESID word */
-#define SLB_ESID_ESID           0xFFFFFFFFF0000000ULL
-#define SLB_ESID_V              0x0000000008000000ULL /* valid */
-
-/* Bits in the SLB VSID word */
-#define SLB_VSID_SHIFT          12
-#define SLB_VSID_SHIFT_1T       24
-#define SLB_VSID_SSIZE_SHIFT    62
-#define SLB_VSID_B              0xc000000000000000ULL
-#define SLB_VSID_B_256M         0x0000000000000000ULL
-#define SLB_VSID_B_1T           0x4000000000000000ULL
-#define SLB_VSID_VSID           0x3FFFFFFFFFFFF000ULL
-#define SLB_VSID_VRMA           (0x0001FFFFFF000000ULL | SLB_VSID_B_1T)
-#define SLB_VSID_PTEM           (SLB_VSID_B | SLB_VSID_VSID)
-#define SLB_VSID_KS             0x0000000000000800ULL
-#define SLB_VSID_KP             0x0000000000000400ULL
-#define SLB_VSID_N              0x0000000000000200ULL /* no-execute */
-#define SLB_VSID_L              0x0000000000000100ULL
-
-#define SLB_VSID_C              0x0000000000000080ULL /* class */
-#define SLB_VSID_LP             0x0000000000000030ULL
-
-#define SLB_VSID_ATTR           0x0000000000000FFFULL
-#define SLB_VSID_LLP_MASK       (SLB_VSID_L | SLB_VSID_LP)
-#define SLB_VSID_4K             0x0000000000000000ULL
-#define SLB_VSID_64K            0x0000000000000110ULL
-#define SLB_VSID_16M            0x0000000000000100ULL
-#define SLB_VSID_16G            0x0000000000000120ULL
-
-/*
  * Hash page table definitions
  */
 
-#define SDR_64_HTABORG         0x0FFFFFFFFFFC0000ULL
-#define SDR_64_HTABSIZE        0x000000000000001FULL
+#define PPC_SPR_SDR_64_HTABORG      0x0FFFFFFFFFFC0000ULL
+#define PPC_SPR_SDR_64_HTABSIZE     0x000000000000001FULL
 
-#define HPTES_PER_GROUP         8
-#define HASH_PTE_SIZE_64        16
-#define HASH_PTEG_SIZE_64       (HASH_PTE_SIZE_64 * HPTES_PER_GROUP)
+#define PPC_HPTES_PER_GROUP         8
 
-#define HPTE64_V_SSIZE          SLB_VSID_B
-#define HPTE64_V_SSIZE_256M     SLB_VSID_B_256M
-#define HPTE64_V_SSIZE_SHIFT    62
-#define HPTE64_V_AVPN_SHIFT     7
-#define HPTE64_V_AVPN           0x3fffffffffffff80ULL
-#define HPTE64_V_AVPN_VAL(x)    (((x) & HPTE64_V_AVPN) >> HPTE64_V_AVPN_SHIFT)
-#define HPTE64_V_COMPARE(x, y)  (!(((x) ^ (y)) & 0xffffffffffffff83ULL))
+//
+// PTE 0.
+//
+
+// Page valid.
+#define PPC_HPTE64_VALID            0x0000000000000001ULL
+// Page Hash identifier.
+#define PPC_HPTE64_HASH             0x0000000000000002ULL
+// Page Large bit.
+#define PPC_HPTE64_LARGE            0x0000000000000004ULL
+// Page AVPN.
+#define PPC_HPTE64_AVPN             0x0001FFFFFFFFFF80ULL
+// Page AVPN [0:51]
+#define PPC_HPTE64_AVPN_0_51        0x0001FFFFFFFFF000ULL
+
+//
+// PTE 1.
+//
+
+// RPN when L = 0.
+#define PPC_HPTE64_RPN_NO_LP    0x000003FFFFFFF000UL
+// RPN when L = 1.
+#define PPC_HPTE64_RPN_LP       0x000003FFFFFFE000UL
+// Large Page Selector bit.
+#define PPC_HPTE64_LP           0x0000000000001000ULL
+// Bolted PTE.
 #define HPTE64_V_BOLTED         0x0000000000000010ULL
-#define HPTE64_V_LARGE          0x0000000000000004ULL
-#define HPTE64_V_SECONDARY      0x0000000000000002ULL
-#define HPTE64_V_VALID          0x0000000000000001ULL
-#define HPTE64_R_RPN_SHIFT      12
-#define HPTE64_R_RPN            0x0ffffffffffff000ULL
-#define HPTE64_R_C              0x0000000000000080ULL
-#define HPTE64_R_R              0x0000000000000100ULL
-
- /* PTE offsets */
-#define HPTE64_DW1              (HASH_PTE_SIZE_64 / 2)
-#define HPTE64_DW1_R            (HPTE64_DW1 + 6)
-#define HPTE64_DW1_C            (HPTE64_DW1 + 7)
-
-#define SEGMENT_SHIFT_256M      28
-#define SEGMENT_MASK_256M       (~((1ULL << SEGMENT_SHIFT_256M) - 1))
+// Changed bit.
+#define PPC_HPTE64_C              0x0000000000000080ULL
+// Referenced bit.
+#define PPC_HPTE64_R              0x0000000000000100ULL
 
 // DSISR Flags.
 #define DSISR_ISSTORE            0x02000000
 #define DSISR_NOPTE              0x40000000
 
+// Page table entry structure.
+struct PPC_HPTE64
+{
+    u64 pte0;
+    u64 pte1;
+};
 
 void PPCInterpreter::PPCInterpreter_slbia(PPU_STATE* hCore)
 {
@@ -857,11 +836,10 @@ bool PPCInterpreter::MMUTranslateAddress(u64* EA, PPU_STATE *hCoreState, bool me
             p = mmuGetPageSize(hCoreState, L, LP);
 
             // Get our Virtual Address - 65 bit
-            // VSID + 28 bit adress data
-            u64 PAGE = QGET(*EA, 36, 63 - p);
-            PAGE = PAGE << p;
-            //u32 OFFSET = QGET(*EA, 64 - p, 63);
-            u64 VA = VSID | PAGE;// | OFFSET;
+            // VSID + 28 bit adress data.
+            u64 VA = VSID | (*EA & 0xFFFFFFF);
+            // Page Offset.
+            u64 PAGE = (QGET(*EA, 36, 63 - p) << p);
 
             if (VA > 0x7FFFFFFF)
             {
@@ -916,111 +894,230 @@ bool PPCInterpreter::MMUTranslateAddress(u64* EA, PPU_STATE *hCoreState, bool me
                     bool msrDR = hCoreState->ppuThread[hCoreState->currentThread].SPR.MSR.DR;
                     bool msrIR = hCoreState->ppuThread[hCoreState->currentThread].SPR.MSR.IR;
 
-                    u64 epnmask = ~((1ULL << p) - 1);
-
-                    u64 vsidHWMode = (currslbEntry.vsidReg & SLB_VSID_VSID) >> SLB_VSID_SHIFT;
-                    u64 epn = epn = (*EA & ~SEGMENT_MASK_256M) & epnmask;
-                    u64 hash = vsidHWMode ^ (epn >> p);
-                    u64 ptem = (currslbEntry.vsidReg & SLB_VSID_PTEM) | ((epn >> 16) & HPTE64_V_AVPN);
-                    ptem |= HPTE64_V_VALID;
-
-                    // First and second PTE doublewords.
-                    // TODO: Make this a union for ease of handling.
-                    u64 PTE0 = 0;
-                    u64 PTE1 = 0;
-
-                    u64 ptex = 0;
-                    u64 pte_offset = 0;
-                    ptex = (hash & ((1ULL << ((hCoreState->SPR.SDR1 & 
-                        SDR_64_HTABSIZE) + 18 - 7)) - 1)) * HPTES_PER_GROUP;
-
-                    pte_offset = ptex * HASH_PTE_SIZE_64;
-                    u64 base;
-                    u64 pagelenght = HPTES_PER_GROUP * HASH_PTE_SIZE_64;
-
-                    base = hCoreState->SPR.SDR1 & SDR_64_HTABORG;
-
-                    u64 hpteg0 = base + pte_offset;
-
+                    // Disable relocation.
                     hCoreState->ppuThread[hCoreState->currentThread].SPR.MSR.DR = 0;
                     hCoreState->ppuThread[hCoreState->currentThread].SPR.MSR.IR = 0;
 
-                    // First PTEG
-                    for (u32 i = 0; i < HPTES_PER_GROUP; i++)
+                    // Get the primary and secondary hashes.
+                    u64 hash0 = (VSID >> 28) ^ (PAGE >> p);
+                    u64 hash1 = ~hash0;
+
+                    // Get hash table origin and hash table mask.
+                    u64 htabOrg = hCoreState->SPR.SDR1 & PPC_SPR_SDR_64_HTABORG;
+                    u64 htabSize = hCoreState->SPR.SDR1 & PPC_SPR_SDR_64_HTABSIZE;
+
+                    // Create the mask.
+                    u64 htabMask = QMASK(64 - (11 + htabSize), 63);
+
+                    // And both hashes with the created mask.
+                    hash0 = hash0 & htabMask;
+                    hash1 = hash1 & htabMask;
+
+                    // Get both PTEG's addresses.
+                    u64 pteg0Addr = htabOrg | (hash0 << 7);
+                    u64 pteg1Addr = htabOrg | (hash1 << 7);
+
+                    /*
+                    The 16-byte PTEs are organized in memory as groups of eight entries, called PTE groups 
+                    (PTEGs), each one a full 128-byte cache line. A hardware table lookup consists of searching a 
+                    primary PTEG and then, if necessary, searching a secondary PTEG to find the correct PTE to be 
+                    reloaded into the TLB. 
+                    */
+
+                    // Hardware searches PTEGs in the following order:
+                    // 1. Request the even primary PTEG entries.
+                    // 2. Search PTE[0], PTE[2], PTE[4], and PTE[6].
+                    // 3. Request the odd primary PTEG entries.
+                    // 4. Search PTE[1], PTE[3], PTE[5], and PTE[7].
+                    // 5. Repeat steps 1 through 4 with the secondary PTE.
+                    // 6. If no match occurs, raise a data storage exception.
+                    
+                    // First PTEG.
+                    PPC_HPTE64 pteg0[PPC_HPTES_PER_GROUP];
+
+                    // Get the pteg data from memory while relocation is off.
+                    for (size_t i = 0; i < PPC_HPTES_PER_GROUP; i++)
                     {
-                        PTE0 = MMURead64(hCoreState, hpteg0 + 8 * i);
-                        PTE1 = MMURead64(hCoreState, hpteg0 + 8 * i + 8);
-                        if (HPTE64_V_COMPARE(PTE0, ptem))
-                        {
-                            // Match
-
-                            // Update Referenced and Change Bits if necessary.
-                            if (!(PTE1 & HPTE64_R_R))
-                            {
-                                // Referenced
-                                MMUWrite64(hCoreState, hpteg0 + 8 * i + 8, (PTE1 | 0x100));
-                            }
-                            if (!(PTE1 & HPTE64_R_C))
-                            {
-                                // Access is a data write?
-                                if (memWrite) {
-                                    // Change
-                                    MMUWrite64(hCoreState, hpteg0 + 8 * i + 8, (PTE1 | 0x80));
-                                }
-                            }
-
-                            // Get our RPN from the PTE1
-                            RPN = ((PTE1 & HPTE64_R_RPN) >> p) << p;
-                            
-                            // Set our D/I relocation state to whatever it was. 
-                            hCoreState->ppuThread[hCoreState->currentThread].SPR.MSR.DR = msrDR;
-                            hCoreState->ppuThread[hCoreState->currentThread].SPR.MSR.IR = msrIR;
-
-                            goto end;
-                        }
+                        pteg0[i].pte0 = PPCInterpreter::MMURead64(hCoreState, pteg0Addr + i * 16);
+                        pteg0[i].pte1 = PPCInterpreter::MMURead64(hCoreState, pteg0Addr + i * 16 + 8);
                     }
 
-                    ptex = (~hash & ((1ULL << ((hCoreState->SPR.SDR1 &
-                        SDR_64_HTABSIZE) + 18 - 7)) - 1)) * HPTES_PER_GROUP;
-
-                    pte_offset = ptex * HASH_PTE_SIZE_64;
-                    u64 hpteg1 = base + pte_offset;
-
-                    // Second PTEG
-                    for (u32 i = 0; i < HPTES_PER_GROUP; i++)
+                    // We compare all pte's in order for simplicity.
+                    for (size_t i = 0; i < PPC_HPTES_PER_GROUP; i++)
                     {
-                        PTE0 = MMURead64(hCoreState, hpteg1 + 8 * i);
-                        PTE1 = MMURead64(hCoreState, hpteg1 + 8 * i + 8);
-                        if (HPTE64_V_COMPARE(PTE0, ptem))
+                        /*
+                            Conditions for a match to occur:
+
+                            * PTE: H = 0 for the primary PTEG, 1 for the secondary PTEG
+                            * PTE: V = 1
+                            * PTE: AVPN[0:51] = VA0:51
+                            * if p < 28, PTE: AVPN[52:51+q] = VA[52:51+q]
+                        */
+
+                        // H = 0?
+                        if (((pteg0[i].pte0 & PPC_HPTE64_HASH) >> 1) != 0)
                         {
-                            // Match
-                            
-                            // Update Referenced and Change Bits if necessary.
-                            if (!(PTE1 & HPTE64_R_R))
-                            {
-                                // Referenced
-                                MMUWrite64(hCoreState, hpteg0 + 8 * i + 8, (PTE1 | 0x100));
-                            }
-                            if (!(PTE1 & HPTE64_R_C))
-                            {
-                                // Access is a data write?
-                                if (memWrite) {
-                                    // Change
-                                    MMUWrite64(hCoreState, hpteg0 + 8 * i + 8, (PTE1 | 0x80));
-                                }
-                            }
-
-                            // Get our RPN from the PTE1
-                            RPN = ((PTE1 & HPTE64_R_RPN) >> p) << p;
-
-                            // Set our D/I relocation state to whatever it was. 
-                            hCoreState->ppuThread[hCoreState->currentThread].SPR.MSR.DR = msrDR;
-                            hCoreState->ppuThread[hCoreState->currentThread].SPR.MSR.IR = msrIR;
-
-                            goto end;
+                            continue;
                         }
+
+                        // V?
+                        if ((pteg0[i].pte0 & PPC_HPTE64_VALID) != true)
+                        {
+                            continue;
+                        }
+
+                        u64 pteAVPN = pteg0[i].pte0 & PPC_HPTE64_AVPN;
+
+                        // PTE:AVPN[0:51] = VA[0:51]?
+                        if (((pteAVPN & PPC_HPTE64_AVPN_0_51) >> 12) != (VA >> 28))
+                        {
+                            continue;
+                        }
+
+                        /*
+                            The PPE also requires that PTE[LP] = SLBE[LP] whenever PTE[L] = ‘1’. In other words, 
+                            the PTE page size must match the SLBE page size exactly for a page-table match to occur.
+                        */
+                        
+                        // L?
+                        if (((pteg0[i].pte0 & PPC_HPTE64_LARGE) >> 2) != L)
+                        {
+                            continue;
+                        }
+
+                        // L & LP?
+                        if (L && (((pteg0[i].pte1 & PPC_HPTE64_LP) >> 12) != LP))
+                        {
+                            continue;
+                        }
+
+                        // Match found. Extract the RPN from the page table.
+
+                        // Set relocation back to whatever it was.
+                        hCoreState->ppuThread[hCoreState->currentThread].SPR.MSR.DR = msrDR;
+                        hCoreState->ppuThread[hCoreState->currentThread].SPR.MSR.IR = msrIR;
+
+                        // Update Referenced and Change Bits if necessary.
+                        if (!((pteg0[i].pte1 & PPC_HPTE64_R) >> 8))
+                        {
+                            // Referenced
+                            MMUWrite64(hCoreState, pteg0Addr + i * 16 + 8, (pteg0[i].pte1 | 0x100));
+                        }
+                        if (!((pteg0[i].pte1 & PPC_HPTE64_C) >> 7))
+                        {
+                            // Access is a data write?
+                            if (memWrite) {
+                                // Change
+                                MMUWrite64(hCoreState, pteg0Addr + i * 16 + 8, (pteg0[i].pte1 | 0x80));
+                            }
+                        }
+
+                        if (L)
+                        {
+                            // RPN is PTE[86:114].
+                            RPN = pteg0[i].pte1 & PPC_HPTE64_RPN_LP;
+                        }
+                        else
+                        {
+                            // RPN is PTE[86:115].
+                            RPN = pteg0[i].pte1 & PPC_HPTE64_RPN_NO_LP;
+                        }
+
+                        goto end;
                     }
 
+                    // Second PTEG.
+                    PPC_HPTE64 pteg1[PPC_HPTES_PER_GROUP];
+
+                    for (size_t i = 0; i < PPC_HPTES_PER_GROUP; i++)
+                    {
+                        pteg1[i].pte0 = PPCInterpreter::MMURead64(hCoreState, pteg1Addr + i * 16);
+                        pteg1[i].pte1 = PPCInterpreter::MMURead64(hCoreState, pteg1Addr + i * 16 + 8);
+                    }
+
+                    // We compare all pte's in order for simplicity.
+                    for (size_t i = 0; i < PPC_HPTES_PER_GROUP; i++)
+                    {
+                        /*
+                            Conditions for a match to occur:
+
+                            * PTE: H = 0 for the primary PTEG, 1 for the secondary PTEG
+                            * PTE: V = 1
+                            * PTE: AVPN[0:51] = VA0:51
+                            * if p < 28, PTE: AVPN[52:51+q] = VA[52:51+q]
+                        */
+
+                        // H = 0?
+                        if (((pteg1[i].pte0 & PPC_HPTE64_HASH) >> 1) != 0)
+                        {
+                            continue;
+                        }
+
+                        // V?
+                        if ((pteg1[i].pte0 & PPC_HPTE64_VALID) != true)
+                        {
+                            continue;
+                        }
+
+                        u64 pteAVPN = pteg1[i].pte0 & PPC_HPTE64_AVPN;
+
+                        // PTE:AVPN[0:51] = VA[0:51]?
+                        if (((pteAVPN & PPC_HPTE64_AVPN_0_51) >> 12) != (VA >> 28))
+                        {
+                            continue;
+                        }
+
+                        /*
+                            The PPE also requires that PTE[LP] = SLBE[LP] whenever PTE[L] = ‘1’. In other words,
+                            the PTE page size must match the SLBE page size exactly for a page-table match to occur.
+                        */
+
+                        // L?
+                        if (((pteg1[i].pte0 & PPC_HPTE64_LARGE) >> 2) != L)
+                        {
+                            continue;
+                        }
+
+                        // L & LP?
+                        if (L && (((pteg1[i].pte1 & PPC_HPTE64_LP) >> 12) != LP))
+                        {
+                            continue;
+                        }
+
+                        // Match found. Extract the RPN from the page table.
+
+                        // Set relocation back to whatever it was.
+                        hCoreState->ppuThread[hCoreState->currentThread].SPR.MSR.DR = msrDR;
+                        hCoreState->ppuThread[hCoreState->currentThread].SPR.MSR.IR = msrIR;
+
+                        // Update Referenced and Change Bits if necessary.
+                        if (!((pteg1[i].pte1 & PPC_HPTE64_R) >> 8))
+                        {
+                            // Referenced
+                            MMUWrite64(hCoreState, pteg1Addr + i * 16 + 8, (pteg1[i].pte1 | 0x100));
+                        }
+                        if (!((pteg1[i].pte1 & PPC_HPTE64_C) >> 7))
+                        {
+                            // Access is a data write?
+                            if (memWrite) {
+                                // Change
+                                MMUWrite64(hCoreState, pteg1Addr + i * 16 + 8, (pteg1[i].pte1 | 0x80));
+                            }
+                        }
+
+                        if (L)
+                        {
+                            // RPN is PTE[86:114].
+                            RPN = pteg1[i].pte1 & PPC_HPTE64_RPN_LP;
+                        }
+                        else
+                        {
+                            // RPN is PTE[86:115].
+                            RPN = pteg1[i].pte1 & PPC_HPTE64_RPN_NO_LP;
+                        }
+
+                        goto end;
+                    }
 
                     // Set MSR to IR/DR mode before raising the interrupt to whatever they were.
                     hCoreState->ppuThread[hCoreState->currentThread].SPR.MSR.DR = msrDR;
@@ -1055,6 +1152,10 @@ bool PPCInterpreter::MMUTranslateAddress(u64* EA, PPU_STATE *hCoreState, bool me
         }
         else
         {
+            if (*EA == 0xd000000000a01000)
+            {
+                std::cout << "p = 0x" << p << std::endl;
+            }
             // SLB Miss
             // Data or Inst Segment Exception
             if (hCoreState->ppuThread[hCoreState->currentThread].iFetch)
