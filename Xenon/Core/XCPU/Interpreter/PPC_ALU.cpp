@@ -874,8 +874,9 @@ void PPCInterpreter::PPCInterpreter_slwx(PPU_STATE* hCore)
 {
 	X_FORM_rS_rA_rB_RC;
 
-	const u32 amount = GPR(rB);
-	GPR(rA) = (amount & 0x20) != 0 ? 0 : GPR(rS) << (amount & 0x1f);
+	u32 n = (u32)(GPR(rB)) & 63;
+
+	GPR(rA) = (n < 32) ? ((u32)(GPR(rS)) << n) : 0;
 
 	if (RC)
 	{
@@ -945,29 +946,17 @@ void PPCInterpreter::PPCInterpreter_srawx(PPU_STATE* hCore)
 {
 	X_FORM_rS_rA_rB_RC;
 
-	const u32 regRB = GPR(rB);
+	u64 regRs = GPR(rS);
+	u64 n = (u32)GPR(rB) & 63;
+	u64 r = _rotl(static_cast<u32>(regRs), 64 - (n & 31));
+	u64 m = (n & 0x20) ? 0 : QMASK(n + 32, 63);
+	u64 s = BGET(regRs, 32, 0) ? QMASK(0, 63) : 0;
+	GPR(rA) = (r & m) | (s & ~m);
 
-	if ((regRB & 0x20) != 0)
-	{
-		if ((GPR(rS) & 0x80000000) != 0)
-		{
-			GPR(rA) = 0xFFFFFFFF;
-			XER_SET_CA(1);
-		}
-		else
-		{
-			GPR(rA) = 0x00000000;
-			XER_SET_CA(0);
-		}
-	}
+	if (s && (((u32)(r & ~m)) != 0))
+		XER_SET_CA(1);
 	else
-	{
-		const u32 amount = regRB & 0x1f;
-		const s32 regRS = s32(GPR(rS));
-		GPR(rA) = u32(regRS >> amount);
-
-		XER_SET_CA(regRS < 0 && amount > 0 && (u32(regRS) << (32 - amount)) != 0);
-	}
+		XER_SET_CA(0);
 
 	if (RC)
 	{
@@ -981,12 +970,17 @@ void PPCInterpreter::PPCInterpreter_srawix(PPU_STATE* hCore)
 {
 	X_FORM_rS_rA_SH_RC;
 
-	const u32 amount = SH;
-	const s32 regRS = s32(GPR(rS));
+	u64 rSReg = GPR(rS);
+	u64 r = _rotl(static_cast<u32>(rSReg), 64 - SH);
+	u64 m = QMASK(SH + 32, 63);
+	u64 s = BGET(rSReg, 32, 0) ? QMASK(0, 63) : 0;
 
-	GPR(rA) = u32(regRS >> amount);
+	GPR(rA) = (r & m) | (s & ~m);
 
-	XER_SET_CA(regRS < 0 && amount > 0 && (u32(regRS) << (32 - amount)) != 0);
+	if (s && (((u32)(r & ~m)) != 0))
+		XER_SET_CA(1);
+	else
+		XER_SET_CA(0);
 
 	if (RC)
 	{
@@ -1018,9 +1012,9 @@ void PPCInterpreter::PPCInterpreter_srwx(PPU_STATE* hCore)
 {
 	X_FORM_rS_rA_rB_RC;
 
-	const u32 amount = GPR(rB);
+	u32 n = (u32)GPR(rB) & 63;
 
-	GPR(rA) = (amount & 0x20) != 0 ? 0 : (GPR(rS) >> (amount & 0x1f));
+	GPR(rA) = (n < 32) ? (GPR(rS) >> n) : 0;
 
 	if (RC)
 	{
