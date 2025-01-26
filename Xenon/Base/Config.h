@@ -2,13 +2,13 @@
 
 #pragma once
 
-#include <filesystem>
 #include "Types.h"
+#include <filesystem>
 
 namespace Config {
 
-void loadConfig(const std::filesystem::path& path);
-void saveConfig(const std::filesystem::path& path);
+void loadConfig(const std::filesystem::path &path);
+void saveConfig(const std::filesystem::path &path);
 
 //
 // General Options.
