@@ -30,7 +30,7 @@ void XenonReservations::Scan(u64 PhysAddress)
 		if ((Reservations[i]->V) &&
 			PhysAddress >= Reservations[i]->resAddr)
 		{
-			Reservations[i]->V = FALSE;
+			Reservations[i]->V = false;
 			Decrement();
 		}
 	}

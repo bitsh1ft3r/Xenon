@@ -28,7 +28,7 @@ public:
     u32 Space(void) { return Size - Pointer; }
     u32 Count(void) { return Pointer; }
     u8* Ptr(void) { return Data + Pointer; }
-    void   Increment(INT32 Inc) { Pointer += Inc; }
+    void   Increment(s32 Inc) { Pointer += Inc; }
     void   ResetPtr(void) { Pointer = 0; }
     bool   Initialize(u32 MaxLength, bool fClear)
     {
@@ -199,15 +199,15 @@ union XE_CDB {
     //
 
     struct _CDB6GENERIC {
-        UINT8  OperationCode;
-        UINT8  Immediate : 1;
-        UINT8  CommandUniqueBits : 4;
-        UINT8  LogicalUnitNumber : 3;
-        UINT8  CommandUniqueBytes[3];
-        UINT8  Link : 1;
-        UINT8  Flag : 1;
-        UINT8  Reserved : 4;
-        UINT8  VendorUnique : 2;
+        u8 OperationCode;
+        u8 Immediate : 1;
+        u8 CommandUniqueBits : 4;
+        u8 LogicalUnitNumber : 3;
+        u8 CommandUniqueBytes[3];
+        u8 Link : 1;
+        u8 Flag : 1;
+        u8 Reserved : 4;
+        u8 VendorUnique : 2;
     } CDB6GENERIC, * PCDB6GENERIC;
 
     //
@@ -215,30 +215,30 @@ union XE_CDB {
     //
 
     struct _CDB10 {
-        UINT8 OperationCode;
-        UINT8 RelativeAddress : 1;
-        UINT8 Reserved1 : 2;
-        UINT8 ForceUnitAccess : 1;
-        UINT8 DisablePageOut : 1;
-        UINT8 LogicalUnitNumber : 3;
+        u8 OperationCode;
+        u8 RelativeAddress : 1;
+        u8 Reserved1 : 2;
+        u8 ForceUnitAccess : 1;
+        u8 DisablePageOut : 1;
+        u8 LogicalUnitNumber : 3;
         union {
             struct {
-                UINT8 LogicalBlockByte0;
-                UINT8 LogicalBlockByte1;
-                UINT8 LogicalBlockByte2;
-                UINT8 LogicalBlockByte3;
+                u8 LogicalBlockByte0;
+                u8 LogicalBlockByte1;
+                u8 LogicalBlockByte2;
+                u8 LogicalBlockByte3;
             };
-            UINT32 LogicalBlock;
+            u32 LogicalBlock;
         };
-        UINT8 Reserved2;
+        u8 Reserved2;
         union {
             struct {
-                UINT8 TransferBlocksMsb;
-                UINT8 TransferBlocksLsb;
+                u8 TransferBlocksMsb;
+                u8 TransferBlocksLsb;
             };
-            UINT16 TransferBlocks;
+            u16 TransferBlocks;
         };
-        UINT8 Control;
+        u8 Control;
     } CDB10, * PCDB10;
 
     //
@@ -246,20 +246,20 @@ union XE_CDB {
     //
 
     struct _CDB12 {
-        UINT8 OperationCode;
-        UINT8 RelativeAddress : 1;
-        UINT8 Reserved1 : 2;
-        UINT8 ForceUnitAccess : 1;
-        UINT8 DisablePageOut : 1;
-        UINT8 LogicalUnitNumber : 3;
-        UINT8 LogicalBlock[4];      // [0]=MSB, [3]=LSB
-        UINT8 TransferLength[4];    // [0]=MSB, [3]=LSB
-        UINT8 Reserved2;
-        UINT8 Control;
+        u8 OperationCode;
+        u8 RelativeAddress : 1;
+        u8 Reserved1 : 2;
+        u8 ForceUnitAccess : 1;
+        u8 DisablePageOut : 1;
+        u8 LogicalUnitNumber : 3;
+        u8 LogicalBlock[4];      // [0]=MSB, [3]=LSB
+        u8 TransferLength[4];    // [0]=MSB, [3]=LSB
+        u8 Reserved2;
+        u8 Control;
     } CDB12, * PCDB12;
 
-    UINT32 AsUlong[4];
-    UINT8 AsByte[16];
+    u32 AsUlong[4];
+    u8 AsByte[16];
 
 };
 

@@ -27,7 +27,7 @@ public:
 	void ReleaseLock(void) { LeaveCriticalSection(&ReservationLock); }
 
 private:
-	LONG nReservations;
+	long nReservations;
 	CRITICAL_SECTION ReservationLock;
 	int nProcessors;
 	struct PPU_RES* Reservations[6];

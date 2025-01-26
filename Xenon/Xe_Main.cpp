@@ -138,7 +138,7 @@ int main(int argc, char* argv[]) {
 	pciBridge.addPCIDevice(&hdd);
 	pciBridge.addPCIDevice(&smcCore);
 
-	//Register the Xenos GPU and the PCIBridge
+	// Register the Xenos GPU and the PCIBridge
 	hostBridge.RegisterXGPU(&xenos);
 	hostBridge.RegisterPCIBridge(&pciBridge);
 

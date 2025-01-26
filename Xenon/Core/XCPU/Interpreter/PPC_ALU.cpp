@@ -430,7 +430,7 @@ void PPCInterpreter::PPCInterpreter_divwx(PPU_STATE* hCore)
 
 	if (GPR(rB) != 0 && (GPR(rA) != 0x80000000 || GPR(rB) != 0xFFFFFFFF))
 	{
-		GPR(rD) = (UINT32)((INT64)(LONG)GPR(rA) / (INT64)(LONG)GPR(rB));
+		GPR(rD) = (u32)((s64)(long)GPR(rA) / (s64)(long)GPR(rB));
 	}
 
 	if (OE)

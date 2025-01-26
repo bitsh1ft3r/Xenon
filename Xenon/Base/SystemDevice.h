@@ -6,10 +6,10 @@
 
 struct deviceInfo
 {
-	const char* deviceName; //DeviceName
-	u64 startAddr;			//Start Address
-	u64 endAddr;			//End Address
-	bool socDevice;			//SOC Device
+	const char* deviceName;	// Device Name
+	u64 startAddr;			// Start Address
+	u64 endAddr;			// End Address
+	bool socDevice;			// SOC Device
 };
 
 class SystemDevice

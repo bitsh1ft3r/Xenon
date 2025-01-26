@@ -1,10 +1,8 @@
 // Copyright 2025 Xenon Emulator Project
 
-#include <iostream>
 #include <toml.hpp>
 
-#include <fstream>
-#include <string>
+#include <iostream>
 
 #include "Config.h"
 #include "Path_util.h"
@@ -39,6 +37,7 @@ static int smcPowerOnReason = 0x11; // Valid values are: 0x11 (SMC_PWR_REAS_PWRB
 static u64 SKIP_HW_INIT_1 = 0;
 static u64 SKIP_HW_INIT_2 = 0;
 
+// GPU.
 static s32 screenWidth = 1280;
 static s32 screenHeight = 720;
 // static s32 gpuId = -1; // Vulkan physical device index. Set to negative for auto select
@@ -112,7 +111,6 @@ void loadConfig(const std::filesystem::path& path) {
 
     if (data.contains("GPU")) {
         const toml::value& gpu = data.at("GPU");
-
         screenWidth = toml::find_or<int>(gpu, "screenWidth", screenWidth);
         screenHeight = toml::find_or<int>(gpu, "screenHeight", screenHeight);
 //        gpuId = toml::find_or<int>(gpu, "gpuId", -1);
@@ -148,7 +146,7 @@ void saveConfig(const std::filesystem::path& path) {
     data["PowerPC"]["HW_INIT_SKIP1"] = SKIP_HW_INIT_1;
     data["PowerPC"]["HW_INIT_SKIP2"] = SKIP_HW_INIT_2;
 
-    // XGPU.
+    // GPU.
     data["GPU"]["screenWidth"] = screenWidth;
     data["GPU"]["screenHeight"] = screenHeight;
 //    data["GPU"]["gpuId"] = gpuId;

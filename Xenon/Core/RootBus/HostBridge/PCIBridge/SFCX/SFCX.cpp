@@ -5,7 +5,7 @@
 
 #include "SFCX.h"
 
-SFCX::SFCX(std::string nandLoadPath, PCIBridge* parentPCIBridge)
+SFCX::SFCX(const std::string nandLoadPath, PCIBridge* parentPCIBridge)
 {
 	// Asign parent PCI Bridge pointer.
 	parentBus = parentPCIBridge;

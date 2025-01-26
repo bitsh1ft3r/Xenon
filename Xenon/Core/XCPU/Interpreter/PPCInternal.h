@@ -34,11 +34,11 @@ static inline u64 GetBits64(u64 data, s8 begin, s8 end)
 	return data & mask;
 }
 
-static inline u32 ExtractBits(uint32_t input, uint32_t begin, uint32_t end) {
+static inline u32 ExtractBits(u32 input, u32 begin, u32 end) {
 	return (input >> (32 - 1 - end)) & ((1 << (end - begin + 1)) - 1);
 }
 
-static inline u64 ExtractBits64(uint32_t input, uint32_t begin, uint32_t end) {
+static inline u64 ExtractBits64(u32 input, u32 begin, u32 end) {
 	return (input >> (64 - 1 - end)) & ((1 << (end - begin + 1)) - 1);
 }
 

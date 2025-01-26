@@ -383,9 +383,9 @@ void ODD::atapiReset()
     atapiState.atapiRegs.statusReg = ATA_STATUS_DRDY;
 
     // Initialize our input and output buffers
-    atapiState.dataWriteBuffer.Initialize(ATAPI_CDROM_SECTOR_SIZE, TRUE);
+    atapiState.dataWriteBuffer.Initialize(ATAPI_CDROM_SECTOR_SIZE, true);
     atapiState.dataWriteBuffer.ResetPtr();
-    atapiState.dataReadBuffer.Initialize(ATAPI_CDROM_SECTOR_SIZE, TRUE);
+    atapiState.dataReadBuffer.Initialize(ATAPI_CDROM_SECTOR_SIZE, true);
     atapiState.dataReadBuffer.ResetPtr();
 
     // Set our Inquiry Data
@@ -451,7 +451,7 @@ void ODD::processSCSICommand()
         readOffset *= ATAPI_CDROM_SECTOR_SIZE;
         sectorCount *= ATAPI_CDROM_SECTOR_SIZE;
 
-        atapiState.dataReadBuffer.Initialize(sectorCount, FALSE);
+        atapiState.dataReadBuffer.Initialize(sectorCount, false);
         atapiState.dataReadBuffer.ResetPtr();
         atapiState.mountedCDImage->Read(readOffset, atapiState.dataReadBuffer.Ptr(), sectorCount);
       
@@ -490,7 +490,7 @@ void ODD::doDMA()
         if (readOperation)
         {
             // Reading from us
-            byteCount = min((UINT32)byteCount, atapiState.dataReadBuffer.Space());
+            byteCount = min((u32)byteCount, atapiState.dataReadBuffer.Space());
 
             // Buffer overrun?
             if (byteCount == 0)
@@ -501,7 +501,7 @@ void ODD::doDMA()
         else
         {
             // Writing to us
-            byteCount = min((UINT32)byteCount, atapiState.dataWriteBuffer.Space());
+            byteCount = min((u32)byteCount, atapiState.dataWriteBuffer.Space());
             // Buffer overrun?
             if (byteCount == 0)
                 return;

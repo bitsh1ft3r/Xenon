@@ -5,7 +5,7 @@
 
 #include "Xenon.h"
 
-Xenon::Xenon(RootBus* inBus, std::string blPath, eFuses inFuseSet)
+Xenon::Xenon(RootBus* inBus, const std::string blPath, eFuses inFuseSet)
 {
 	// First, Initialize system bus.
 	mainBus = inBus;
