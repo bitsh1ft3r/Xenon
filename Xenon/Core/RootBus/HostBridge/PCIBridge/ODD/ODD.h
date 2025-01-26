@@ -37,7 +37,7 @@ public:
             delete Data;
             memset(this, 0, sizeof * this);
         }
-        if (Data == NULL)
+        if (Data == nullptr)
         {
             Data = ::new u8[MaxLength];
         }
@@ -65,7 +65,7 @@ class Storage {
 public:
     Storage(wchar_t* Filename)
     {
-        hFile = CreateFileW(Filename, GENERIC_READ, FILE_SHARE_READ, NULL, OPEN_EXISTING, FILE_ATTRIBUTE_NORMAL, NULL);
+        hFile = CreateFileW(Filename, GENERIC_READ, FILE_SHARE_READ, nullptr, OPEN_EXISTING, FILE_ATTRIBUTE_NORMAL, nullptr);
     }
 
     ~Storage(void)
@@ -78,7 +78,7 @@ public:
     u32 Size(void)
     {
         u32 cb;
-        cb = GetFileSize(hFile, NULL);
+        cb = GetFileSize(hFile, nullptr);
         return (cb == INVALID_FILE_SIZE) ? 0 : cb;
     }
 

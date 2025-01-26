@@ -44,4 +44,4 @@ s32 windowHeight();
 // GPU ID Selection (Only for Vulkan)
 // s32 getGpuId();
 
-}; // namespace Config
+} // namespace Config

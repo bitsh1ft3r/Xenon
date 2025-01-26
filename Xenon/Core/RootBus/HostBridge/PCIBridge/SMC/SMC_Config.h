@@ -5,7 +5,7 @@
 #include "Base/Types.h"
 
 // Taken from a Jasper SMC Config Space dump.
-u32 smcConfigSpaceMap[64] =
+const u32 smcConfigSpaceMap[64] =
 {
 	0x580d1414, 0x02000002, 0x00000000, 0x00000000, 0xea001000, 0x00000000, 0x00000000, 0x00000000,
 	0x00000000, 0x00000000, 0x00000000, 0x00000000, 0x00000000, 0x000000d0, 0x00000000, 0x00000100,

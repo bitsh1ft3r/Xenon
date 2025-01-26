@@ -61,7 +61,7 @@ namespace Xe
 				SMC_ANA_RELATED			= 0x9B,
 				SMC_SET_ASYNC_OPERATION = 0x9C,
 				SMC_SET_82_INT			= 0x9D,
-				SMC_SET_9F_INT			= 0x9F,
+				SMC_SET_9F_INT			= 0x9F
 			};
 
 			// SMC DVD Tray State
@@ -73,7 +73,7 @@ namespace Xe
 				SMC_TRAY_OPENING		= 0x63,
 				SMC_TRAY_CLOSING		= 0x64,
 				SMC_TRAY_UNKNOWN		= 0x65,
-				SMC_TRAY_SPINUP			= 0x66,
+				SMC_TRAY_SPINUP			= 0x66
 			};
 
 			// SMC Power On Reason
@@ -97,7 +97,7 @@ namespace Xe
 													// right USB port
 				SMC_PWR_REAS_WIRED_R2		= 0x58, // XSS B wired guide button; slim back middle USB port
 				SMC_PWR_REAS_WIRED_R3		= 0x59, // XSS C wired guide button; slim back top USB port
-				SMC_PWR_REAS_WIRED_R1		= 0x5A, // XSS D wired guide button; fat back USB port, slim back bottom 
+				SMC_PWR_REAS_WIRED_R1		= 0x5A  // XSS D wired guide button; fat back USB port, slim back bottom 
 													// USB port
 													// 
 			// Possibles/reboot reasons  0x23, 0x2A, 0x42, 0x61, 0x64.

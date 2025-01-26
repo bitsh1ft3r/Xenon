@@ -168,7 +168,7 @@ void Xe::Xenos::XGPU::XenosThread()
 
 	SDL_SetWindowMinimumSize(mainWindow, 640, 480);
 
-	renderer = SDL_CreateRenderer(mainWindow, NULL);
+	renderer = SDL_CreateRenderer(mainWindow, nullptr);
 	texture = SDL_CreateTexture(renderer, SDL_PIXELFORMAT_BGRX32, SDL_TEXTUREACCESS_STREAMING, resWidth, resHeight);
 
 	// Pixel Data pointer.
@@ -217,7 +217,7 @@ void Xe::Xenos::XGPU::XenosThread()
 		}
 
 		// Lock the texture to write our pixels on.
-		SDL_LockTexture(texture, NULL, (void**)&pixels, &pitch);
+		SDL_LockTexture(texture, nullptr, (void**)&pixels, &pitch);
 		// Clear the backbuffer.
 		SDL_RenderClear(renderer);
 		// Copy the pixels.
@@ -235,7 +235,7 @@ void Xe::Xenos::XGPU::XenosThread()
 		// Unlock the texture.
 		SDL_UnlockTexture(texture);
 		// Render the texture to out backbuffer.
-		SDL_RenderTexture(renderer, texture, NULL, NULL);
+		SDL_RenderTexture(renderer, texture, nullptr, nullptr);
 		// Present the new frame.
 		SDL_RenderPresent(renderer);
 	}

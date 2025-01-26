@@ -7,7 +7,7 @@ XenonReservations::XenonReservations()
 	InitializeCriticalSectionAndSpinCount(&ReservationLock, 40000);
 	nReservations = 0;
 	nProcessors = 0;
-	Reservations[0] = {0};
+	Reservations[0] = nullptr;
 }
 
 bool XenonReservations::Register(PPU_RES* Res)

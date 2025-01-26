@@ -13,12 +13,12 @@ struct PCIDeviceInfo
 class PCIDevice
 {
 public:
-	void Initialize(const char* deviceName, u64 size) { deviceInfo.deviceName = deviceName; deviceInfo.size = size; };
-	virtual void Read(u64 readAddress, u64* data, u8 byteCount) {};
-	virtual void Write(u64 writeAddress, u64 data, u8 byteCount) {};
+	void Initialize(const char* deviceName, u64 size) { deviceInfo.deviceName = deviceName; deviceInfo.size = size; }
+	virtual void Read(u64 readAddress, u64* data, u8 byteCount) {}
+	virtual void Write(u64 writeAddress, u64 data, u8 byteCount) {}
 
-	virtual void ConfigRead(u64 readAddress, u64* data, u8 byteCount) {};
-	virtual void ConfigWrite(u64 writeAddress, u64 data, u8 byteCount) {};
+	virtual void ConfigRead(u64 readAddress, u64* data, u8 byteCount) {}
+	virtual void ConfigWrite(u64 writeAddress, u64 data, u8 byteCount) {}
 
 	const char* GetDeviceName() { return deviceInfo.deviceName; }
 
@@ -32,12 +32,12 @@ public:
 		u32 bar4 = pciConfigSpace.configSpaceHeader.BAR4;
 		u32 bar5 = pciConfigSpace.configSpaceHeader.BAR5;
 
-		if (address >= bar0 && address <= bar0 + deviceInfo.size
-			|| address >= bar1 && address <= bar1 + deviceInfo.size
-			|| address >= bar2 && address <= bar2 + deviceInfo.size
-			|| address >= bar3 && address <= bar3 + deviceInfo.size
-			|| address >= bar4 && address <= bar4 + deviceInfo.size
-			|| address >= bar5 && address <= bar5 + deviceInfo.size)
+		if ((address >= bar0 && address <= bar0 + deviceInfo.size)
+			|| (address >= bar1 && address <= bar1 + deviceInfo.size)
+			|| (address >= bar2 && address <= bar2 + deviceInfo.size)
+			|| (address >= bar3 && address <= bar3 + deviceInfo.size)
+			|| (address >= bar4 && address <= bar4 + deviceInfo.size)
+			|| (address >= bar5 && address <= bar5 + deviceInfo.size))
 		{
 			return true;
 		}

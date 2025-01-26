@@ -18,10 +18,10 @@ public:
 	void Initialize(const char* deviceName, u64 startAddress, u64 endAddress, bool isSOCDevice) 
 	{ 
 		info.deviceName = deviceName; info.startAddr = startAddress; info.endAddr = endAddress; info.socDevice = isSOCDevice;
-	};
+	}
 
-	virtual void Read(u64 readAddress, u64* data, u8 byteCount) {};
-	virtual void Write(u64 writeAddress, u64 data, u8 byteCount) {};
+	virtual void Read(u64 readAddress, u64* data, u8 byteCount) {}
+	virtual void Write(u64 writeAddress, u64 data, u8 byteCount) {}
 
 	const char* GetDeviceName() { return info.deviceName; }
 	u64 GetStartAddress() { return info.startAddr; }

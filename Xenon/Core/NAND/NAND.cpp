@@ -141,7 +141,7 @@ void NAND::CheckSpare()
     fseek(inputFile, 0, SEEK_SET);
     fread(data, 1, 0x630, inputFile);
     hasSpare = true;
-    u8* spare = 0;
+    u8* spare = nullptr;
 
 
     for (int idx = 0; idx < sizeof(data); idx += 0x210)

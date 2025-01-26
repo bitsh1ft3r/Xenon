@@ -106,7 +106,7 @@ void Xe::PCIDev::SMC::SMCCore::Read(u64 readAddress, u64* data, u8 byteCount)
 		break;
 	case UART_BYTE_OUT_REG:			// UART Data Out Register
 		smcCoreState->retVal = ReadFile(smcCoreState->comPortHandle, &smcPCIState->uartOutReg, 1,
-			&smcCoreState->currentBytesReadCount, NULL);
+			&smcCoreState->currentBytesReadCount, nullptr);
 		memcpy(data, &smcPCIState->uartOutReg, byteCount);
 		break;
 	case UART_STATUS_REG:			// UART Status Register
@@ -186,7 +186,7 @@ void Xe::PCIDev::SMC::SMCCore::Write(u64 writeAddress, u64 data, u8 byteCount)
 		memcpy(&smcPCIState->uartInReg, &data, byteCount);
 		// Write the data out.
 		smcCoreState->retVal = WriteFile(smcCoreState->comPortHandle, &data, 1,
-			&smcCoreState->currentBytesWrittenCount, NULL);
+			&smcCoreState->currentBytesWrittenCount, nullptr);
 		break;
 	case SMI_INT_STATUS_REG:	// SMI INT Status Register
 		memcpy(&smcPCIState->smiIntPendingReg, &data, byteCount);
@@ -278,7 +278,7 @@ void Xe::PCIDev::SMC::SMCCore::setupUART(u32 uartConfig)
 
 	// Open COM# port using the CreateFile function.
 	smcCoreState->comPortHandle = CreateFile(TEXT("\\\\.\\COM2"), GENERIC_READ | GENERIC_WRITE,
-		0, NULL, OPEN_EXISTING, 0, NULL);
+		0, nullptr, OPEN_EXISTING, 0, nullptr);
 
 	if (smcCoreState->comPortHandle == INVALID_HANDLE_VALUE)
 	{
