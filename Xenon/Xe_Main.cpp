@@ -70,7 +70,7 @@ int main(int argc, char *argv[]) {
   memset(&smcCoreState, 0, sizeof(Xe::PCIDev::SMC::SMC_CORE_STATE));
 
   // Initialize several settings from the struct.
-  smcCoreState.currentCOMPort = "\\\\.\\COM2";
+  smcCoreState.currentCOMPort = Config::COMPort();
   smcCoreState.currAVPackType = Xe::PCIDev::SMC::SMC_AVPACK_TYPE::HDMI_NO_AUDIO;
   smcCoreState.currPowerOnReas =
       (Xe::PCIDev::SMC::SMC_PWR_REAS)Config::smcPowerOnType();
@@ -88,7 +88,7 @@ int main(int argc, char *argv[]) {
 
   // Create the Secure Flash Controller for Xbox Device, and load the Nand dump
   // for emulation.
-  SFCX sfcx("C:/Xbox/nand.bin", &pciBridge);
+  SFCX sfcx(Config::nandPath(), &pciBridge);
   RAM ram;
   XMA xma;
   ODD odd(&pciBridge, &ram);
@@ -139,7 +139,7 @@ int main(int argc, char *argv[]) {
   RootBus.AddDevice(&ram);
 
   // NAND Load Path.
-  nandDevice.Load("C:/Xbox/nand.bin");
+  nandDevice.Load(Config::nandPath());
 
   // Load 1BL here from given path.
   eFuses cpuFuses = getFuses(Config::fusesPath());
@@ -147,7 +147,7 @@ int main(int argc, char *argv[]) {
   {
     std::cerr << "No valid fuses.txt!" << std::endl;
   }
-  Xenon xenonCPU(&RootBus, "C:/Xbox/1bl.bin", cpuFuses);
+  Xenon xenonCPU(&RootBus, Config::oneBlPath(), cpuFuses);
 
   /**************Registers the IIC**************/
   pciBridge.RegisterIIC(xenonCPU.GetIICPointer());
