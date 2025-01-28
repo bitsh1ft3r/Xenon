@@ -8,13 +8,10 @@
 
 #define POST_BUS_ADDR 0x61010
 
-namespace Xe
-{
-	namespace XCPU
-	{
-		namespace POSTBUS
-		{
-			void POST(u64 postCode);
-		}
-	}
+namespace Xe {
+namespace XCPU {
+namespace POSTBUS {
+void POST(u64 postCode);
 }
+} // namespace XCPU
+} // namespace Xe

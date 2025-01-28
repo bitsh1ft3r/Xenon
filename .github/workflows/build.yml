@@ -13,7 +13,7 @@ env:
 
 jobs:
   Windows:
-    runs-on: windows-2022
+    runs-on: windows-2025
     steps:
     - uses: actions/checkout@main
       with:
