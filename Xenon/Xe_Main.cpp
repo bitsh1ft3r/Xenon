@@ -22,56 +22,42 @@
 #include "Core/XCPU/Xenon.h"
 #include "Core/XGPU/XGPU.h"
 
+eFuses getFuses(const std::filesystem::path& path) {
+  std::ifstream file(path);
+  if (!file.is_open()) {
+    return { 0x9999999999999999 };
+  }
+  std::vector<std::string> fusesets;
+  std::string fuseset;
+  while (std::getline(file, fuseset)) {
+    if (size_t pos = fuseset.find(": "); pos != std::string::npos) {
+      fuseset = fuseset.substr(pos + 2);
+    }
+    fusesets.push_back(fuseset);
+  }
+
+  eFuses cpuFuses;
+  cpuFuses.fuseLine00 = strtoull(fusesets[0].data(), 0, 16);
+  cpuFuses.fuseLine01 = strtoull(fusesets[1].data(), 0, 16);
+  cpuFuses.fuseLine02 = strtoull(fusesets[2].data(), 0, 16);
+  cpuFuses.fuseLine03 = strtoull(fusesets[3].data(), 0, 16);
+  cpuFuses.fuseLine04 = strtoull(fusesets[4].data(), 0, 16);
+  cpuFuses.fuseLine05 = strtoull(fusesets[5].data(), 0, 16);
+  cpuFuses.fuseLine06 = strtoull(fusesets[6].data(), 0, 16);
+  cpuFuses.fuseLine07 = strtoull(fusesets[7].data(), 0, 16);
+  cpuFuses.fuseLine08 = strtoull(fusesets[8].data(), 0, 16);
+  cpuFuses.fuseLine09 = strtoull(fusesets[9].data(), 0, 16);
+  cpuFuses.fuseLine10 = strtoull(fusesets[10].data(), 0, 16);
+  cpuFuses.fuseLine11 = strtoull(fusesets[11].data(), 0, 16);
+  
+  return cpuFuses;
+}
+
 int main(int argc, char *argv[]) {
 
   // Load configuration.
   const auto user_dir = Base::FS::GetUserPath(Base::FS::PathType::UserDir);
   Config::loadConfig(user_dir / "xenon_config.toml");
-
-  /*********Jasper motherboard CPU fuses*********/
-  eFuses jasperCpuFuses;
-  jasperCpuFuses.fuseLine00 = 0xc0ffffffffffffff;
-  jasperCpuFuses.fuseLine01 = 0x0f0f0f0f0f0f0ff0;
-  jasperCpuFuses.fuseLine02 = 0x0000000000000000;
-  jasperCpuFuses.fuseLine03 = 0x2EBCD846F1A7711C;
-  jasperCpuFuses.fuseLine04 = 0x2EBCD846F1A7711C;
-  jasperCpuFuses.fuseLine05 = 0x8F06C4C7E3EC4961;
-  jasperCpuFuses.fuseLine06 = 0x8F06C4C7E3EC4961;
-  jasperCpuFuses.fuseLine07 = 0x0000000000000000;
-  jasperCpuFuses.fuseLine08 = 0x0000000000000000;
-  jasperCpuFuses.fuseLine09 = 0x0000000000000000;
-  jasperCpuFuses.fuseLine10 = 0x0000000000000000;
-  jasperCpuFuses.fuseLine11 = 0x0000000000000000;
-
-  /*********Xenon motherboard CPU fuses*********/
-  eFuses xenonCpuFuses;
-  xenonCpuFuses.fuseLine00 = 0xc0ffffffffffffff;
-  xenonCpuFuses.fuseLine01 = 0x0f0f0f0f0f0f0ff0;
-  xenonCpuFuses.fuseLine02 = 0x0000000000000000;
-  xenonCpuFuses.fuseLine03 = 0xF98C9725B2052FE2;
-  xenonCpuFuses.fuseLine04 = 0xF98C9725B2052FE2;
-  xenonCpuFuses.fuseLine05 = 0x08EE3C57932DCACA;
-  xenonCpuFuses.fuseLine06 = 0x08EE3C57932DCACA;
-  xenonCpuFuses.fuseLine07 = 0x0000000000000000;
-  xenonCpuFuses.fuseLine08 = 0x0000000000000000;
-  xenonCpuFuses.fuseLine09 = 0x0000000000000000;
-  xenonCpuFuses.fuseLine10 = 0x0000000000000000;
-  xenonCpuFuses.fuseLine11 = 0x0000000000000000;
-
-  /*******Xenon XDK motherboard CPU fuses*******/
-  eFuses xedkCpuFuses;
-  xedkCpuFuses.fuseLine00 = 0xc0ffffffffffffff;
-  xedkCpuFuses.fuseLine01 = 0x0f0f0f0f0f0f0ff0;
-  xedkCpuFuses.fuseLine02 = 0x0000000000000000;
-  xedkCpuFuses.fuseLine03 = 0x8CBA33C6B70BF641;
-  xedkCpuFuses.fuseLine04 = 0x8CBA33C6B70BF641;
-  xedkCpuFuses.fuseLine05 = 0x2AC5A81E6B41BFE6;
-  xedkCpuFuses.fuseLine06 = 0x2AC5A81E6B41BFE6;
-  xedkCpuFuses.fuseLine07 = 0x0000000000000000;
-  xedkCpuFuses.fuseLine08 = 0x0000000000000000;
-  xedkCpuFuses.fuseLine09 = 0x0000000000000000;
-  xedkCpuFuses.fuseLine10 = 0x0000000000000000;
-  xedkCpuFuses.fuseLine11 = 0x0000000000000000;
 
   RootBus RootBus;       // RootBus Object
   HostBridge hostBridge; // HostBridge Object
@@ -84,7 +70,7 @@ int main(int argc, char *argv[]) {
   memset(&smcCoreState, 0, sizeof(Xe::PCIDev::SMC::SMC_CORE_STATE));
 
   // Initialize several settings from the struct.
-  smcCoreState.currentCOMPort = const_cast<wchar_t *>(L"\\\\.\\COM2");
+  smcCoreState.currentCOMPort = "\\\\.\\COM2";
   smcCoreState.currAVPackType = Xe::PCIDev::SMC::SMC_AVPACK_TYPE::HDMI_NO_AUDIO;
   smcCoreState.currPowerOnReas =
       (Xe::PCIDev::SMC::SMC_PWR_REAS)Config::smcPowerOnType();
@@ -102,7 +88,7 @@ int main(int argc, char *argv[]) {
 
   // Create the Secure Flash Controller for Xbox Device, and load the Nand dump
   // for emulation.
-  SFCX sfcx("C://Xbox/xenon_xdk.bin", &pciBridge);
+  SFCX sfcx("C:/Xbox/nand.bin", &pciBridge);
   RAM ram;
   XMA xma;
   ODD odd(&pciBridge, &ram);
@@ -153,10 +139,15 @@ int main(int argc, char *argv[]) {
   RootBus.AddDevice(&ram);
 
   // NAND Load Path.
-  nandDevice.Load("C://Xbox/xenon_xdk.bin");
+  nandDevice.Load("C:/Xbox/nand.bin");
 
   // Load 1BL here from given path.
-  Xenon xenonCPU(&RootBus, "C://Xbox/1bl.bin", xedkCpuFuses);
+  eFuses cpuFuses = getFuses("C:/Xbox/fuses.txt");
+  if (cpuFuses.fuseLine00 == 0x9999999999999999)
+  {
+    std::cerr << "No valid fuses.txt!" << std::endl;
+  }
+  Xenon xenonCPU(&RootBus, "C:/Xbox/1bl.bin", cpuFuses);
 
   /**************Registers the IIC**************/
   pciBridge.RegisterIIC(xenonCPU.GetIICPointer());
