@@ -14,6 +14,8 @@ void saveConfig(const std::filesystem::path &path);
 // General Options.
 //
 
+// Selected COM Port.
+std::string COMPort();
 // Show in fullscreen.
 bool fullscreenMode();
 // Enable GPU Render thread.
@@ -43,5 +45,16 @@ s32 windowWidth();
 s32 windowHeight();
 // GPU ID Selection (Only for Vulkan)
 // s32 getGpuId();
+
+//
+// Filepaths
+//
+
+// Fuses path
+std::string fusesPath();
+// 1bl.bin path
+std::string oneBlPath();
+// nand.bin path
+std::string nandPath();
 
 } // namespace Config
