@@ -14,6 +14,8 @@ void saveConfig(const std::filesystem::path &path);
 // General Options.
 //
 
+// Fuses path
+std::string fusesPath();
 // Show in fullscreen.
 bool fullscreenMode();
 // Enable GPU Render thread.

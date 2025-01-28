@@ -142,7 +142,7 @@ int main(int argc, char *argv[]) {
   nandDevice.Load("C:/Xbox/nand.bin");
 
   // Load 1BL here from given path.
-  eFuses cpuFuses = getFuses("C:/Xbox/fuses.txt");
+  eFuses cpuFuses = getFuses(Config::fusesPath());
   if (cpuFuses.fuseLine00 == 0x9999999999999999)
   {
     std::cerr << "No valid fuses.txt!" << std::endl;

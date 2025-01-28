@@ -27,6 +27,7 @@ std::filesystem::path find_fs_path_or(const basic_value<TC> &v, const K &ky,
 namespace Config {
 
 // General.
+static std::string fusesTxtPath = "C:/Xbox/fuses.txt";
 static bool gpuRenderThreadEnabled = true;
 static bool isFullscreen = false;
 
@@ -44,6 +45,8 @@ static s32 screenWidth = 1280;
 static s32 screenHeight = 720;
 // static s32 gpuId = -1; // Vulkan physical device index. Set to negative for
 // auto select
+
+std::string fusesPath() { return fusesTxtPath; }
 
 bool fullscreenMode() { return isFullscreen; }
 
@@ -83,6 +86,8 @@ void loadConfig(const std::filesystem::path &path) {
 
   if (data.contains("General")) {
     const toml::value &general = data.at("General");
+    fusesTxtPath =
+        toml::find_or<std::string>(general, "FusesPath", "fusesPath");
     gpuRenderThreadEnabled =
         toml::find_or<bool>(general, "GPURenderThreadEnabled", false);
     isFullscreen = toml::find_or<bool>(general, "Fullscreen", false);
@@ -127,6 +132,7 @@ void saveConfig(const std::filesystem::path &path) {
   }
 
   // General.
+  data["General"]["FusesPath"] = fusesTxtPath;
   data["General"]["GPURenderThreadEnabled"] = gpuRenderThreadEnabled;
   data["General"]["Fullscreen"] = isFullscreen;
 
