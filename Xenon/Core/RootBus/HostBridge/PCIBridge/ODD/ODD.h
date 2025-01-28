@@ -39,7 +39,7 @@ public:
       Data = ::new u8[MaxLength];
     }
     if (Data) {
-      Size = max(Size, MaxLength);
+      Size = std::max(Size, MaxLength);
       Pointer = Size; // Empty()
       if (fClear)
         memset(Data, 0, MaxLength);

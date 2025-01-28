@@ -1,5 +1,7 @@
 // Copyright 2025 Xenon Emulator Project
 
+#include "Base/Logging/Log.h"
+
 #include "SMC.h"
 #include "HANA_State.h"
 #include "SMC_Config.h"
@@ -58,7 +60,7 @@
 // Class Constructor.
 Xe::PCIDev::SMC::SMCCore::SMCCore(PCIBridge *parentPCIBridge,
                                   SMC_CORE_STATE *newSMCCoreState) {
-  std::cout << "SMCCore: Initializing." << std::endl;
+  LOG_ERROR(Kernel, "SMCCore: Initializing.");
 
   // Assign our parent PCI Bus Ptr.
   pciBridge = parentPCIBridge;
@@ -153,8 +155,7 @@ void Xe::PCIDev::SMC::SMCCore::Read(u64 readAddress, u64 *data, u8 byteCount) {
     smcCoreState->fifoBufferPos += 4;
     break;
   default:
-    std::cout << "[WARN] SMCCore: Unknown register being read, offset 0x"
-              << static_cast<u16>(regOffset) << std::endl;
+    LOG_ERROR(Kernel, "SMCCore: Unknown register being read, offset 0x{}", static_cast<u16>(regOffset));
     break;
   }
 }

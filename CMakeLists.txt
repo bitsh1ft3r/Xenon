@@ -27,18 +27,51 @@ function(create_target_directory_groups target_name)
     endforeach()
 endfunction()
 
+find_package(fmt 11.1.3 CONFIG)
 find_package(SDL3 3.2.0 CONFIG)
 find_package(toml11 4.3.0 CONFIG)
 
 add_subdirectory(third_party)
 include_directories(Xenon)
 
+set(Logging
+    Xenon/Base/Logging/Backend.cpp
+    Xenon/Base/Logging/Backend.h
+    Xenon/Base/Logging/Filter.cpp
+    Xenon/Base/Logging/Filter.h
+    Xenon/Base/Logging/Formatter.h
+    Xenon/Base/Logging/Log.h
+    Xenon/Base/Logging/Log_entry.h
+    Xenon/Base/Logging/Text_formatter.cpp
+    Xenon/Base/Logging/Text_formatter.h
+    Xenon/Base/Logging/Types.h
+)
+
 set(Base
+    ${Logging}
+    Xenon/Base/Alignment.h
+    Xenon/Base/Arch.h
+    Xenon/Base/Assert.cpp
+    Xenon/Base/Assert.h
+    Xenon/Base/Bounded_threadsafe_queue.h
+    Xenon/Base/Concepts.h
     Xenon/Base/Config.cpp
     Xenon/Base/Config.h
+    Xenon/Base/Error.cpp
+    Xenon/Base/Error.h
+    Xenon/Base/Enum.h
+    Xenon/Base/io_file.cpp
+    Xenon/Base/io_file.h
+    Xenon/Base/ntapi.cpp
+    Xenon/Base/ntapi.h
     Xenon/Base/Path_util.cpp
     Xenon/Base/Path_util.h
+    Xenon/Base/Polyfill_thread.h
+    Xenon/Base/String_util.cpp
+    Xenon/Base/String_util.h
     Xenon/Base/SystemDevice.h
+    Xenon/Base/Thread.cpp
+    Xenon/Base/Thread.h
     Xenon/Base/Types.h
     Xenon/Base/Version.h
 )
@@ -139,7 +172,10 @@ add_executable(Xenon
 create_target_directory_groups(Xenon)
 
 target_include_directories(Xenon PRIVATE ${CMAKE_CURRENT_SOURCE_DIR})
-target_link_libraries(Xenon PRIVATE SDL3::SDL3 toml11::toml11)
+target_link_libraries(Xenon PRIVATE fmt::fmt SDL3::SDL3 toml11::toml11)
+
+add_definitions(-DNTDDI_VERSION=0x0A000006 -D_WIN32_WINNT=0x0A00 -DWINVER=0x0A00)
+add_definitions(-DNOMINMAX -DWIN32_LEAN_AND_MEAN)
 
 if (WIN32)
     target_sources(Xenon PRIVATE Xenon/Xenon.rc)

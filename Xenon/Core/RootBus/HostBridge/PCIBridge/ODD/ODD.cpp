@@ -494,7 +494,7 @@ void ODD::doDMA() {
 
     if (readOperation) {
       // Reading from us
-      byteCount = min((u32)byteCount, atapiState.dataReadBuffer.Space());
+      byteCount = fmin((u32)byteCount, atapiState.dataReadBuffer.Space());
 
       // Buffer overrun?
       if (byteCount == 0)
@@ -503,7 +503,7 @@ void ODD::doDMA() {
       atapiState.dataReadBuffer.Increment(byteCount);
     } else {
       // Writing to us
-      byteCount = min((u32)byteCount, atapiState.dataWriteBuffer.Space());
+      byteCount = fmin((u32)byteCount, atapiState.dataWriteBuffer.Space());
       // Buffer overrun?
       if (byteCount == 0)
         return;
@@ -550,7 +550,7 @@ void ODD::Read(u64 readAddress, u64 *data, u8 byteCount) {
     case ATAPI_REG_DATA:
       // Check if we have some data to return.
       if (!atapiState.dataReadBuffer.Empty()) {
-        byteCount = min(byteCount, atapiState.dataReadBuffer.Space());
+        byteCount = fmin(byteCount, atapiState.dataReadBuffer.Space());
         memcpy(data, atapiState.dataReadBuffer.Ptr(), byteCount);
         atapiState.dataReadBuffer.Increment(byteCount);
         return;
@@ -613,7 +613,7 @@ void ODD::Write(u64 writeAddress, u64 data, u8 byteCount) {
       memcpy(&atapiState.atapiRegs.dataReg, &data, byteCount);
 
       // Push the data onto our buffer
-      byteCount = min(byteCount, atapiState.dataWriteBuffer.Space());
+      byteCount = fmin(byteCount, atapiState.dataWriteBuffer.Space());
       memcpy(atapiState.dataWriteBuffer.Ptr(), &data, byteCount);
       atapiState.dataWriteBuffer.Increment(byteCount);
 

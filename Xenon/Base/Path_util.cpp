@@ -18,6 +18,7 @@ static auto UserPaths = [] {
   };
 
   create_path(PathType::UserDir, user_dir);
+  create_path(PathType::LogDir, user_dir / LOG_DIR);
   return paths;
 }();
 

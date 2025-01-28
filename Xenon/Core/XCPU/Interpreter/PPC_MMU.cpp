@@ -1,5 +1,6 @@
 // Copyright 2025 Xenon Emulator Project
 
+#include "Base/Logging/Log.h"
 #include <iostream>
 
 #include "PPCInterpreter.h"
@@ -1358,9 +1359,7 @@ void PPCInterpreter::MMUWrite(XENON_CONTEXT *cpuContext, PPU_STATE *ppuState,
   }
 
   if (socWrite && nand != true && pciBridge != true && pciConfigSpace != true) {
-
-    std::cout << "MMU: SoC Write to 0x" << EA << ", data = 0x" << data
-              << ", invalidating." << std::endl;
+    LOG_ERROR(Kernel, "MMU: SoC Write to 0x{}, data = 0x{}, invalidating.", EA, data);
     return;
   }
 
