@@ -1252,7 +1252,7 @@ u64 PPCInterpreter::MMURead(XENON_CONTEXT *cpuContext, PPU_STATE *ppuState,
   }
 
   // External Read
-  sysBus->Read(EA, &data, byteCount, socRead);
+  sysBus->Read(EA, &data, byteCount);
   return data;
 }
 
@@ -1355,7 +1355,7 @@ void PPCInterpreter::MMUWrite(XENON_CONTEXT *cpuContext, PPU_STATE *ppuState,
   }
 
   // External Write
-  sysBus->Write(EA, data, byteCount, socWrite);
+  sysBus->Write(EA, data, byteCount);
 
   intXCPUContext->xenonRes.Check(EA);
 }
