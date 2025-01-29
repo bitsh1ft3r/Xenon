@@ -1,13 +1,15 @@
 // Copyright 2025 Xenon Emulator Project
 
+#include "Base/Logging/Log.h"
+
 #include "NAND.h"
 
 /********************Responsible for loading the NAND file********************/
 bool NAND::Load(const std::string filePath) {
-  std::cout << "NAND: Loading file " << filePath.c_str() << std::endl;
+  LOG_INFO(System, "NAND: Loading file {}", filePath.c_str());
 
   if (fopen_s(&inputFile, filePath.c_str(), "rb") != 0) {
-    std::cout << "NAND: Unable to load file!" << std::endl;
+    LOG_CRITICAL(System, "NAND: Unable to load file!");
     return false;
   }
 
@@ -15,13 +17,12 @@ bool NAND::Load(const std::string filePath) {
   rawFileSize = ftell(inputFile);
   fseek(inputFile, 0, SEEK_SET);
 
-  std::cout << "NAND: File size = 0x" << rawFileSize << " bytes." << std::endl;
+  LOG_INFO(System, "NAND: File size = 0x{} bytes.", rawFileSize);
 
   CheckMagic();
 
   if (!CheckMagic()) {
-    std::cout << "NAND: wrong magic found, Xbox 360 Retail NAND magic"
-              << "is 0xFF4F and Devkit NAND magic 0x0F4F." << std::endl;
+    LOG_ERROR(System, "NAND: wrong magic found, Xbox 360 Retail NAND magic is 0xFF4F and Devkit NAND magic 0x0F4F.");
     return false;
   }
 
@@ -37,7 +38,7 @@ bool NAND::Load(const std::string filePath) {
   CheckSpare();
 
   if (hasSpare) {
-    std::cout << "NAND: Image has spare." << std::endl;
+    LOG_INFO(System, "NAND: Image has spare.");
 
     // Check Meta Type
     imageMetaType = DetectSpareType();
