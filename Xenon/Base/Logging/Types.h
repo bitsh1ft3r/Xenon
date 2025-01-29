@@ -39,10 +39,19 @@ enum class Class : u8 {
     Xenon_PostBus,          // Xenon Post Bus output messages.
     Xenos,                  // Xenos GPU messages.
     RootBus,                // RootBus messages. Missing/unmapped memory, etc... 
+    HostBridge,             // Hostbridge messages.
     PCIBridge,              // PCI Bridge messages: Connected devices, failed lookups, etc.. 
+    AudioController,        // Several devices on the system:
+    EHCI,
+    OHCI,
+    ETH,
+    HDD,
+    ODD,
+    SFCX,
+    XMA,
     SMC,                    // System Management Controller messages.
     UART,                   // UART output.
-    Guest,                // Guest hardware output. Xbox Kernel Debug Prints.
+    Guest,                  // Guest hardware output. Xbox Kernel Debug Prints.
     Count                   // Total number of logging classes.
 };
 

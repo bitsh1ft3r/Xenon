@@ -73,7 +73,16 @@ bool ParseFilterRule(Filter& instance, Iterator begin, Iterator end) {
     SUB(Xenon, PostBus)                                                                            \
     CLS(Xenos)                                                                                     \
     CLS(RootBus)                                                                                   \
+    CLS(HostBridge)                                                                                \
     CLS(PCIBridge)                                                                                 \
+    CLS(AudioController)                                                                           \
+    CLS(EHCI)                                                                                      \
+    CLS(OHCI)                                                                                      \
+    CLS(ETH)                                                                                       \
+    CLS(HDD)                                                                                       \
+    CLS(ODD)                                                                                       \
+    CLS(SFCX)                                                                                      \
+    CLS(XMA)                                                                                       \
     CLS(Guest)                                                                                     \
     CLS(SMC)                                                                                       \
     CLS(UART)  
