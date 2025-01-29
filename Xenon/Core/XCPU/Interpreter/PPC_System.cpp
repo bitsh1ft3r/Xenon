@@ -1,6 +1,6 @@
 // Copyright 2025 Xenon Emulator Project
 
-#include <iostream>
+#include "Base/Logging/Log.h"
 
 #include "PPCInterpreter.h"
 
@@ -652,7 +652,7 @@ void PPCInterpreter::PPCInterpreter_mfspr(PPU_STATE *hCore) {
     value = hCore->SPR.CTRL;
     break;
   default:
-    std::cout << "mfspr: Unknown SPR: 0x" << std::hex << sprNum << std::endl;
+    LOG_ERROR(Xenon_PostBus, "mfspr: Unknown SPR: 0x{0:#x}", sprNum);
     break;
   }
 
@@ -792,9 +792,7 @@ void PPCInterpreter::PPCInterpreter_mtspr(PPU_STATE *hCore) {
         (hCore->ppuThread[hCore->currentThread].GPR[rD] << 32);
     break;
   default:
-    std::cout << hCore->ppuName << " SPR " << std::dec << spr << " = 0x"
-              << std::hex << hCore->ppuThread[hCore->currentThread].GPR[rD]
-              << std::endl;
+    LOG_ERROR(Xenon_PostBus, "{} SPR {0:#d} = 0x{0:#x}", hCore->ppuName, spr, hCore->ppuThread[hCore->currentThread].GPR[rD]);
     break;
   }
 }
