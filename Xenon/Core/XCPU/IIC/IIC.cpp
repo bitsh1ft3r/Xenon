@@ -1,7 +1,8 @@
 // Copyright 2025 Xenon Emulator Project
 
-#include <iostream>
 #include <thread>
+
+#include "Base/Logging/Log.h"
 
 #include "IIC.h"
 
@@ -64,9 +65,7 @@ void Xe::XCPU::IIC::XenonIIC::writeInterrupt(u64 intAddress, u64 intData) {
         static_cast<u32>(_byteswap_uint64(intData));
     break;
   default:
-    std::cout
-        << "Xenon IIC: Unknown CPU Interrupt Ctrl Blck Reg being written: "
-        << ppeIntCtrlBlckReg << std::endl;
+    LOG_ERROR(Xenon_PostBus, "IIC: Unknown CPU Interrupt Ctrl Blck Reg being written: {}", ppeIntCtrlBlckReg);
     break;
   }
 }
@@ -98,8 +97,7 @@ void Xe::XCPU::IIC::XenonIIC::readInterrupt(u64 intAddress, u64 *intData) {
     *intData = _byteswap_uint64(PRIO_NONE);
     break;
   default:
-    std::cout << "XenonIIC: Unknown interupt being read 0x" << ppeIntCtrlBlckReg
-              << std::endl;
+    LOG_ERROR(Xenon_PostBus, "IIC: Unknown interupt being read 0x{}", ppeIntCtrlBlckReg);
     break;
   }
 }

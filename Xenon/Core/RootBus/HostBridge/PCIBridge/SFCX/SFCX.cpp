@@ -1,7 +1,6 @@
 // Copyright 2025 Xenon Emulator Project
 
-#include <fstream>
-#include <iostream>
+#include "Base/Logging/Log.h"
 
 #include "SFCX.h"
 
@@ -13,7 +12,7 @@ SFCX::SFCX(const std::string nandLoadPath, PCIBridge *parentPCIBridge) {
   pciConfigSpace.configSpaceHeader.reg0.vendorID = 0x1414;
   pciConfigSpace.configSpaceHeader.reg0.deviceID = 0x580B;
 
-  std::cout << "Xenon Secure Flash Controller for Xbox" << std::endl;
+  LOG_INFO(SFCX, "Xenon Secure Flash Controller for Xbox.");
 
   // Set the registers as a dump from my Corona 16MB. These were dumped at POR
   // via Xell before SFCX Init. These are also readable via JRunner and
@@ -35,20 +34,18 @@ SFCX::SFCX(const std::string nandLoadPath, PCIBridge *parentPCIBridge) {
   sfcxState.commandReg = NO_CMD;
 
   // Load the NAND dump.
-  std::cout << "SFCX: Loading NAND from path: " << nandLoadPath << std::endl;
+  LOG_INFO(SFCX, "Loading NAND from path: {}", nandLoadPath);
 
   fopen_s(&nandFile, nandLoadPath.c_str(), "rb");
 
   if (!nandFile) {
-    std::cout << "SFCX: Fatal error, check your nand dump path." << std::endl;
+    LOG_CRITICAL(SFCX, "Fatal error, check your nand dump path.");
     system("PAUSE");
   }
 
   // Check file magic.
   if (!checkMagic()) {
-    std::cout << "SFCX: Fatal error, loaded faile magic does'nt correspond to "
-                 "Xbox 360 NAND."
-              << std::endl;
+    LOG_CRITICAL(SFCX, "Fatal error, loaded faile magic does'nt correspond to Xbox 360 NAND.");
     system("PAUSE");
   }
 
@@ -166,7 +163,7 @@ void SFCX::Read(u64 readAddress, u64 *data, u8 byteCount) {
     *data = sfcxState.mmcIDReg;
     break;
   default:
-    std::cout << "SFCX: Read from unknown register 0x" << reg << std::endl;
+    LOG_ERROR(SFCX, "Read from unknown register 0x{}", reg);
     break;
   }
 }
@@ -212,7 +209,7 @@ void SFCX::Write(u64 writeAddress, u64 data, u8 byteCount) {
     sfcxState.mmcIDReg = (u32)data;
     break;
   default:
-    std::cout << "SFCX: Write to unknown register 0x" << reg << std::endl;
+    LOG_ERROR(SFCX, "Write from unknown register 0x{}", reg);
     break;
   }
 }
@@ -272,8 +269,7 @@ void SFCX::sfcxMainLoop() {
       // case UNLOCK_CMD_1:
       //	break;
       default:
-        std::cout << "SFCX: Unrecognized command was issued. 0x"
-                  << sfcxState.commandReg << std::endl;
+        LOG_ERROR(SFCX, "Unrecognized command was issued. 0x{}", sfcxState.commandReg);
         break;
       }
 
@@ -298,15 +294,15 @@ bool SFCX::checkMagic() {
   // Older Devkit Nand's magic is 0x0F3F.
 
   if (magic[0] == (char)0xff && magic[1] == (char)0x4f) {
-    std::cout << "SFCX: Retail NAND Magic found." << std::endl;
+    LOG_INFO(SFCX, "Retail NAND Magic found.");
     return true;
   }
   if (magic[0] == (char)0x0f && magic[1] == (char)0x4f) {
-    std::cout << "SFCX: Devkit NAND Magic found." << std::endl;
+    LOG_INFO(SFCX, "Devkit NAND Magic found.");
     return true;
   }
   if (magic[0] == (char)0x0f && magic[1] == (char)0x3f) {
-    std::cout << "SFCX: Old Devkit NAND Magic found." << std::endl;
+    LOG_INFO(SFCX, "Old Devkit NAND Magic found.");
     return true;
   }
   return false;

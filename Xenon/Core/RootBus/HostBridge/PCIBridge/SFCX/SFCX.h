@@ -2,7 +2,6 @@
 
 #pragma once
 
-#include <iostream>
 #include <thread>
 
 #include "Core/RootBus/HostBridge/PCIBridge/PCIBridge.h"

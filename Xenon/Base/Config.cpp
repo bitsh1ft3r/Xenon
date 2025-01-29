@@ -2,8 +2,6 @@
 
 #include <toml.hpp>
 
-#include <iostream>
-
 #include "Config.h"
 #include "Path_util.h"
 #include "Logging/Log.h"
@@ -33,9 +31,8 @@ static bool isFullscreen = false;
 Base::Log::Level currentLogLevel = Base::Log::Level::Info;
 
 // SMC.
-static int smcPowerOnReason =
-    0x11; // Valid values are: 0x11 (SMC_PWR_REAS_PWRBTN) and 0x12
-          // (SMC_PWR_REAS_EJECT).
+static int smcPowerOnReason = 0x11; // Valid values are: 0x11 (SMC_PWR_REAS_PWRBTN) and 0x12
+                                    // (SMC_PWR_REAS_EJECT).
 static int comPort = 2;
 static std::string com = "";
 
@@ -156,9 +153,9 @@ void saveConfig(const std::filesystem::path &path) {
     }
   } else {
     if (error) {
-      std::cout << "Filesystem error: " << error.message() << std::endl;
+      LOG_ERROR(Config, "Filesystem error: {}", error.message());
     }
-    LOG_INFO(Config, "Config not found. Saving new configuration file: {}", path.string());
+      LOG_INFO(Config, "Config not found. Saving new configuration file: {}", path.string());
   }
 
   // General.

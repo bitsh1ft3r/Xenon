@@ -1,5 +1,7 @@
 // Copyright 2025 Xenon Emulator Project
 
+#include "Base/Logging/Log.h"
+
 #include "ODD.h"
 
 //
@@ -462,8 +464,7 @@ void ODD::processSCSICommand() {
 
     break;
   default:
-    std::cout << "ATAPI: Unknown SCSI Command requested: 0x"
-              << atapiState.scsiCBD.CDB12.OperationCode << std::endl;
+    LOG_ERROR(ODD, "Unknown SCSI Command requested: 0x{}", atapiState.scsiCBD.CDB12.OperationCode);
   }
 
   atapiState.atapiRegs.interruptReasonReg = IDE_INTERRUPT_REASON_IO;
@@ -566,9 +567,7 @@ void ODD::Read(u64 readAddress, u64 *data, u8 byteCount) {
       memcpy(data, &atapiState.atapiRegs.statusReg, byteCount);
       return;
     default:
-      std::cout << "ATAPI: Unknown Command Register Block register being read, "
-                   "command"
-                << "code = 0x" << atapiCommandReg << std::endl;
+      LOG_ERROR(ODD, "Unknown Command Register Block register being read, command code = 0x{}", atapiCommandReg);
       break;
     }
   } else {
@@ -584,9 +583,7 @@ void ODD::Read(u64 readAddress, u64 *data, u8 byteCount) {
       memcpy(data, &atapiState.atapiRegs.dmaTableOffsetReg, byteCount);
       break;
     default:
-      std::cout << "ATAPI: Unknown Control Register Block register being read, "
-                   "command"
-                << "code = 0x" << atapiControlReg << std::endl;
+      LOG_ERROR(ODD, "Unknown Control Register Block register being read, command code = 0x{}", atapiControlReg);
       break;
     }
   }
@@ -665,15 +662,12 @@ void ODD::Write(u64 writeAddress, u64 data, u8 byteCount) {
         atapiIdentifyCommand();
         return;
       default:
-        std::cout << "ATAPI: Unknown command, command code = 0x" << data
-                  << std::endl;
+        LOG_ERROR(ODD, "Unknown command, command code = 0x{}", data);
         break;
       }
       return;
     default:
-      std::cout << "ATAPI: Unknown Command Register Block register being "
-                   "written, command"
-                << "code = 0x" << atapiCommandReg << std::endl;
+      LOG_ERROR(ODD, "Unknown Command Register Block register being written, command code = 0x{}", atapiCommandReg);
       break;
     }
   } else {
@@ -696,9 +690,7 @@ void ODD::Write(u64 writeAddress, u64 data, u8 byteCount) {
       memcpy(&atapiState.atapiRegs.dmaTableOffsetReg, &data, byteCount);
       break;
     default:
-      std::cout << "ATAPI: Unknown Control Register Block register being "
-                   "written, command"
-                << "code = 0x" << atapiControlReg << std::endl;
+      LOG_ERROR(ODD, "Unknown Control Register Block register being written, command code = 0x{}", atapiControlReg);
       break;
     }
   }

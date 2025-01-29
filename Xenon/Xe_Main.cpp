@@ -78,6 +78,7 @@ int main(int argc, char *argv[]) {
 
   // First initialize the logging backend.
   Base::Log::Initialize();
+  Base::Log::Start();
 
   // Load configuration.
   const auto user_dir = Base::FS::GetUserPath(Base::FS::PathType::UserDir);
