@@ -1,6 +1,7 @@
 // Copyright 2025 Xenon Emulator Project
 
 #include "HostBridge.h"
+#include "Base/Logging/Log.h"
 
 HostBridge::HostBridge() {
   xGPU = nullptr;
@@ -47,8 +48,8 @@ bool HostBridge::Read(u64 readAddress, u64 *data, u8 byteCount) {
       *data = biuRegs.REG_E1040000;
       break;
     default:
-      std::cout << "HostBridge/BIU: Unknown register being read at address 0x"
-                << readAddress << std::endl;
+        LOG_ERROR(HostBridge, "Unknown register being read at address: {:#x}.",
+            readAddress);
       *data = 0;
       break;
     }
@@ -142,9 +143,8 @@ bool HostBridge::Write(u64 writeAddress, u64 data, u8 byteCount) {
       biuRegs.REG_E1040078 = static_cast<u32>(data);
       break;
     default:
-      std::cout
-          << "HostBridge/BIU: Unknown register being written at address 0x"
-          << writeAddress << " data = 0x" << data << std::endl;
+        LOG_ERROR(HostBridge, "Unknown register being written at address: {:#x}, data: {:#x}.",
+            writeAddress, data);
       break;
     }
     return true;
@@ -183,9 +183,8 @@ void HostBridge::ConfigRead(u64 readAddress, u64 *data, u8 byteCount) {
       xGPU->ConfigRead(readAddress, data, byteCount);
       break;
     default:
-      std::cout
-          << "BUS 0: Configuration Read to inexistant PCI Device at address 0x"
-          << readAddress << std::endl;
+        LOG_ERROR(HostBridge, "BUS0: Configuration read to inexistant PCI Device at address: {:#x}.",
+            readAddress);
       break;
     }
     return;
@@ -213,9 +212,8 @@ void HostBridge::ConfigWrite(u64 writeAddress, u64 data, u8 byteCount) {
       xGPU->ConfigWrite(writeAddress, data, byteCount);
       break;
     default:
-      std::cout
-          << "BUS 0: Configuration Write to inexistant PCI Device at address 0x"
-          << writeAddress << std::endl;
+        LOG_ERROR(HostBridge, "BUS0: Configuration Write to inexistant PCI Device at address: {:#x}, data: {:#x}.",
+            writeAddress, data);
       break;
     }
     return;

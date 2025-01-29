@@ -1,7 +1,6 @@
 // Copyright 2025 Xenon Emulator Project
 
-#include <fstream>
-#include <iostream>
+#include "Base/Logging/Log.h"
 
 #include "SFCX.h"
 
@@ -13,7 +12,7 @@ SFCX::SFCX(const std::string nandLoadPath, PCIBridge *parentPCIBridge) {
   pciConfigSpace.configSpaceHeader.reg0.vendorID = 0x1414;
   pciConfigSpace.configSpaceHeader.reg0.deviceID = 0x580B;
 
-  std::cout << "Xenon Secure Flash Controller for Xbox" << std::endl;
+  LOG_INFO(SFCX, "Xenon Secure Flash Controller for Xbox.");
 
   // Set the registers as a dump from my Corona 16MB. These were dumped at POR
   // via Xell before SFCX Init. These are also readable via JRunner and
@@ -35,20 +34,18 @@ SFCX::SFCX(const std::string nandLoadPath, PCIBridge *parentPCIBridge) {
   sfcxState.commandReg = NO_CMD;
 
   // Load the NAND dump.
-  std::cout << "SFCX: Loading NAND from path: " << nandLoadPath << std::endl;
+  LOG_INFO(SFCX, "Loading NAND from path: {}", nandLoadPath);
 
   fopen_s(&nandFile, nandLoadPath.c_str(), "rb");
 
   if (!nandFile) {
-    std::cout << "SFCX: Fatal error, check your nand dump path." << std::endl;
+    LOG_CRITICAL(SFCX, "Fatal error, check your nand dump path.");
     system("PAUSE");
   }
 
   // Check file magic.
   if (!checkMagic()) {
-    std::cout << "SFCX: Fatal error, loaded faile magic does'nt correspond to "
-                 "Xbox 360 NAND."
-              << std::endl;
+    LOG_CRITICAL(SFCX, "Fatal error, loaded faile magic does'nt correspond to Xbox 360 NAND.");
     system("PAUSE");
   }
 
@@ -59,65 +56,55 @@ SFCX::SFCX(const std::string nandLoadPath, PCIBridge *parentPCIBridge) {
   // Fix Endiannes
   sfcxState.nandHeader.nandMagic =
       _byteswap_ushort(sfcxState.nandHeader.nandMagic);
-  std::cout << " * NAND Magic: 0x" << std::hex << sfcxState.nandHeader.nandMagic
-            << std::endl;
+  LOG_INFO(SFCX, " * NAND Magic: ", sfcxState.nandHeader.nandMagic);
 
   sfcxState.nandHeader.build = _byteswap_ushort(sfcxState.nandHeader.build);
-  std::cout << " * Build: 0x" << sfcxState.nandHeader.build << std::endl;
+  LOG_INFO(SFCX, " * Build: ", sfcxState.nandHeader.build);
 
   sfcxState.nandHeader.qfe = _byteswap_ushort(sfcxState.nandHeader.qfe);
   sfcxState.nandHeader.flags = _byteswap_ushort(sfcxState.nandHeader.flags);
 
   sfcxState.nandHeader.entry = _byteswap_ulong(sfcxState.nandHeader.entry);
-  std::cout << " * Entry: 0x" << sfcxState.nandHeader.entry << std::endl;
+  LOG_INFO(SFCX, " * Entry: ", sfcxState.nandHeader.entry);
 
   sfcxState.nandHeader.size = _byteswap_ulong(sfcxState.nandHeader.size);
-  std::cout << " * Size: 0x" << sfcxState.nandHeader.size << std::endl;
+  LOG_INFO(SFCX, " * Size: ", sfcxState.nandHeader.size);
 
   sfcxState.nandHeader.keyvaultSize =
       _byteswap_ulong(sfcxState.nandHeader.keyvaultSize);
-  std::cout << " * Keyvault Size: 0x" << sfcxState.nandHeader.keyvaultSize
-            << std::endl;
+  LOG_INFO(SFCX, " * Keyvault Size: ", sfcxState.nandHeader.keyvaultSize);
 
   sfcxState.nandHeader.sysUpdateAddr =
       _byteswap_ulong(sfcxState.nandHeader.sysUpdateAddr);
-  std::cout << " * System Update Addr: 0x" << sfcxState.nandHeader.sysUpdateAddr
-            << std::endl;
+  LOG_INFO(SFCX, " * System Update Addr: ", sfcxState.nandHeader.sysUpdateAddr);
 
   sfcxState.nandHeader.sysUpdateCount =
       _byteswap_ushort(sfcxState.nandHeader.sysUpdateCount);
-  std::cout << " * System Update Count: 0x"
-            << sfcxState.nandHeader.sysUpdateCount << std::endl;
+  LOG_INFO(SFCX, " * System Update Count: ", sfcxState.nandHeader.sysUpdateCount);
 
   sfcxState.nandHeader.keyvaultVer =
       _byteswap_ushort(sfcxState.nandHeader.keyvaultVer);
-  std::cout << " * Keyvault Ver: 0x" << sfcxState.nandHeader.keyvaultVer
-            << std::endl;
+  LOG_INFO(SFCX, " * Keyvault Ver: ", sfcxState.nandHeader.keyvaultVer);
 
   sfcxState.nandHeader.keyvaultAddr =
       _byteswap_ulong(sfcxState.nandHeader.keyvaultAddr);
-  std::cout << " * Keyvault Addr: 0x" << sfcxState.nandHeader.keyvaultAddr
-            << std::endl;
+  LOG_INFO(SFCX, " * Keyvault Addr: ", sfcxState.nandHeader.keyvaultAddr);
 
   sfcxState.nandHeader.sysUpdateSize =
       _byteswap_ulong(sfcxState.nandHeader.sysUpdateSize);
-  std::cout << " * System Update Size: 0x" << sfcxState.nandHeader.sysUpdateSize
-            << std::endl;
+  LOG_INFO(SFCX, " * System Update Size: ", sfcxState.nandHeader.sysUpdateSize);
 
   sfcxState.nandHeader.smcConfigAddr =
-      _byteswap_ulong(sfcxState.nandHeader.smcConfigAddr);
-  std::cout << " * SMC Config Addr: 0x" << sfcxState.nandHeader.smcConfigAddr
-            << std::endl;
+      _byteswap_ulong(sfcxState.nandHeader.smcConfigAddr);  
+  LOG_INFO(SFCX, " * SMC Config Addr: ", sfcxState.nandHeader.smcConfigAddr);
 
   sfcxState.nandHeader.smcBootSize =
       _byteswap_ulong(sfcxState.nandHeader.smcBootSize);
-  std::cout << " * SMC Boot Size: 0x" << sfcxState.nandHeader.smcBootSize
-            << std::endl;
+  LOG_INFO(SFCX, " * SMC Boot Size: ", sfcxState.nandHeader.smcBootSize);
 
   sfcxState.nandHeader.smcBootAddr =
       _byteswap_ulong(sfcxState.nandHeader.smcBootAddr);
-  std::cout << " * SMC Boot Addr: 0x" << sfcxState.nandHeader.smcBootAddr
-            << std::endl;
+  LOG_INFO(SFCX, " * SMC Boot Addr: ", sfcxState.nandHeader.smcBootAddr);
 
   // Check Image size and Meta type.
   size_t imageSize = 0;
@@ -166,7 +153,7 @@ void SFCX::Read(u64 readAddress, u64 *data, u8 byteCount) {
     *data = sfcxState.mmcIDReg;
     break;
   default:
-    std::cout << "SFCX: Read from unknown register 0x" << reg << std::endl;
+    LOG_ERROR(SFCX, "Read from unknown register {:#x}", reg);
     break;
   }
 }
@@ -212,7 +199,7 @@ void SFCX::Write(u64 writeAddress, u64 data, u8 byteCount) {
     sfcxState.mmcIDReg = (u32)data;
     break;
   default:
-    std::cout << "SFCX: Write to unknown register 0x" << reg << std::endl;
+    LOG_ERROR(SFCX, "Write from unknown register {:#x}", reg);
     break;
   }
 }
@@ -272,8 +259,7 @@ void SFCX::sfcxMainLoop() {
       // case UNLOCK_CMD_1:
       //	break;
       default:
-        std::cout << "SFCX: Unrecognized command was issued. 0x"
-                  << sfcxState.commandReg << std::endl;
+        LOG_ERROR(SFCX, "Unrecognized command was issued. {:#x}", sfcxState.commandReg);
         break;
       }
 
@@ -298,15 +284,15 @@ bool SFCX::checkMagic() {
   // Older Devkit Nand's magic is 0x0F3F.
 
   if (magic[0] == (char)0xff && magic[1] == (char)0x4f) {
-    std::cout << "SFCX: Retail NAND Magic found." << std::endl;
+    LOG_INFO(SFCX, "Retail NAND Magic found.");
     return true;
   }
   if (magic[0] == (char)0x0f && magic[1] == (char)0x4f) {
-    std::cout << "SFCX: Devkit NAND Magic found." << std::endl;
+    LOG_INFO(SFCX, "Devkit NAND Magic found.");
     return true;
   }
   if (magic[0] == (char)0x0f && magic[1] == (char)0x3f) {
-    std::cout << "SFCX: Old Devkit NAND Magic found." << std::endl;
+    LOG_INFO(SFCX, "Old Devkit NAND Magic found.");
     return true;
   }
   return false;

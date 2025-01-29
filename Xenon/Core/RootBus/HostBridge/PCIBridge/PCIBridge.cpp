@@ -1,5 +1,7 @@
 // Copyright 2025 Xenon Emulator Project
 
+#include "Base/Logging/Log.h"
+
 #include "PCIBridge.h"
 #include "PCIBridgeConfig.h"
 
@@ -92,6 +94,7 @@ bool PCIBridge::RouteInterrupt(u8 prio) {
     }
     break;
   default:
+      LOG_ERROR(PCIBridge, "Unknown interrupt being routed: {:#x}", prio);
     break;
   }
   return false;
@@ -110,8 +113,7 @@ bool PCIBridge::isAddressMappedinBAR(u32 address) {
 }
 
 void PCIBridge::addPCIDevice(PCIDevice *device) {
-  std::cout << "PCI Bus > New device attatched: " << device->GetDeviceName()
-            << std::endl;
+  LOG_INFO(PCIBridge, "Attatched: {}", device->GetDeviceName());
 
   connectedPCIDevices.push_back(device);
 }
@@ -140,8 +142,7 @@ bool PCIBridge::Read(u64 readAddress, u64 *data, u8 byteCount) {
       *data = pciBridgeState.PRIO_REG_SFCX.hexData;
       break;
     default:
-      std::cout << "PCI Bridge: Unknown reg being read: 0x" << readAddress
-                << std::endl;
+      LOG_ERROR(PCIBridge, "Unknown reg being read: {:#x}", readAddress);
       break;
     }
     return true;
@@ -200,8 +201,7 @@ bool PCIBridge::Write(u64 writeAddress, u64 data, u8 byteCount) {
       pciBridgeState.PRIO_REG_SFCX.cpuIRQ = cpuIRQ;
       break;
     default:
-      std::cout << "PCI Bridge: Unknown reg being written: 0x" << writeAddress
-                << ", 0x" << data << std::endl;
+      LOG_ERROR(PCIBridge, "Unknown reg being written: {:#x}, {:#x}", writeAddress, data);
       break;
     }
     return true;
@@ -271,9 +271,8 @@ void PCIBridge::ConfigRead(u64 readAddress, u64 *data, u8 byteCount) {
     currentDevName = "5841";
     break;
   default:
-    std::cout << "PCI Config Space Read: Unknown device accessed: Dev 0x"
-              << configAddr.devNum << " Reg 0x" << configAddr.regOffset
-              << std::endl;
+    LOG_ERROR(PCIBridge, "Config Space Read: Unknown device accessed: Dev {:#x}, Reg{:#x}",
+        configAddr.devNum, configAddr.regOffset);
     return;
     break;
   }
@@ -281,15 +280,12 @@ void PCIBridge::ConfigRead(u64 readAddress, u64 *data, u8 byteCount) {
   for (auto &device : connectedPCIDevices) {
     if (device->GetDeviceName() == currentDevName) {
       // Hit!
-      std::cout << "PCI Bus -> Config read, device: " << currentDevName
-                << " addr = 0x" << configAddr.regOffset << std::endl;
+      LOG_INFO(PCIBridge, "Config read, device: {} addr = {:#x}", currentDevName, configAddr.regOffset);
       device->ConfigRead(readAddress, data, byteCount);
       return;
     }
   }
-
-  std::cout << "PCI Read to unimplemented device: " << currentDevName.c_str()
-            << std::endl;
+  LOG_ERROR(PCIBridge, "Read to unimplemented device: {}", currentDevName.c_str());
   *data = 0xFFFFFFFFFFFFFFFF;
 }
 
@@ -346,10 +342,8 @@ void PCIBridge::ConfigWrite(u64 writeAddress, u64 data, u8 byteCount) {
     currentDevName = "5841";
     break;
   default:
-    std::cout << "PCI Config Space Write: Unknown device accessed: Dev 0x"
-              << configAddr.devNum << " Func 0x" << configAddr.functNum
-              << " Reg 0x" << configAddr.regOffset << " data = 0x" << data
-              << std::endl;
+    LOG_ERROR(PCIBridge, "Config Space Write: Unknown device accessed: Dev {:#x} Func {:#x}"
+        "Reg {:#x} data = {:#x}", configAddr.devNum, configAddr.functNum, configAddr.regOffset, data);
     return;
     break;
   }
@@ -357,13 +351,10 @@ void PCIBridge::ConfigWrite(u64 writeAddress, u64 data, u8 byteCount) {
   for (auto &device : connectedPCIDevices) {
     if (device->GetDeviceName() == currentDevName) {
       // Hit!
-      std::cout << "PCI Bus -> Config write, device: " << currentDevName
-                << " addr = 0x" << configAddr.regOffset << " data = 0x" << data
-                << std::endl;
+      LOG_INFO(PCIBridge, "Config write, device: {} addr = {:#x} data = {:#x}", currentDevName.c_str(), configAddr.regOffset, data);
       device->ConfigWrite(writeAddress, data, byteCount);
       return;
     }
   }
-  std::cout << "PCI Write to unimplemented device: " << currentDevName.c_str()
-            << " data = 0x" << data << std::endl;
+  LOG_ERROR(PCIBridge, "Write to unimplemented device: {} data = {:#x}", currentDevName.c_str(), data);
 }

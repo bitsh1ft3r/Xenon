@@ -19,8 +19,8 @@ public:
 
   void AddDevice(SystemDevice *device);
 
-  void Read(u64 readAddress, u64 *data, u8 byteCount, bool SOC = false);
-  void Write(u64 writeAddress, u64 data, u8 byteCount, bool SOC = false);
+  void Read(u64 readAddress, u64 *data, u8 byteCount);
+  void Write(u64 writeAddress, u64 data, u8 byteCount);
 
   // Configuration Space R/W
   void ConfigRead(u64 readAddress, u64 *data, u8 byteCount);

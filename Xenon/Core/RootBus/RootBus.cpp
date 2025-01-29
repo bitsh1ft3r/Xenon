@@ -3,6 +3,7 @@
 #include <iostream>
 
 #include "RootBus.h"
+#include "Base/Logging/Log.h"
 
 #define PCI_CONFIG_SPACE_BEGIN 0xD0000000
 #define PCI_CONFIG_SPACE_END 0xD1000000
@@ -21,15 +22,11 @@ void RootBus::AddHostBridge(HostBridge *newHostBridge) {
 
 void RootBus::AddDevice(SystemDevice *device) {
   deviceCount++;
-
-  std::cout << "BUS-> New device attatched: " << device->GetDeviceName() << " "
-            << std::hex << "0x" << device->GetStartAddress() << " - 0x"
-            << device->GetEndAddress() << std::endl;
-
+  LOG_INFO(RootBus, "Device attatched: {}", device->GetDeviceName());
   conectedDevices.push_back(device);
 }
 
-void RootBus::Read(u64 readAddress, u64 *data, u8 byteCount, bool ramAccess) {
+void RootBus::Read(u64 readAddress, u64 *data, u8 byteCount) {
   // Configuration Read?
   if (readAddress >= PCI_CONFIG_REGION_ADDRESS &&
       readAddress <= PCI_CONFIG_REGION_ADDRESS + PCI_CONFIG_REGION_SIZE) {
@@ -51,15 +48,14 @@ void RootBus::Read(u64 readAddress, u64 *data, u8 byteCount, bool ramAccess) {
     return;
   }
 
-  // Device not found
-  std::cout << "BUS: Read failed at address 0x" << std::hex << readAddress
-            << " RAM Access = " << ramAccess << std::endl;
+  // Device not found.
+  LOG_ERROR(RootBus, "Read failed at address {:#x}", readAddress);
 
   // Any reads to bus that dont belong to any device are always 0xFF.
   *data = 0xFFFFFFFFFFFFFFFF;
 }
 
-void RootBus::Write(u64 writeAddress, u64 data, u8 byteCount, bool ramAccess) {
+void RootBus::Write(u64 writeAddress, u64 data, u8 byteCount) {
   // PCI Configuration Write?
   if (writeAddress >= PCI_CONFIG_REGION_ADDRESS &&
       writeAddress <= PCI_CONFIG_REGION_ADDRESS + PCI_CONFIG_REGION_SIZE) {
@@ -81,9 +77,8 @@ void RootBus::Write(u64 writeAddress, u64 data, u8 byteCount, bool ramAccess) {
     return;
   }
 
-  // Device or address not found
-  std::cout << "BUS: Write failed > (" << writeAddress << ") data = 0x"
-            << std::hex << data << std::endl;
+  // Device or address not found.
+  LOG_ERROR(RootBus, "Write failed at address: {:#x} data: {:#x}", writeAddress, data);
 }
 
 //

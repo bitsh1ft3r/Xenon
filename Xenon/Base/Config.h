@@ -2,8 +2,10 @@
 
 #pragma once
 
-#include "Types.h"
 #include <filesystem>
+
+#include "Types.h"
+#include "Logging/Backend.h"
 
 namespace Config {
 
@@ -15,11 +17,13 @@ void saveConfig(const std::filesystem::path &path);
 //
 
 // Selected COM Port.
-std::string COMPort();
+std::string* COMPort();
 // Show in fullscreen.
 bool fullscreenMode();
 // Enable GPU Render thread.
 bool gpuThreadEnabled();
+// Current log level.
+Base::Log::Level getCurrentLogLevel();
 
 //
 // SMC Options.

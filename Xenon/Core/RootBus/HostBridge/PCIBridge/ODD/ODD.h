@@ -3,7 +3,6 @@
 #pragma once
 
 #include <Windows.h>
-#include <iostream>
 #include <vector>
 
 #include "Core/RAM/RAM.h"
@@ -39,7 +38,7 @@ public:
       Data = ::new u8[MaxLength];
     }
     if (Data) {
-      Size = max(Size, MaxLength);
+      Size = std::max(Size, MaxLength);
       Pointer = Size; // Empty()
       if (fClear)
         memset(Data, 0, MaxLength);

@@ -1,5 +1,7 @@
 // Copyright 2025 Xenon Emulator Project
 
+#include "Base/Logging/Log.h"
+
 #include "PPCInterpreter.h"
 
 void PPCInterpreter::ppcUpdateCR(PPU_STATE *hCore, s8 crNum, u32 crValue) {
@@ -102,10 +104,8 @@ void PPCInterpreter::ppcDebugLoadImageSymbols(PPU_STATE *hCore,
   Kdinfo.CheckSum = MMURead32(hCore, moduleInfoAddress + 8);
   Kdinfo.SizeOfImage = MMURead32(hCore, moduleInfoAddress + 12);
 
-  std::cout << "XCPU[" << hCore->ppuName
-            << "]: *** DebugLoadImageSymbols ***\n\t > Loaded: " << moduleName
-            << " at address 0x" << Kdinfo.BaseOfDll << " - 0x"
-            << Kdinfo.BaseOfDll + Kdinfo.SizeOfImage << std::endl;
+  LOG_XBOX(Xenon, "[{}]: *** DebugLoadImageSymbols ***", hCore->ppuName);
+  LOG_XBOX(Xenon, "Loaded: {} at address {:#x} - {:#x}", moduleName, Kdinfo.BaseOfDll, (Kdinfo.BaseOfDll + Kdinfo.SizeOfImage));
 }
 
 void PPCInterpreter::ppcDebugUnloadImageSymbols(PPU_STATE *hCore,

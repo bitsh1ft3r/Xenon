@@ -4,6 +4,7 @@
 #include <stdlib.h>
 
 #include "PPCInterpreter.h"
+#include "Base/Logging/Log.h"
 
 #define GPR(x) hCore->ppuThread[hCore->currentThread].GPR[x]
 #define XER_SET_CA(v) hCore->ppuThread[hCore->currentThread].SPR.XER.CA = v
@@ -14,8 +15,7 @@ void PPCInterpreter::PPCInterpreter_addx(PPU_STATE *hCore) {
   GPR(rD) = GPR(rA) + GPR(rB);
 
   if (OE) {
-    std::cout << "PPC Interpreter< ADDX-> Fatal error, OE not implemented!"
-              << std::endl;
+      LOG_CRITICAL(Xenon, "ADDX -> Fatal error, OE not implemented!");
   }
 
   if (RC) {
@@ -31,8 +31,7 @@ void PPCInterpreter::PPCInterpreter_addex(PPU_STATE *hCore) {
                            hCore->ppuThread[hCore->currentThread].SPR.XER.CA);
 
   if (OE) {
-    std::cout << "PPC Interpreter< ADDEX-> Fatal error, OE not implemented!"
-              << std::endl;
+      LOG_CRITICAL(Xenon, "ADDEXX -> Fatal error, OE not implemented!");
   }
 
   if (RC) {
@@ -78,8 +77,7 @@ void PPCInterpreter::PPCInterpreter_addzex(PPU_STATE *hCore) {
                            hCore->ppuThread[hCore->currentThread].SPR.XER.CA);
 
   if (OE) {
-    std::cout << "PPC Interpreter: ADDZEX -> Fatal error, OE not implemented!"
-              << std::endl;
+      LOG_CRITICAL(Xenon, "ADDZEX -> Fatal error, OE not implemented!");
   }
 
   if (RC) {
@@ -341,8 +339,7 @@ void PPCInterpreter::PPCInterpreter_divd(PPU_STATE *hCore) {
   }
 
   if (OE) {
-    std::cout << "PPC Interpreter: DIVDX-> Fatal error, OE not implemented!"
-              << std::endl;
+    LOG_CRITICAL(Xenon, "DIVDX -> Fatal error, OE not implemented!");
   }
 
   if (RC) {
@@ -359,8 +356,7 @@ void PPCInterpreter::PPCInterpreter_divdu(PPU_STATE *hCore) {
   }
 
   if (OE) {
-    std::cout << "PPC Interpreter: DIVDUX-> Fatal error, OE not implemented!"
-              << std::endl;
+      LOG_CRITICAL(Xenon, "DIVDU -> Fatal error, OE not implemented!");
   }
 
   if (RC) {
@@ -377,8 +373,7 @@ void PPCInterpreter::PPCInterpreter_divwx(PPU_STATE *hCore) {
   }
 
   if (OE) {
-    std::cout << "PPC Interpreter: DIVWX-> Fatal error, OE not implemented!"
-              << std::endl;
+    LOG_CRITICAL(Xenon, "DIVWX -> Fatal error, OE not implemented!");
   }
 
   if (RC) {
@@ -395,8 +390,7 @@ void PPCInterpreter::PPCInterpreter_divwux(PPU_STATE *hCore) {
   }
 
   if (OE) {
-    std::cout << "PPC Interpreter: DIVWUX-> Fatal error, OE not implemented!"
-              << std::endl;
+    LOG_CRITICAL(Xenon, "DIVWUX -> Fatal error, OE not implemented!");
   }
 
   if (RC) {
@@ -471,8 +465,7 @@ void PPCInterpreter::PPCInterpreter_mftb(PPU_STATE *hCore) {
     break;
 
   default:
-    std::cout << "PPC Interpreter: mftb-> Illegal instruction form!"
-              << std::endl;
+    LOG_CRITICAL(Xenon, "MFTB -> Illegal instruction form!");
     break;
   }
 }
@@ -513,8 +506,7 @@ void PPCInterpreter::PPCInterpreter_mulldx(PPU_STATE *hCore) {
   u64 qwH, qwL;
 
   if (OE) {
-    std::cout << "PPC Interpreter: mulldx -> Fatal error, OE not implemented!"
-              << std::endl;
+    LOG_CRITICAL(Xenon, "MULLDX -> Fatal error, OE not implemented!");
   }
 
   ppcMul64Signed(GPR(rA), GPR(rB), &qwH, &qwL);
@@ -532,8 +524,7 @@ void PPCInterpreter::PPCInterpreter_mullw(PPU_STATE *hCore) {
   GPR(rD) = static_cast<u32>(res);
 
   if (OE) {
-    std::cout << "PPC Interpreter: mullw -> Fatal error, OE not implemented!"
-              << std::endl;
+      LOG_CRITICAL(Xenon, "MULLW -> Fatal error, OE not implemented!");
   }
 
   if (RC) {
@@ -588,8 +579,7 @@ void PPCInterpreter::PPCInterpreter_negx(PPU_STATE *hCore) {
   GPR(rD) = (~GPR(rA)) + 1;
 
   if (OE) {
-    std::cout << "PPC Interpreter: NEGX -> Fatal error, OE not implemented!"
-              << std::endl;
+      LOG_CRITICAL(Xenon, "NEG -> Fatal error, OE not implemented!");
   }
 
   if (RC) {
@@ -904,8 +894,7 @@ void PPCInterpreter::PPCInterpreter_subfcx(PPU_STATE *hCore) {
   XER_SET_CA((GPR(rD) < ~GPR(rA)));
 
   if (OE) {
-    std::cout << "PPC Interpreter: SUBFCX-> Fatal error, OE not implemented!"
-              << std::endl;
+      LOG_CRITICAL(Xenon, "SUBFCX -> Fatal error, OE not implemented!");
   }
 
   if (RC) {
@@ -920,8 +909,7 @@ void PPCInterpreter::PPCInterpreter_subfx(PPU_STATE *hCore) {
   GPR(rD) = ~GPR(rA) + GPR(rB) + 1;
 
   if (OE) {
-    std::cout << "PPC Interpreter: SUBFX-> Fatal error, OE not implemented!"
-              << std::endl;
+      LOG_CRITICAL(Xenon, "SUBFX -> Fatal error, OE not implemented!");
   }
 
   if (RC) {
@@ -937,8 +925,7 @@ void PPCInterpreter::PPCInterpreter_subfex(PPU_STATE *hCore) {
                            hCore->ppuThread[hCore->currentThread].SPR.XER.CA);
 
   if (OE) {
-    std::cout << "PPC Interpreter: SUBFEX-> Fatal error, OE not implemented!"
-              << std::endl;
+      LOG_CRITICAL(Xenon, "SUBFEX -> Fatal error, OE not implemented!");
   }
 
   if (RC) {

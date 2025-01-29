@@ -1,5 +1,7 @@
 // Copyright 2025 Xenon Emulator Project
 
+#include "Base/Logging/Log.h"
+
 #include "HDD.h"
 
 HDD::HDD(PCIBridge *parentPCIBridge) {
@@ -45,8 +47,7 @@ void HDD::Read(u64 readAddress, u64 *data, u8 byteCount) {
 
     memcpy(data, (u8 *)&ataDeviceState.ataReadState + regOffset, byteCount);
   } else {
-    std::cout << "ATA: Unknown register being accesed: (Read)0x" << regOffset
-              << std::endl;
+    LOG_ERROR(HDD, "Unknown register being accesed: (Read) {:#x}", regOffset);
     memset(data, 0, byteCount);
   }
 }
@@ -121,8 +122,7 @@ void HDD::Write(u64 writeAddress, u64 data, u8 byteCount) {
 
     memcpy((u8 *)&ataDeviceState.ataWriteState + regOffset, &data, byteCount);
   } else {
-    std::cout << "ATA: Unknown register being accesed: (Write)0x" << regOffset
-              << std::endl;
+    LOG_ERROR(HDD, "Unknown register being accesed: (Write) {:#x}", regOffset);
   }
 }
 
@@ -136,7 +136,7 @@ void HDD::ConfigWrite(u64 writeAddress, u64 data, u8 byteCount) {
 
 void HDD::ataCopyIdentifyDeviceData() {
   if (!ataDeviceState.readBuffer.empty())
-    std::cout << "HDD: Read Buffer not empty!" << std::endl;
+    LOG_ERROR(HDD, "Read Buffer not empty!");
 
   ataDeviceState.readBuffer.resize(sizeof(ATA_IDENTIFY_DATA));
 

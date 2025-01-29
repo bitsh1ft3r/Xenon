@@ -6,3 +6,7 @@
 	path = third_party/toml11
 	url = https://github.com/ToruNiina/toml11.git
 	shallow = true
+[submodule "third_party/fmt"]
+	path = third_party/fmt
+	url = https://github.com/fmtlib/fmt.git
+	shallow = true

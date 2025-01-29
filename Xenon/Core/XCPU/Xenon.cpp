@@ -1,7 +1,6 @@
 // Copyright 2025 Xenon Emulator Project
 
-#include <chrono>
-#include <fstream>
+#include "Base/Logging/Log.h"
 
 #include "Xenon.h"
 
@@ -32,9 +31,7 @@ Xenon::Xenon(RootBus *inBus, const std::string blPath, eFuses inFuseSet) {
   fopen_s(&inputFile, blPath.c_str(), "rb");
 
   if (!inputFile) {
-    std::cout << "Xenon: Unable to open file: " << blPath
-              << " for reading. Check your file path. System Stopped!"
-              << std::endl;
+    LOG_CRITICAL(Xenon, "Unable to open file: {} for reading. Check your file path. System Stopped!", blPath);
     system("PAUSE");
   } else {
     fseek(inputFile, 0, SEEK_END);
@@ -43,8 +40,7 @@ Xenon::Xenon(RootBus *inBus, const std::string blPath, eFuses inFuseSet) {
 
     if (fileSize == XE_SROM_SIZE) {
       fread(xenonContext.SROM, 1, XE_SROM_SIZE, inputFile);
-
-      std::cout << "Xenon: * 1BL loaded." << std::endl;
+      LOG_INFO(Xenon, "1BL Loaded.");
     }
   }
 }

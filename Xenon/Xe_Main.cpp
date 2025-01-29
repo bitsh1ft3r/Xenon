@@ -1,6 +1,8 @@
 // Copyright 2025 Xenon Emulator Project
 
 #include "Base/Config.h"
+#include "Base/Logging/Backend.h"
+#include "Base/Logging/Log.h"
 #include "Base/Path_util.h"
 
 #include "Core/NAND/NAND.h"
@@ -23,10 +25,15 @@
 #include "Core/XGPU/XGPU.h"
 
 eFuses getFuses(const std::filesystem::path& path) {
+
+  LOG_INFO(System, "Loading eFuses from: {}", path.string());
+
   std::ifstream file(path);
+
   if (!file.is_open()) {
     return { 0x9999999999999999 };
   }
+
   std::vector<std::string> fusesets;
   std::string fuseset;
   while (std::getline(file, fuseset)) {
@@ -35,29 +42,51 @@ eFuses getFuses(const std::filesystem::path& path) {
     }
     fusesets.push_back(fuseset);
   }
-
+  // Got some fuses, let's print them!
   eFuses cpuFuses;
+  LOG_INFO(System, "Current FuseSet:");
   cpuFuses.fuseLine00 = strtoull(fusesets[0].data(), 0, 16);
+  LOG_INFO(System, " * FuseSet 00: 0x{}", fusesets[0].data());
   cpuFuses.fuseLine01 = strtoull(fusesets[1].data(), 0, 16);
+  LOG_INFO(System, " * FuseSet 01: 0x{}", fusesets[1].data());
   cpuFuses.fuseLine02 = strtoull(fusesets[2].data(), 0, 16);
+  LOG_INFO(System, " * FuseSet 02: 0x{}", fusesets[2].data());
   cpuFuses.fuseLine03 = strtoull(fusesets[3].data(), 0, 16);
+  LOG_INFO(System, " * FuseSet 03: 0x{}", fusesets[3].data());
   cpuFuses.fuseLine04 = strtoull(fusesets[4].data(), 0, 16);
+  LOG_INFO(System, " * FuseSet 04: 0x{}", fusesets[4].data());
   cpuFuses.fuseLine05 = strtoull(fusesets[5].data(), 0, 16);
+  LOG_INFO(System, " * FuseSet 05: 0x{}", fusesets[5].data());
   cpuFuses.fuseLine06 = strtoull(fusesets[6].data(), 0, 16);
+  LOG_INFO(System, " * FuseSet 06: 0x{}", fusesets[6].data());
   cpuFuses.fuseLine07 = strtoull(fusesets[7].data(), 0, 16);
+  LOG_INFO(System, " * FuseSet 07: 0x{}", fusesets[7].data());
   cpuFuses.fuseLine08 = strtoull(fusesets[8].data(), 0, 16);
+  LOG_INFO(System, " * FuseSet 08: 0x{}", fusesets[8].data());
   cpuFuses.fuseLine09 = strtoull(fusesets[9].data(), 0, 16);
+  LOG_INFO(System, " * FuseSet 09: 0x{}", fusesets[9].data());
   cpuFuses.fuseLine10 = strtoull(fusesets[10].data(), 0, 16);
+  LOG_INFO(System, " * FuseSet 10: 0x{}", fusesets[10].data());
   cpuFuses.fuseLine11 = strtoull(fusesets[11].data(), 0, 16);
-  
+  LOG_INFO(System, " * FuseSet 11: 0x{}", fusesets[11].data());
+
+  // Return the fuses.
   return cpuFuses;
 }
 
 int main(int argc, char *argv[]) {
 
+  // First initialize the logging backend.
+  Base::Log::Initialize();
+  Base::Log::Start();
+
   // Load configuration.
   const auto user_dir = Base::FS::GetUserPath(Base::FS::PathType::UserDir);
   Config::loadConfig(user_dir / "xenon_config.toml");
+
+  // Set current log filter based on the config value.
+  Base::Log::Filter currentLogFilter(Config::getCurrentLogLevel());
+  Base::Log::SetGlobalFilter(currentLogFilter);
 
   RootBus RootBus;       // RootBus Object
   HostBridge hostBridge; // HostBridge Object
@@ -70,7 +99,7 @@ int main(int argc, char *argv[]) {
   memset(&smcCoreState, 0, sizeof(Xe::PCIDev::SMC::SMC_CORE_STATE));
 
   // Initialize several settings from the struct.
-  smcCoreState.currentCOMPort = Config::COMPort().data();
+  smcCoreState.currentCOMPort = Config::COMPort()->data();
   smcCoreState.currAVPackType = Xe::PCIDev::SMC::SMC_AVPACK_TYPE::HDMI_NO_AUDIO;
   smcCoreState.currPowerOnReas =
       (Xe::PCIDev::SMC::SMC_PWR_REAS)Config::smcPowerOnType();
@@ -145,13 +174,17 @@ int main(int argc, char *argv[]) {
   eFuses cpuFuses = getFuses(Config::fusesPath());
   if (cpuFuses.fuseLine00 == 0x9999999999999999)
   {
-    std::cerr << "No valid fuses.txt!" << std::endl;
+      LOG_CRITICAL(System, "Unable to load eFuses from path: {}", Config::fusesPath());
+      system("PAUSE");
+      return EXIT_FAILURE;
   }
+
   Xenon xenonCPU(&RootBus, Config::oneBlPath(), cpuFuses);
 
   /**************Registers the IIC**************/
   pciBridge.RegisterIIC(xenonCPU.GetIICPointer());
 
+  LOG_INFO(System, "Starting Xenon.");
   // CPU Start routine and entry point.
   xenonCPU.Start(0x20000000100);
 

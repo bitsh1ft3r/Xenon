@@ -1,5 +1,7 @@
 // Copyright 2025 Xenon Emulator Project
 
+#include "Base/Logging/Log.h"
+
 #include "SMC.h"
 #include "HANA_State.h"
 #include "SMC_Config.h"
@@ -58,7 +60,7 @@
 // Class Constructor.
 Xe::PCIDev::SMC::SMCCore::SMCCore(PCIBridge *parentPCIBridge,
                                   SMC_CORE_STATE *newSMCCoreState) {
-  std::cout << "SMCCore: Initializing." << std::endl;
+  LOG_INFO(SMC, "Core: Initializing.");
 
   // Assign our parent PCI Bus Ptr.
   pciBridge = parentPCIBridge;
@@ -90,7 +92,7 @@ Xe::PCIDev::SMC::SMCCore::SMCCore(PCIBridge *parentPCIBridge,
 
 // Class Destructor.
 Xe::PCIDev::SMC::SMCCore::~SMCCore() {
-  std::cout << "SMCCore: Exiting." << std::endl;
+    LOG_INFO(SMC, "Core: Exiting.");
 }
 
 // PCI Read
@@ -153,8 +155,7 @@ void Xe::PCIDev::SMC::SMCCore::Read(u64 readAddress, u64 *data, u8 byteCount) {
     smcCoreState->fifoBufferPos += 4;
     break;
   default:
-    std::cout << "[WARN] SMCCore: Unknown register being read, offset 0x"
-              << static_cast<u16>(regOffset) << std::endl;
+    LOG_ERROR(SMC, "Unknown register being read, offset {:#x}", static_cast<u16>(regOffset));
     break;
   }
 }
@@ -225,9 +226,8 @@ void Xe::PCIDev::SMC::SMCCore::Write(u64 writeAddress, u64 data, u8 byteCount) {
     smcCoreState->fifoBufferPos += 4;
     break;
   default:
-    std::cout << "[WARN] SMCCore: Unknown register being written, offset 0x"
-              << static_cast<u16>(regOffset) << ", data 0x" << data
-              << std::endl;
+    LOG_ERROR(SMC, "Unknown register being written, offset {:#x}, data {:#x}", 
+        static_cast<u16>(regOffset), data);
     break;
   }
 }
@@ -241,41 +241,36 @@ void Xe::PCIDev::SMC::SMCCore::ConfigWrite(u64 writeAddress, u64 data,
 // Setups the UART Communication at a given configuration.
 void Xe::PCIDev::SMC::SMCCore::setupUART(u32 uartConfig) {
 #ifdef _WIN32
-  // Windows Init Code
-  std::cout << "[INFO] SMCCore: Initializing UART:" << std::endl;
+  // Windows Init Code.
+  LOG_INFO(SMC, "Initializing UART:");
 
   //  Initialize the DCB structure.
   SecureZeroMemory(&smcCoreState->comPortDCB, sizeof(DCB));
   smcCoreState->comPortDCB.DCBlength = sizeof(DCB);
   switch (uartConfig) {
   case 0x1e6:
-    std::cout << "\t* BaudRate: 115200bps, DataSize: 8, Parity: N, StopBits: 1"
-              << std::endl;
+    LOG_INFO(SMC, " * BaudRate: 115200bps, DataSize: 8, Parity: N, StopBits: 1.");
     smcCoreState->comPortDCB.BaudRate = CBR_115200;
     smcCoreState->comPortDCB.ByteSize = 8;
     smcCoreState->comPortDCB.Parity = NOPARITY;
     smcCoreState->comPortDCB.StopBits = ONESTOPBIT;
     break;
   case 0x1bb2:
-    std::cout << "\t* BaudRate: 38400bps, DataSize: 8, Parity: N, StopBits: 1"
-              << std::endl;
+    LOG_INFO(SMC, " * BaudRate: 38400bps, DataSize: 8, Parity: N, StopBits: 1.");
     smcCoreState->comPortDCB.BaudRate = CBR_38400;
     smcCoreState->comPortDCB.ByteSize = 8;
     smcCoreState->comPortDCB.Parity = NOPARITY;
     smcCoreState->comPortDCB.StopBits = ONESTOPBIT;
     break;
   case 0x163:
-    std::cout << "\t* BaudRate: 19200bps, DataSize: 8, Parity: N, StopBits: 1"
-              << std::endl;
+    LOG_INFO(SMC, " * BaudRate: 19200bps, DataSize: 8, Parity: N, StopBits: 1.");
     smcCoreState->comPortDCB.BaudRate = CBR_19200;
     smcCoreState->comPortDCB.ByteSize = 8;
     smcCoreState->comPortDCB.Parity = NOPARITY;
     smcCoreState->comPortDCB.StopBits = ONESTOPBIT;
     break;
   default:
-    std::cout
-        << "[WARN] SMCCore: Unknown UART config being set: ConfigValue = 0x"
-        << uartConfig << std::endl;
+    LOG_WARNING(SMC, "SMCCore: Unknown UART config being set: ConfigValue = {:#x}", uartConfig);
     break;
   }
 
@@ -285,39 +280,34 @@ void Xe::PCIDev::SMC::SMCCore::setupUART(u32 uartConfig) {
                  OPEN_EXISTING, 0, nullptr);
 
   if (smcCoreState->comPortHandle == INVALID_HANDLE_VALUE) {
-    printf("[ERR] SMCCore: CreateFile failed with error %lu. Make sure the "
-           "Selected COM"
-           "Port (%s) is avaliable in your system.\n",
-           GetLastError(), smcCoreState->currentCOMPort);
+    LOG_ERROR(SMC, "CreateFile failed with error {:#x}. Make sure the Selected COM Port is avaliable "
+        "in your system.", GetLastError());
     smcCoreState->uartPresent = false;
     return;
   }
 
   // Get Current COM Port State
   if (!GetCommState(smcCoreState->comPortHandle, &smcCoreState->comPortDCB)) {
-    printf("[ERR] SMCCore: UART: GetCommState failed with error %lu.\n",
-           GetLastError());
+    LOG_ERROR(SMC, "UART: GetCommState failed with error {:#x}.", GetLastError());
   }
   // Set The COM Port State as per config value.
   if (!SetCommState(smcCoreState->comPortHandle, &smcCoreState->comPortDCB)) {
-    printf("[ERR] SMCCore: UART: SetCommState failed with error %lu.\n",
-           GetLastError());
+    LOG_ERROR(SMC, "UART: SetCommState failed with error {:#x}.", GetLastError());
   }
 
-  std::cout << "[INFO] SMCCore: UART Initialized Successfully." << std::endl;
+  LOG_INFO(SMC, "UART Initialized Successfully.");
 
   // Everything OK.
   smcCoreState->uartInitialized = true;
 
 #elif
-  std::cout
-      << "[ERR] SMCCore: UART Initialization is not supported on this platform!"
-      << std::endl;
+    LOG_ERROR(SMC, "UART Initialization is not supported on this platform!");
 #endif // _WIN32
 }
 
 // SMC Main Thread
 void Xe::PCIDev::SMC::SMCCore::smcMainThread() {
+  LOG_INFO(SMC, "Entered main thread.");
   // Set FIFO_IN_STATUS_REG to FIFO_STATUS_READY to indicate we are ready to
   // receive a message.
   smcPCIState->fifoInStatusReg = FIFO_STATUS_READY;
@@ -415,14 +405,10 @@ void Xe::PCIDev::SMC::SMCCore::smcMainThread() {
         smcCoreState->fifoDataBuffer[1] = 0;
         break;
       case Xe::PCIDev::SMC::SMC_QUERY_TEMP_SENS:
-        std::cout
-            << "[WARN] SMCCore: Unimplemented SMC_FIFO_CMD: SMC_QUERY_TEMP_SENS"
-            << std::endl;
+        LOG_WARNING(SMC, "Unimplemented SMC_FIFO_CMD: SMC_QUERY_TEMP_SENS");
         break;
       case Xe::PCIDev::SMC::SMC_QUERY_TRAY_STATE:
-        std::cout << "[WARN] SMCCore: Unimplemented SMC_FIFO_CMD: "
-                     "SMC_QUERY_TRAY_STATE"
-                  << std::endl;
+          LOG_WARNING(SMC, "Unimplemented SMC_FIFO_CMD: SMC_QUERY_TRAY_STATE");
         break;
       case Xe::PCIDev::SMC::SMC_QUERY_AVPACK:
         smcCoreState->fifoDataBuffer[0] = SMC_QUERY_AVPACK;
@@ -452,9 +438,8 @@ void Xe::PCIDev::SMC::SMCCore::smcMainThread() {
               (smcCoreState->fifoDataBuffer[7] << 24);
           break;
         default:
-          std::cout
-              << "[WARN] SMCCore: SMC_I2C_READ_WRITE: Unimplemented command 0x"
-              << static_cast<u16>(smcCoreState->fifoDataBuffer[1]) << std::endl;
+            LOG_WARNING(SMC, "SMC_I2C_READ_WRITE: Unimplemented command {:#x}", 
+                smcCoreState->fifoDataBuffer[1]);
           smcCoreState->fifoDataBuffer[0] = SMC_I2C_READ_WRITE;
           smcCoreState->fifoDataBuffer[1] = 0x1; // Set R/W Failed.
         }
@@ -466,117 +451,74 @@ void Xe::PCIDev::SMC::SMCCore::smcMainThread() {
         smcCoreState->fifoDataBuffer[3] = 0x03;
         break;
       case Xe::PCIDev::SMC::SMC_FIFO_TEST:
-        std::cout << "[WARN] SMCCore: Unimplemented SMC_FIFO_CMD: SMC_FIFO_TEST"
-                  << std::endl;
+        LOG_WARNING(SMC, "Unimplemented SMC_FIFO_CMD: SMC_FIFO_TEST");
         break;
       case Xe::PCIDev::SMC::SMC_QUERY_IR_ADDRESS:
-        std::cout << "[WARN] SMCCore: Unimplemented SMC_FIFO_CMD: "
-                     "SMC_QUERY_IR_ADDRESS"
-                  << std::endl;
+          LOG_WARNING(SMC, "Unimplemented SMC_FIFO_CMD: SMC_QUERY_IR_ADDRESS");
         break;
       case Xe::PCIDev::SMC::SMC_QUERY_TILT_SENSOR:
-        std::cout << "[WARN] SMCCore: Unimplemented SMC_FIFO_CMD: "
-                     "SMC_QUERY_TILT_SENSOR"
-                  << std::endl;
+          LOG_WARNING(SMC, "Unimplemented SMC_FIFO_CMD: SMC_QUERY_TILT_SENSOR");
         break;
       case Xe::PCIDev::SMC::SMC_READ_82_INT:
-        std::cout
-            << "[WARN] SMCCore: Unimplemented SMC_FIFO_CMD: SMC_READ_82_INT"
-            << std::endl;
+          LOG_WARNING(SMC, "Unimplemented SMC_FIFO_CMD: SMC_READ_82_INT");
         break;
       case Xe::PCIDev::SMC::SMC_READ_8E_INT:
-        std::cout
-            << "[WARN] SMCCore: Unimplemented SMC_FIFO_CMD: SMC_READ_8E_INT"
-            << std::endl;
+          LOG_WARNING(SMC, "Unimplemented SMC_FIFO_CMD: SMC_READ_8E_INT");
         break;
       case Xe::PCIDev::SMC::SMC_SET_STANDBY:
-        std::cout
-            << "[WARN] SMCCore: Unimplemented SMC_FIFO_CMD: SMC_SET_STANDBY"
-            << std::endl;
+          LOG_WARNING(SMC, "Unimplemented SMC_FIFO_CMD: SMC_SET_STANDBY");
         break;
       case Xe::PCIDev::SMC::SMC_SET_TIME:
-        std::cout << "[WARN] SMCCore: Unimplemented SMC_FIFO_CMD: SMC_SET_TIME"
-                  << std::endl;
+          LOG_WARNING(SMC, "Unimplemented SMC_FIFO_CMD: SMC_SET_TIME");
         break;
       case Xe::PCIDev::SMC::SMC_SET_FAN_ALGORITHM:
-        std::cout << "[WARN] SMCCore: Unimplemented SMC_FIFO_CMD: "
-                     "SMC_SET_FAN_ALGORITHM"
-                  << std::endl;
+          LOG_WARNING(SMC, "Unimplemented SMC_FIFO_CMD: SMC_SET_FAN_ALGORITHM");
         break;
       case Xe::PCIDev::SMC::SMC_SET_FAN_SPEED_CPU:
-        std::cout << "[WARN] SMCCore: Unimplemented SMC_FIFO_CMD: "
-                     "SMC_SET_FAN_SPEED_CPU"
-                  << std::endl;
+          LOG_WARNING(SMC, "Unimplemented SMC_FIFO_CMD: SMC_SET_FAN_SPEED_CPU");
         break;
       case Xe::PCIDev::SMC::SMC_SET_DVD_TRAY:
-        std::cout
-            << "[WARN] SMCCore: Unimplemented SMC_FIFO_CMD: SMC_SET_DVD_TRAY"
-            << std::endl;
+          LOG_WARNING(SMC, "Unimplemented SMC_FIFO_CMD: SMC_SET_DVD_TRAY");
         break;
       case Xe::PCIDev::SMC::SMC_SET_POWER_LED:
-        std::cout
-            << "[WARN] SMCCore: Unimplemented SMC_FIFO_CMD: SMC_SET_POWER_LED"
-            << std::endl;
+          LOG_WARNING(SMC, "Unimplemented SMC_FIFO_CMD: SMC_SET_POWER_LED");
         break;
       case Xe::PCIDev::SMC::SMC_SET_AUDIO_MUTE:
-        std::cout
-            << "[WARN] SMCCore: Unimplemented SMC_FIFO_CMD: SMC_SET_AUDIO_MUTE"
-            << std::endl;
+          LOG_WARNING(SMC, "Unimplemented SMC_FIFO_CMD: SMC_SET_AUDIO_MUTE");
         break;
       case Xe::PCIDev::SMC::SMC_ARGON_RELATED:
-        std::cout
-            << "[WARN] SMCCore: Unimplemented SMC_FIFO_CMD: SMC_ARGON_RELATED"
-            << std::endl;
+          LOG_WARNING(SMC, "Unimplemented SMC_FIFO_CMD: SMC_ARGON_RELATED");
         break;
       case Xe::PCIDev::SMC::SMC_SET_FAN_SPEED_GPU:
-        std::cout << "[WARN] SMCCore: Unimplemented SMC_FIFO_CMD: "
-                     "SMC_SET_FAN_SPEED_GPU"
-                  << std::endl;
+          LOG_WARNING(SMC, "Unimplemented SMC_FIFO_CMD: SMC_SET_FAN_SPEED_GPU");
         break;
       case Xe::PCIDev::SMC::SMC_SET_IR_ADDRESS:
-        std::cout
-            << "[WARN] SMCCore: Unimplemented SMC_FIFO_CMD: SMC_SET_IR_ADDRESS"
-            << std::endl;
+          LOG_WARNING(SMC, "Unimplemented SMC_FIFO_CMD: SMC_SET_IR_ADDRESS");
         break;
       case Xe::PCIDev::SMC::SMC_SET_DVD_TRAY_SECURE:
-        std::cout << "[WARN] SMCCore: Unimplemented SMC_FIFO_CMD: "
-                     "SMC_SET_DVD_TRAY_SECURE"
-                  << std::endl;
+          LOG_WARNING(SMC, "Unimplemented SMC_FIFO_CMD: SMC_SET_DVD_TRAY_SECURE");
         break;
       case Xe::PCIDev::SMC::SMC_SET_FP_LEDS:
-        std::cout
-            << "[WARN] SMCCore: Unimplemented SMC_FIFO_CMD: SMC_SET_FP_LEDS"
-            << std::endl;
+          LOG_WARNING(SMC, "Unimplemented SMC_FIFO_CMD: SMC_SET_FP_LEDS");
         break;
       case Xe::PCIDev::SMC::SMC_SET_RTC_WAKE:
-        std::cout
-            << "[WARN] SMCCore: Unimplemented SMC_FIFO_CMD: SMC_SET_RTC_WAKE"
-            << std::endl;
+          LOG_WARNING(SMC, "Unimplemented SMC_FIFO_CMD: SMC_SET_RTC_WAKE");
         break;
       case Xe::PCIDev::SMC::SMC_ANA_RELATED:
-        std::cout
-            << "[WARN] SMCCore: Unimplemented SMC_FIFO_CMD: SMC_ANA_RELATED"
-            << std::endl;
+          LOG_WARNING(SMC, "Unimplemented SMC_FIFO_CMD: SMC_ANA_RELATED");
         break;
       case Xe::PCIDev::SMC::SMC_SET_ASYNC_OPERATION:
-        std::cout << "[WARN] SMCCore: Unimplemented SMC_FIFO_CMD: "
-                     "SMC_SET_ASYNC_OPERATION"
-                  << std::endl;
+          LOG_WARNING(SMC, "Unimplemented SMC_FIFO_CMD: SMC_SET_ASYNC_OPERATION");
         break;
       case Xe::PCIDev::SMC::SMC_SET_82_INT:
-        std::cout
-            << "[WARN] SMCCore: Unimplemented SMC_FIFO_CMD: SMC_SET_82_INT"
-            << std::endl;
+          LOG_WARNING(SMC, "Unimplemented SMC_FIFO_CMD: SMC_SET_82_INT");
         break;
       case Xe::PCIDev::SMC::SMC_SET_9F_INT:
-        std::cout
-            << "[WARN] SMCCore: Unimplemented SMC_FIFO_CMD: SMC_SET_9F_INT"
-            << std::endl;
+          LOG_WARNING(SMC, "Unimplemented SMC_FIFO_CMD: SMC_SET_9F_INT");
         break;
       default:
-        std::cout << "[WARN] SMCCore: Unknown SMC_FIFO_CMD: ID = 0x"
-                  << static_cast<u16>(smcCoreState->fifoDataBuffer[0])
-                  << std::endl;
+          LOG_WARNING(SMC, "Unknown SMC_FIFO_CMD: ID = {:#x}", 
+              static_cast<u16>(smcCoreState->fifoDataBuffer[0]));
         break;
       }
 

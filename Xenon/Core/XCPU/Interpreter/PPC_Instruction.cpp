@@ -4,6 +4,7 @@
 
 #include "PPCInterpreter.h"
 #include "PPC_Instruction.h"
+#include "Base/Logging/Log.h"
 
 PPCInstruction PPCInterpreter::getOpcode(u32 instrData) {
   u32 OPCD = ExtractBits(instrData, 0, 5);
@@ -98,8 +99,7 @@ PPCInstruction PPCInterpreter::getOpcode(u32 instrData) {
       return PPCInstruction::bcctrx;
       break;
     }
-    std::cout << "PPC Decoder: Unimplemented instruction found, SUBGROUP 19!"
-              << std::endl;
+    LOG_ERROR(Xenon, "PPC Decoder: Unimplemented instruction found, SUBGROUP 19!");
     return PPCInstruction::invalidInstruction;
     break;
   case 20: // rlwimix
@@ -152,8 +152,7 @@ PPCInstruction PPCInterpreter::getOpcode(u32 instrData) {
       return PPCInstruction::rldcrx;
       break;
     }
-    std::cout << "PPC Decoder: Unimplemented instruction found, SUBGROUP 30!"
-              << std::endl;
+    LOG_ERROR(Xenon, "PPC Decoder: Unimplemented instruction found, SUBGROUP 30!");
     return PPCInstruction::invalidInstruction;
     break;
   case 31: /* Subgroup 31 */
@@ -517,8 +516,7 @@ PPCInstruction PPCInterpreter::getOpcode(u32 instrData) {
       return PPCInstruction::sradix;
       break;
     }
-    std::cout << "PPC Decoder: Unimplemented instruction found, SUBGROUP 31!"
-              << std::endl;
+    LOG_ERROR(Xenon, "PPC Decoder: Unimplemented instruction found, SUBGROUP 31!");
     return PPCInstruction::invalidInstruction;
     break;
   case 32: // lwz
@@ -596,8 +594,7 @@ PPCInstruction PPCInterpreter::getOpcode(u32 instrData) {
       return PPCInstruction::lwa;
       break;
     default:
-      std::cout << "PPC Decoder: Unimplemented instruction found, SUBGROUP 58!"
-                << std::endl;
+        LOG_ERROR(Xenon, "PPC Decoder: Unimplemented instruction found, SUBGROUP 58!");
       return PPCInstruction::invalidInstruction;
       break;
     }
@@ -610,8 +607,7 @@ PPCInstruction PPCInterpreter::getOpcode(u32 instrData) {
       return PPCInstruction::stdu;
       break;
     default:
-      std::cout << "PPC Decoder: Unimplemented instruction found, SUBGROUP 62!"
-                << std::endl;
+        LOG_ERROR(Xenon, "PPC Decoder: Unimplemented instruction found, SUBGROUP 62!");
       return PPCInstruction::invalidInstruction;
       break;
     }
@@ -621,15 +617,13 @@ PPCInstruction PPCInterpreter::getOpcode(u32 instrData) {
       return PPCInstruction::mffsx;
       break;
     default:
-      std::cout << "PPC Decoder: Unimplemented instruction found, SUBGROUP 63!"
-                << std::endl;
+        LOG_ERROR(Xenon, "PPC Decoder: Unimplemented instruction found, SUBGROUP 63!");
       return PPCInstruction::invalidInstruction;
       break;
     }
     break;
   default:
-    std::cout << "PPC Decoder: Unimplemented instruction found, data 0x"
-              << std::hex << instrData << std::endl;
+    LOG_ERROR(Xenon, "PPC Decoder: Unimplemented instruction found, data {:#x}", instrData);
     return PPCInstruction::invalidInstruction;
     break;
   }
@@ -728,8 +722,6 @@ std::string PPCInterpreter::getOpcodeName(u32 instrData) {
       return "bcctrx";
       break;
     }
-    std::cout << "PPC Decoder: Unimplemented instruction found, SUBGROUP 19!"
-              << std::endl;
     return "INVALID";
     break;
   case 20: // rlwimix
@@ -782,8 +774,6 @@ std::string PPCInterpreter::getOpcodeName(u32 instrData) {
       return "rldcrx";
       break;
     }
-    std::cout << "PPC Decoder: Unimplemented instruction found, SUBGROUP 30!"
-              << std::endl;
     return "INVALID";
     break;
   case 31: /* Subgroup 31 */
@@ -1147,8 +1137,6 @@ std::string PPCInterpreter::getOpcodeName(u32 instrData) {
       return "sradix";
       break;
     }
-    std::cout << "PPC Decoder: Unimplemented instruction found, SUBGROUP 31!"
-              << std::endl;
     return "INVALID";
     break;
   case 32: // lwz
@@ -1196,8 +1184,6 @@ std::string PPCInterpreter::getOpcodeName(u32 instrData) {
       return "ldu";
       break;
     default:
-      std::cout << "PPC Decoder: Unimplemented instruction found, SUBGROUP 58!"
-                << std::endl;
       return "INVALID";
       break;
     }
@@ -1210,15 +1196,10 @@ std::string PPCInterpreter::getOpcodeName(u32 instrData) {
       return "stdu";
       break;
     default:
-      std::cout << "PPC Decoder: Unimplemented instruction found, SUBGROUP 62!"
-                << std::endl;
       return "INVALID";
       break;
     }
-
   default:
-    std::cout << "PPC Decoder: Unimplemented instruction found, data 0x"
-              << std::hex << instrData << std::endl;
     return "INVALID";
     break;
   }

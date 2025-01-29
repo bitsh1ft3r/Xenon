@@ -2,10 +2,9 @@
 
 #include <toml.hpp>
 
-#include <iostream>
-
 #include "Config.h"
 #include "Path_util.h"
+#include "Logging/Log.h"
 
 namespace toml {
 template <typename TC, typename K>
@@ -27,14 +26,15 @@ std::filesystem::path find_fs_path_or(const basic_value<TC> &v, const K &ky,
 namespace Config {
 
 // General.
-static int comPort = 2;
 static bool gpuRenderThreadEnabled = true;
 static bool isFullscreen = false;
+Base::Log::Level currentLogLevel = Base::Log::Level::Warning;
 
 // SMC.
-static int smcPowerOnReason =
-    0x11; // Valid values are: 0x11 (SMC_PWR_REAS_PWRBTN) and 0x12
-          // (SMC_PWR_REAS_EJECT).
+static int smcPowerOnReason = 0x11; // Valid values are: 0x11 (SMC_PWR_REAS_PWRBTN) and 0x12
+                                    // (SMC_PWR_REAS_EJECT).
+static int comPort = 2;
+static std::string com = "";
 
 // PowerPC.
 static u64 SKIP_HW_INIT_1 = 0;
@@ -51,11 +51,16 @@ static std::string fusesTxtPath = "C:/Xbox/fuses.txt";
 static std::string oneBlBinPath = "C:/Xbox/1bl.bin";
 static std::string nandBinPath = "C:/Xbox/nand.bin";
 
-std::string COMPort() { return "\\\\.\\COM" + std::to_string(comPort); }
+std::string* COMPort() {
+    com = "\\\\.\\COM" + std::to_string(comPort);
+    return &com;
+}
 
 bool fullscreenMode() { return isFullscreen; }
 
 bool gpuThreadEnabled() { return gpuRenderThreadEnabled; }
+
+Base::Log::Level getCurrentLogLevel() { return currentLogLevel; }
 
 int smcPowerOnType() { return smcPowerOnReason; }
 
@@ -78,7 +83,8 @@ std::string nandPath() { return nandBinPath; }
 // }
 
 void loadConfig(const std::filesystem::path &path) {
-  // If the configuration file does not exist, create it and return
+  // If the configuration file does not exist, create it and return.
+  LOG_INFO(Config, "Loading configuration from: {}", path.string());
   std::error_code error;
   if (!std::filesystem::exists(path, error)) {
     saveConfig(path);
@@ -90,21 +96,22 @@ void loadConfig(const std::filesystem::path &path) {
   try {
     data = toml::parse(path);
   } catch (std::exception &ex) {
-    std::cout << "Got exception trying to load config file. Exception: "
-              << ex.what() << std::endl;
+    LOG_ERROR(Config, "Got exception trying to load config file. Exception: {}", 
+        ex.what());
     return;
   }
 
   if (data.contains("General")) {
     const toml::value &general = data.at("General");
-    comPort = toml::find_or<int>(general, "COMPort", false);
     gpuRenderThreadEnabled =
         toml::find_or<bool>(general, "GPURenderThreadEnabled", false);
     isFullscreen = toml::find_or<bool>(general, "Fullscreen", false);
+    currentLogLevel = (Base::Log::Level)find_or<int>(general, "Loglevel", false);
   }
 
   if (data.contains("SMC")) {
     const toml::value &smc = data.at("SMC");
+    comPort = toml::find_or<int>(smc, "COMPort", false);
     smcPowerOnReason = toml::find_or<int>(smc, "SMCPowerOnType", false);
   }
 
@@ -140,23 +147,24 @@ void saveConfig(const std::filesystem::path &path) {
     try {
       data = toml::parse(path);
     } catch (const std::exception &ex) {
-      std::cout << "Exception trying to parse config file. Exception: "
-                << ex.what() << std::endl;
+      LOG_ERROR(Config, "Exception trying to parse config file. Exception: {}",
+          ex.what());
       return;
     }
   } else {
     if (error) {
-      std::cout << "Filesystem error: " << error.message() << std::endl;
+      LOG_ERROR(Config, "Filesystem error: {}", error.message());
     }
-    std::cout << "Saving new configuration file " << path.string() << std::endl;
+      LOG_INFO(Config, "Config not found. Saving new configuration file: {}", path.string());
   }
 
   // General.
-  data["General"]["COMPort"] = comPort;
   data["General"]["GPURenderThreadEnabled"] = gpuRenderThreadEnabled;
   data["General"]["Fullscreen"] = isFullscreen;
+  data["General"]["Loglevel"] = (int)currentLogLevel;
 
   // SMC.
+  data["SMC"]["COMPort"] = comPort;
   data["SMC"]["SMCPowerOnType"] = smcPowerOnReason;
 
   // PowerPC.

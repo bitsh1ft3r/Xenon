@@ -6,8 +6,6 @@
 
 #pragma once
 
-#include <iostream>
-
 #include "Core/RootBus/HostBridge/PCIBridge/PCIDevice.h"
 
 namespace Xe {
