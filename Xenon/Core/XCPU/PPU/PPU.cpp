@@ -5,7 +5,7 @@
 #include <thread>
 
 #include "PPU.h"
-
+#include "Base/Thread.h"
 #include "Core/XCPU/Interpreter/PPCInterpreter.h"
 
 PPU::PPU() {
@@ -58,8 +58,11 @@ void PPU::Initialize(XENON_CONTEXT *inXenonContext, RootBus *mainBus, u32 PVR,
     ppuState->ppuThread[ppuState->currentThread].SPR.DEC = 0x7FFFFFFF;
   }
 
-  // Set PPU Name
+  // Set PPU Name.
   ppuState->ppuName = ppuName;
+
+  // Set thread name.
+  Base::SetCurrentThreadName(ppuName);
 
   // Set PVR and PIR
   ppuState->SPR.PVR.PVR_Hex = PVR;
