@@ -28,7 +28,6 @@ std::filesystem::path find_fs_path_or(const basic_value<TC> &v, const K &ky,
 namespace Config {
 
 // General.
-static int comPort = 2;
 static bool gpuRenderThreadEnabled = true;
 static bool isFullscreen = false;
 Base::Log::Level currentLogLevel = Base::Log::Level::Info;
@@ -37,6 +36,8 @@ Base::Log::Level currentLogLevel = Base::Log::Level::Info;
 static int smcPowerOnReason =
     0x11; // Valid values are: 0x11 (SMC_PWR_REAS_PWRBTN) and 0x12
           // (SMC_PWR_REAS_EJECT).
+static int comPort = 2;
+static std::string com = "";
 
 // PowerPC.
 static u64 SKIP_HW_INIT_1 = 0;
@@ -53,7 +54,10 @@ static std::string fusesTxtPath = "C:/Xbox/fuses.txt";
 static std::string oneBlBinPath = "C:/Xbox/1bl.bin";
 static std::string nandBinPath = "C:/Xbox/nand.bin";
 
-std::string COMPort() { return "\\\\.\\COM" + std::to_string(comPort); }
+std::string* COMPort() {
+    com = "\\\\.\\COM" + std::to_string(comPort);
+    return &com;
+}
 
 bool fullscreenMode() { return isFullscreen; }
 

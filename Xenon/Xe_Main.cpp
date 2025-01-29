@@ -98,7 +98,7 @@ int main(int argc, char *argv[]) {
   memset(&smcCoreState, 0, sizeof(Xe::PCIDev::SMC::SMC_CORE_STATE));
 
   // Initialize several settings from the struct.
-  smcCoreState.currentCOMPort = Config::COMPort().data();
+  smcCoreState.currentCOMPort = Config::COMPort()->data();
   smcCoreState.currAVPackType = Xe::PCIDev::SMC::SMC_AVPACK_TYPE::HDMI_NO_AUDIO;
   smcCoreState.currPowerOnReas =
       (Xe::PCIDev::SMC::SMC_PWR_REAS)Config::smcPowerOnType();

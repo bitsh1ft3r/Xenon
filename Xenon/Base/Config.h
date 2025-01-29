@@ -17,7 +17,7 @@ void saveConfig(const std::filesystem::path &path);
 //
 
 // Selected COM Port.
-std::string COMPort();
+std::string* COMPort();
 // Show in fullscreen.
 bool fullscreenMode();
 // Enable GPU Render thread.
