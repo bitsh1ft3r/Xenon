@@ -60,7 +60,7 @@
 // Class Constructor.
 Xe::PCIDev::SMC::SMCCore::SMCCore(PCIBridge *parentPCIBridge,
                                   SMC_CORE_STATE *newSMCCoreState) {
-  LOG_ERROR(Kernel, "SMCCore: Initializing.");
+  LOG_INFO(SMC, "SMCCore: Initializing.");
 
   // Assign our parent PCI Bus Ptr.
   pciBridge = parentPCIBridge;
@@ -155,7 +155,7 @@ void Xe::PCIDev::SMC::SMCCore::Read(u64 readAddress, u64 *data, u8 byteCount) {
     smcCoreState->fifoBufferPos += 4;
     break;
   default:
-    LOG_ERROR(Kernel, "SMCCore: Unknown register being read, offset 0x{}", static_cast<u16>(regOffset));
+    LOG_ERROR(SMC, "SMCCore: Unknown register being read, offset 0x{}", static_cast<u16>(regOffset));
     break;
   }
 }

@@ -1359,7 +1359,7 @@ void PPCInterpreter::MMUWrite(XENON_CONTEXT *cpuContext, PPU_STATE *ppuState,
   }
 
   if (socWrite && nand != true && pciBridge != true && pciConfigSpace != true) {
-    LOG_ERROR(Kernel, "MMU: SoC Write to 0x{}, data = 0x{}, invalidating.", EA, data);
+    LOG_ERROR(Xenon_MMU, "MMU: SoC Write to 0x{}, data = 0x{}, invalidating.", EA, data);
     return;
   }
 

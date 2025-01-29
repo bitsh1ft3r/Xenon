@@ -28,20 +28,21 @@ enum class Level : u8 {
  * filter.cpp.
  */
 enum class Class : u8 {
-    Log,                   ///< Messages about the log system itself
-    Base,                  ///< Library routines
-    Base_Filesystem,       ///< Filesystem interface library
-    Core,                  ///< LLE emulation core
-    Config,                ///< Emulator configuration (including commandline)
-    Debug,                 ///< Debugging tools
-    Kernel,                ///< The HLE implementation of the PS4 kernel.
-    Lib,                   ///< HLE implementation of system library. Each major library
-    Frontend,              ///< Emulator UI
-    Render,                ///< Video Core
-    Render_Vulkan,         ///< Vulkan backend
-    Render_Recompiler,     ///< Shader recompiler
-    Loader,                ///< ROM loader
-    Count                  ///< Total number of logging classes
+    Log,                    // Messages about the log system itself.
+    Base,                   // System base routines: FS, logging, etc.
+    Base_Filesystem,        // Filesystem Messages.
+    Config,                 // Emulator configuration (including commandline).
+    Debug,                  // Debugging tools.
+    System,                 // Base System messages.
+    Xenon,                  // Xenon CPU messages.
+    Xenon_MMU,              // Xenon MMU debugging messages.
+    Xenon_PostBus,          // Xenon Post Bus output messages.
+    Xenos,                  // Xenos GPU messages.
+    RootBus,                // RootBus messages. Missing/unmapped memory, etc... 
+    PCIBridge,              // PCI Bridge messages: Connected devices, failed lookups, etc.. 
+    SMC,                    // System Management Controller messages.
+    UART,                   // UART output.
+    Count                   // Total number of logging classes.
 };
 
 } // namespace Base::Log

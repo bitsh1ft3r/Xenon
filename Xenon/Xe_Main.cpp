@@ -1,6 +1,8 @@
 // Copyright 2025 Xenon Emulator Project
 
 #include "Base/Config.h"
+#include "Base/Logging/Backend.h"
+#include "Base/Logging/Log.h"
 #include "Base/Path_util.h"
 
 #include "Core/NAND/NAND.h"
@@ -24,7 +26,11 @@
 
 int main(int argc, char *argv[]) {
 
+  // First initialize the logging backend.
+  Base::Log::Initialize();
+
   // Load configuration.
+  LOG_INFO(System, "Loading configuration.");
   const auto user_dir = Base::FS::GetUserPath(Base::FS::PathType::UserDir);
   Config::loadConfig(user_dir / "xenon_config.toml");
 
@@ -161,6 +167,7 @@ int main(int argc, char *argv[]) {
   /**************Registers the IIC**************/
   pciBridge.RegisterIIC(xenonCPU.GetIICPointer());
 
+  LOG_INFO(System, "Starting the Xenon CPU.");
   // CPU Start routine and entry point.
   xenonCPU.Start(0x20000000100);
 

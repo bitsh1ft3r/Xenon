@@ -65,16 +65,17 @@ bool ParseFilterRule(Filter& instance, Iterator begin, Iterator end) {
     CLS(Log)                                                                                       \
     CLS(Base)                                                                                      \
     SUB(Base, Filesystem)                                                                          \
-    CLS(Core)                                                                                      \
     CLS(Config)                                                                                    \
     CLS(Debug)                                                                                     \
-    CLS(Kernel)                                                                                    \
-    CLS(Lib)                                                                                       \
-    CLS(Frontend)                                                                                  \
-    CLS(Render)                                                                                    \
-    SUB(Render, Vulkan)                                                                            \
-    SUB(Render, Recompiler)                                                                        \
-    CLS(Loader)
+    CLS(System)                                                                                    \
+    CLS(Xenon)                                                                                     \
+    SUB(Xenon, MMU)                                                                                \
+    SUB(Xenon, PostBus)                                                                            \
+    CLS(Xenos)                                                                                     \
+    CLS(RootBus)                                                                                   \
+    CLS(PCIBridge)                                                                                 \
+    CLS(SMC)                                                                                       \
+    CLS(UART)  
 
 // GetClassName is a macro defined by Windows.h, grrr...
 const char* GetLogClassName(Class log_class) {
