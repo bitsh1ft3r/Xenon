@@ -8,6 +8,7 @@
 
 #include "Base/Config.h"
 #include "Base/Version.h"
+#include "Base/Logging/Log.h"
 
 Xe::Xenos::XGPU::XGPU(RAM *ram) {
   // Assign RAM Pointer
@@ -38,14 +39,17 @@ Xe::Xenos::XGPU::XGPU(RAM *ram) {
   if (Config::gpuThreadEnabled()) {
     renderThread = std::thread(&XGPU::XenosThread, this);
   }
+  else{
+      LOG_WARNING(Xenos, "Xenos Render thread disbaled in config.");
+  }
 }
 
 bool Xe::Xenos::XGPU::Read(u64 readAddress, u64 *data, u8 byteCount) {
   if (isAddressMappedInBAR(static_cast<u32>(readAddress))) {
-    // std::cout << "Xenos Read Addr = 0x" << readAddress << std::endl;
+    
     const u32 regIndex = (readAddress & 0xFFFFF) / 4;
 
-    bool hit = 0;
+    LOG_TRACE(Xenos, "Read Addr = {0:#x}, reg: {0:#x}.", readAddress, regIndex);
 
     XeRegister reg = static_cast<XeRegister>(regIndex);
 
@@ -67,12 +71,11 @@ bool Xe::Xenos::XGPU::Read(u64 readAddress, u64 *data, u8 byteCount) {
 
 bool Xe::Xenos::XGPU::Write(u64 writeAddress, u64 data, u8 byteCount) {
   if (isAddressMappedInBAR(static_cast<u32>(writeAddress))) {
-    // std::cout << "Xenos Write Addr = 0x" << writeAddress << " data = 0x" <<
-    // _byteswap_ulong(static_cast<u32>(data)) << std::endl;
 
     const u32 regIndex = (writeAddress & 0xFFFFF) / 4;
 
-    bool hit = 0;
+    LOG_TRACE(Xenos, "Write Addr = {0:#x}, reg: {0:#x}, data = {0:#x}.", writeAddress, regIndex,
+        _byteswap_ulong(static_cast<u32>(data)));
 
     XeRegister reg = static_cast<XeRegister>(regIndex);
 
@@ -140,8 +143,7 @@ void Xe::Xenos::XGPU::XenosThread() {
   const u32 resHeight = 720;
 
   if (!SDL_Init(SDL_INIT_VIDEO)) {
-    std::cout << "Failed to initialize SDL video subsystem: " << SDL_GetError()
-              << std::endl;
+    LOG_ERROR(System, "Failed to initialize SDL video subsystem: {0:#x}", SDL_GetError());
   }
 
   //	Set the title.
@@ -198,6 +200,7 @@ void Xe::Xenos::XGPU::XenosThread() {
       case SDL_EVENT_KEY_DOWN:
         if (windowEvent.key.key == SDLK_F5) {
           SDL_SetRenderVSync(renderer, !VSYNC);
+          LOG_INFO(Xenos, "RenderWindow: Setting Vsync to: {0:#b}", VSYNC);
           VSYNC = !VSYNC;
         }
         if (windowEvent.key.key == SDLK_F11) {
