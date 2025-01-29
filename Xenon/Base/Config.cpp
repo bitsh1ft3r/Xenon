@@ -6,6 +6,7 @@
 
 #include "Config.h"
 #include "Path_util.h"
+#include "Logging/Log.h"
 
 namespace toml {
 template <typename TC, typename K>
@@ -78,7 +79,8 @@ std::string nandPath() { return nandBinPath; }
 // }
 
 void loadConfig(const std::filesystem::path &path) {
-  // If the configuration file does not exist, create it and return
+  // If the configuration file does not exist, create it and return.
+  LOG_INFO(Config, "Loading configuration from: {}", path.string());
   std::error_code error;
   if (!std::filesystem::exists(path, error)) {
     saveConfig(path);
@@ -90,8 +92,8 @@ void loadConfig(const std::filesystem::path &path) {
   try {
     data = toml::parse(path);
   } catch (std::exception &ex) {
-    std::cout << "Got exception trying to load config file. Exception: "
-              << ex.what() << std::endl;
+    LOG_ERROR(Config, "Got exception trying to load config file. Exception: {}", 
+        ex.what());
     return;
   }
 
@@ -140,15 +142,15 @@ void saveConfig(const std::filesystem::path &path) {
     try {
       data = toml::parse(path);
     } catch (const std::exception &ex) {
-      std::cout << "Exception trying to parse config file. Exception: "
-                << ex.what() << std::endl;
+      LOG_ERROR(Config, "Exception trying to parse config file. Exception: {}",
+          ex.what());
       return;
     }
   } else {
     if (error) {
       std::cout << "Filesystem error: " << error.message() << std::endl;
     }
-    std::cout << "Saving new configuration file " << path.string() << std::endl;
+    LOG_INFO(Config, "Config not found. Saving new configuration file: {}", path.string());
   }
 
   // General.
