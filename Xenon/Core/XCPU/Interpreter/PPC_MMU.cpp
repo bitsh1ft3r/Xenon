@@ -1,10 +1,9 @@
 // Copyright 2025 Xenon Emulator Project
 
-#include "Base/Logging/Log.h"
 #include <iostream>
 
 #include "PPCInterpreter.h"
-
+#include "Base/Logging/Log.h"
 #include "Core/XCPU/PostBus/PostBus.h"
 
 //
@@ -688,7 +687,7 @@ bool PPCInterpreter::MMUTranslateAddress(u64 *EA, PPU_STATE *hCoreState,
               (*EA & 0xFFFFF));
       } else {
         // Mode Fault. LPAR Interrupt.
-        std::cout << "XCPU (MMU): LPAR INTERRUPT!" << std::endl;
+        LOG_CRITICAL(Xenon_MMU, "LPAR Interrupt unimplemented.");
         system("PAUSE");
       }
     }
@@ -1042,9 +1041,6 @@ bool PPCInterpreter::MMUTranslateAddress(u64 *EA, PPU_STATE *hCoreState,
         }
       }
     } else {
-      if (*EA == 0xd000000000a01000) {
-        std::cout << "p = 0x" << p << std::endl;
-      }
       // SLB Miss
       // Data or Inst Segment Exception
       if (hCoreState->ppuThread[hCoreState->currentThread].iFetch) {
@@ -1197,8 +1193,7 @@ u64 PPCInterpreter::MMURead(XENON_CONTEXT *cpuContext, PPU_STATE *ppuState,
       data = cpuContext->fuseSet.fuseLine11;
       break;
     default:
-      std::cout << "XCPU SECOTP(eFuse): Reading to FUSE at address 0x" << EA
-                << std::endl;
+      LOG_ERROR(Xenon_MMU, "Reading to unknown fuse at address {0:#x}", EA);
       break;
     }
 
@@ -1247,7 +1242,7 @@ u64 PPCInterpreter::MMURead(XENON_CONTEXT *cpuContext, PPU_STATE *ppuState,
   }
 
   if (socRead && nand != true && pciBridge != true && pciConfigSpace != true) {
-    std::cout << "MMU: SoC Read from 0x" << EA << ", returning 0." << std::endl;
+      LOG_WARNING(Xenon_MMU, "SoC Read from {0:#x}, returning 0.", EA);
     data = 0;
     return data;
   }
@@ -1264,9 +1259,6 @@ u64 PPCInterpreter::MMURead(XENON_CONTEXT *cpuContext, PPU_STATE *ppuState,
 // MMU Write Routine, used by the CPU
 void PPCInterpreter::MMUWrite(XENON_CONTEXT *cpuContext, PPU_STATE *ppuState,
                               u64 data, u64 EA, s8 byteCount, bool cacheStore) {
-  if (EA == 0xc000000000022794) {
-    u8 a = 0;
-  }
   u64 oldEA = EA;
   if (MMUTranslateAddress(&EA, ppuState, true) == false)
     return;
@@ -1307,15 +1299,14 @@ void PPCInterpreter::MMUWrite(XENON_CONTEXT *cpuContext, PPU_STATE *ppuState,
   // CPU VID Register
   if (socWrite && EA == 0x61188) {
     if (data != 0) {
-      std::cout << "XCPU(SOC): New VID value being set: " << data << std::endl;
+      LOG_WARNING(Xenon, "(SOC): New VID value being set: {0:#x}", data);
     }
     return;
   }
 
   // Check if writing to bootloader section
   if (socWrite && EA >= XE_SROM_ADDR && EA < XE_SROM_ADDR + XE_SROM_SIZE) {
-    std::cout << "XCPU (MMU): WARNING: Tried to write to XCPU SROM!"
-              << std::endl;
+     LOG_ERROR(Xenon_MMU, "Tried to write to XCPU SROM!");
     return;
   }
 
@@ -1359,12 +1350,8 @@ void PPCInterpreter::MMUWrite(XENON_CONTEXT *cpuContext, PPU_STATE *ppuState,
   }
 
   if (socWrite && nand != true && pciBridge != true && pciConfigSpace != true) {
-    LOG_ERROR(Xenon_MMU, "MMU: SoC Write to 0x{}, data = 0x{}, invalidating.", EA, data);
+    LOG_WARNING(Xenon_MMU, "SoC Write to {0:#x}, data = {0:#x}, invalidating.", EA, data);
     return;
-  }
-
-  if (EA == 0x22794) {
-    u8 a = 0;
   }
 
   // External Write
