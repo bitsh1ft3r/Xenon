@@ -1,8 +1,7 @@
 // Copyright 2025 Xenon Emulator Project
 
-#include "Base/Logging/Log.h"
-
 #include "Ethernet.h"
+#include "Base/Logging/Log.h"
 
 #define XE_NET_STATUS_INT 0x0000004C
 
@@ -74,7 +73,7 @@ void Xe::PCIDev::ETHERNET::ETHERNET::Read(u64 readAddress, u64 *data,
     memcpy(data, &ethPciState.address1Reg, byteCount);
     break;
   default:
-    LOG_ERROR(ETH, "Unknown PCI Reg being read 0x{}", (u16)offset);
+    LOG_ERROR(ETH, "Unknown PCI Reg being read {:#x}", (u16)offset);
     memset(data, 0xFF, byteCount);
     break;
   }
@@ -145,7 +144,7 @@ void Xe::PCIDev::ETHERNET::ETHERNET::Write(u64 writeAddress, u64 data,
     ethPciState.address1Reg = static_cast<u32>(data);
     break;
   default:
-    LOG_ERROR(ETH, "Unknown PCI Reg being written 0x{} data = 0x{}", (u16)offset, data);
+    LOG_ERROR(ETH, "Unknown PCI Reg being written {:#x} data = {:#x}", (u16)offset, data);
     break;
   }
 }

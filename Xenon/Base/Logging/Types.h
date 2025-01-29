@@ -35,6 +35,7 @@ enum class Class : u8 {
     Debug,                  // Debugging tools.
     System,                 // Base System messages.
     Xenon,                  // Xenon CPU messages.
+    Xenon_IIC,              // Xenon Integrated Interrupt Controller.
     Xenon_MMU,              // Xenon MMU debugging messages.
     Xenon_PostBus,          // Xenon Post Bus output messages.
     Xenos,                  // Xenos GPU messages.

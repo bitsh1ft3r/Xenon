@@ -47,7 +47,7 @@ void HDD::Read(u64 readAddress, u64 *data, u8 byteCount) {
 
     memcpy(data, (u8 *)&ataDeviceState.ataReadState + regOffset, byteCount);
   } else {
-    LOG_ERROR(HDD, "ATA: Unknown register being accesed: (Read)0x{}", regOffset);
+    LOG_ERROR(HDD, "Unknown register being accesed: (Read) {:#x}", regOffset);
     memset(data, 0, byteCount);
   }
 }
@@ -122,7 +122,7 @@ void HDD::Write(u64 writeAddress, u64 data, u8 byteCount) {
 
     memcpy((u8 *)&ataDeviceState.ataWriteState + regOffset, &data, byteCount);
   } else {
-    LOG_ERROR(HDD, "ATA: Unknown register being accesed: (Write)0x{}", regOffset);
+    LOG_ERROR(HDD, "Unknown register being accesed: (Write) {:#x}", regOffset);
   }
 }
 

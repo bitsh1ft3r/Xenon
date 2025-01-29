@@ -65,7 +65,7 @@ void Xe::XCPU::IIC::XenonIIC::writeInterrupt(u64 intAddress, u64 intData) {
         static_cast<u32>(_byteswap_uint64(intData));
     break;
   default:
-    LOG_ERROR(Xenon_PostBus, "IIC: Unknown CPU Interrupt Ctrl Blck Reg being written: {}", ppeIntCtrlBlckReg);
+    LOG_ERROR(Xenon_IIC, "Unknown CPU Interrupt Ctrl Blck Reg being written: {:#x}", ppeIntCtrlBlckReg);
     break;
   }
 }
@@ -97,7 +97,7 @@ void Xe::XCPU::IIC::XenonIIC::readInterrupt(u64 intAddress, u64 *intData) {
     *intData = _byteswap_uint64(PRIO_NONE);
     break;
   default:
-    LOG_ERROR(Xenon_PostBus, "IIC: Unknown interupt being read 0x{}", ppeIntCtrlBlckReg);
+    LOG_ERROR(Xenon_IIC, "Unknown interupt being read {:#x}", ppeIntCtrlBlckReg);
     break;
   }
 }

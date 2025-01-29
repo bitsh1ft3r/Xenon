@@ -745,7 +745,7 @@ case PPCInstruction::td:
 
 // System reset Exception (0x100)
 void PPCInterpreter::ppcResetException(PPU_STATE *hCore) {
-  LOG_INFO(Xenon, "{}: Reset exception.", hCore->ppuName);
+  LOG_INFO(Xenon, "[{}](Thrd{:#d}): Reset exception.", hCore->ppuName, (s8)hCore->currentThread);
   hCore->ppuThread[hCore->currentThread].SPR.SRR0 =
       hCore->ppuThread[hCore->currentThread].NIA;
   hCore->ppuThread[hCore->currentThread].SPR.SRR1 =
@@ -763,7 +763,7 @@ void PPCInterpreter::ppcResetException(PPU_STATE *hCore) {
 }
 // Data Storage Exception (0x300)
 void PPCInterpreter::ppcDataStorageException(PPU_STATE *hCore) {
-  LOG_TRACE(Xenon, "{}: Data Storage exception.", hCore->ppuName);
+  LOG_TRACE(Xenon, "[{}](Thrd{:#d}): Data Storage exception.", hCore->ppuName, (s8)hCore->currentThread);
   hCore->ppuThread[hCore->currentThread].SPR.SRR0 =
       hCore->ppuThread[hCore->currentThread].CIA;
   hCore->ppuThread[hCore->currentThread].SPR.SRR1 =
@@ -781,7 +781,7 @@ void PPCInterpreter::ppcDataStorageException(PPU_STATE *hCore) {
 }
 // Data Segment Exception (0x380)
 void PPCInterpreter::ppcDataSegmentException(PPU_STATE *hCore) {
-  LOG_TRACE(Xenon, "{}: Data Segment exception.", hCore->ppuName);
+  LOG_TRACE(Xenon, "[{}](Thrd{:#d}): Data Segment exception.", hCore->ppuName, (s8)hCore->currentThread);
   hCore->ppuThread[hCore->currentThread].SPR.SRR0 =
       hCore->ppuThread[hCore->currentThread].CIA;
   hCore->ppuThread[hCore->currentThread].SPR.SRR1 =
@@ -799,7 +799,7 @@ void PPCInterpreter::ppcDataSegmentException(PPU_STATE *hCore) {
 }
 // Instruction Storage Exception (0x400)
 void PPCInterpreter::ppcInstStorageException(PPU_STATE *hCore) {
-  LOG_TRACE(Xenon, "{}: Instruction Storage exception.", hCore->ppuName);
+  LOG_TRACE(Xenon, "[{}](Thrd{:#d}): Instruction Storage exception.", hCore->ppuName, (s8)hCore->currentThread);
   hCore->ppuThread[hCore->currentThread].SPR.SRR0 =
       hCore->ppuThread[hCore->currentThread].CIA;
   hCore->ppuThread[hCore->currentThread].SPR.SRR1 =
@@ -818,7 +818,7 @@ void PPCInterpreter::ppcInstStorageException(PPU_STATE *hCore) {
 }
 // Instruction Segment Exception (0x480)
 void PPCInterpreter::ppcInstSegmentException(PPU_STATE *hCore) {
-  LOG_TRACE(Xenon, "{}: Instruction Segment exception.", hCore->ppuName);
+  LOG_TRACE(Xenon, "[{}](Thrd{:#d}): Instruction Segment exception.", hCore->ppuName, (s8)hCore->currentThread);
   hCore->ppuThread[hCore->currentThread].SPR.SRR0 =
       hCore->ppuThread[hCore->currentThread].CIA;
   hCore->ppuThread[hCore->currentThread].SPR.SRR1 =
@@ -836,7 +836,7 @@ void PPCInterpreter::ppcInstSegmentException(PPU_STATE *hCore) {
 }
 // External Exception (0x500)
 void PPCInterpreter::ppcExternalException(PPU_STATE *hCore) {
-  LOG_TRACE(Xenon, "{}: External exception.", hCore->ppuName);
+  LOG_TRACE(Xenon, "[{}](Thrd{:#d}): External exception.", hCore->ppuName, (s8)hCore->currentThread);
   hCore->ppuThread[hCore->currentThread].SPR.SRR0 =
       hCore->ppuThread[hCore->currentThread].NIA;
   hCore->ppuThread[hCore->currentThread].SPR.SRR1 =
@@ -854,7 +854,7 @@ void PPCInterpreter::ppcExternalException(PPU_STATE *hCore) {
 }
 // Program Exception (0x700)
 void PPCInterpreter::ppcProgramException(PPU_STATE *hCore) {
-  LOG_TRACE(Xenon, "{}: Program exception.", hCore->ppuName);
+  LOG_TRACE(Xenon, "[{}](Thrd{:#d}): Program exception.", hCore->ppuName, (s8)hCore->currentThread);
   hCore->ppuThread[hCore->currentThread].SPR.SRR0 =
       hCore->ppuThread[hCore->currentThread].CIA;
   hCore->ppuThread[hCore->currentThread].SPR.SRR1 =
@@ -874,7 +874,7 @@ void PPCInterpreter::ppcProgramException(PPU_STATE *hCore) {
 }
 
 void PPCInterpreter::ppcDecrementerException(PPU_STATE *hCore) {
-  LOG_TRACE(Xenon, "{}: Decrementer exception.", hCore->ppuName);
+  LOG_TRACE(Xenon, "[{}](Thrd{:#d}): Decrementer exception.", hCore->ppuName, (s8)hCore->currentThread);
   hCore->ppuThread[hCore->currentThread].SPR.SRR0 =
       hCore->ppuThread[hCore->currentThread].NIA;
   hCore->ppuThread[hCore->currentThread].SPR.SRR1 =
@@ -893,7 +893,7 @@ void PPCInterpreter::ppcDecrementerException(PPU_STATE *hCore) {
 
 // System Call Exception (0xC00)
 void PPCInterpreter::ppcSystemCallException(PPU_STATE *hCore) {
-  LOG_TRACE(Xenon, "{}: System Call exception.", hCore->ppuName);
+  LOG_TRACE(Xenon, "[{}](Thrd{:#d}): System Call exception.", hCore->ppuName, (s8)hCore->currentThread);
   hCore->ppuThread[hCore->currentThread].SPR.SRR0 =
       hCore->ppuThread[hCore->currentThread].NIA;
   hCore->ppuThread[hCore->currentThread].SPR.SRR1 =
@@ -922,7 +922,7 @@ void PPCInterpreter::ppcInterpreterTrap(PPU_STATE *hCore, u32 trapNumber) {
       dbgString[idx] = MMURead8(
           hCore, hCore->ppuThread[hCore->currentThread].GPR[0x3] + idx);
     }
-    LOG_XBOX(Guest, "DebugPrint: {}", dbgString.c_str());
+    LOG_XBOX(Guest, " > DebugPrint: {}", dbgString.c_str());
   }
 
   if (trapNumber == 0x17) {

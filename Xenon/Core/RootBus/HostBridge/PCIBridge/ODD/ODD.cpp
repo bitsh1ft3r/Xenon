@@ -464,7 +464,7 @@ void ODD::processSCSICommand() {
 
     break;
   default:
-    LOG_ERROR(ODD, "Unknown SCSI Command requested: 0x{}", atapiState.scsiCBD.CDB12.OperationCode);
+    LOG_ERROR(ODD, "Unknown SCSI Command requested: {:#x}", atapiState.scsiCBD.CDB12.OperationCode);
   }
 
   atapiState.atapiRegs.interruptReasonReg = IDE_INTERRUPT_REASON_IO;
@@ -567,7 +567,7 @@ void ODD::Read(u64 readAddress, u64 *data, u8 byteCount) {
       memcpy(data, &atapiState.atapiRegs.statusReg, byteCount);
       return;
     default:
-      LOG_ERROR(ODD, "Unknown Command Register Block register being read, command code = 0x{}", atapiCommandReg);
+      LOG_ERROR(ODD, "Unknown Command Register Block register being read, command code = {:#x}", atapiCommandReg);
       break;
     }
   } else {
@@ -583,7 +583,7 @@ void ODD::Read(u64 readAddress, u64 *data, u8 byteCount) {
       memcpy(data, &atapiState.atapiRegs.dmaTableOffsetReg, byteCount);
       break;
     default:
-      LOG_ERROR(ODD, "Unknown Control Register Block register being read, command code = 0x{}", atapiControlReg);
+      LOG_ERROR(ODD, "Unknown Control Register Block register being read, command code = {:#x}", atapiControlReg);
       break;
     }
   }
@@ -662,12 +662,12 @@ void ODD::Write(u64 writeAddress, u64 data, u8 byteCount) {
         atapiIdentifyCommand();
         return;
       default:
-        LOG_ERROR(ODD, "Unknown command, command code = 0x{}", data);
+        LOG_ERROR(ODD, "Unknown command, command code = {:#x}", data);
         break;
       }
       return;
     default:
-      LOG_ERROR(ODD, "Unknown Command Register Block register being written, command code = 0x{}", atapiCommandReg);
+      LOG_ERROR(ODD, "Unknown Command Register Block register being written, command code = {:#x}", atapiCommandReg);
       break;
     }
   } else {
@@ -690,7 +690,7 @@ void ODD::Write(u64 writeAddress, u64 data, u8 byteCount) {
       memcpy(&atapiState.atapiRegs.dmaTableOffsetReg, &data, byteCount);
       break;
     default:
-      LOG_ERROR(ODD, "Unknown Control Register Block register being written, command code = 0x{}", atapiControlReg);
+      LOG_ERROR(ODD, "Unknown Control Register Block register being written, command code = {:#x}", atapiControlReg);
       break;
     }
   }

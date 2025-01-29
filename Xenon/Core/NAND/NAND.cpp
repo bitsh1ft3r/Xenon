@@ -17,12 +17,12 @@ bool NAND::Load(const std::string filePath) {
   rawFileSize = ftell(inputFile);
   fseek(inputFile, 0, SEEK_SET);
 
-  LOG_INFO(System, "NAND: File size = 0x{} bytes.", rawFileSize);
+  LOG_INFO(System, "NAND: File size = {:#x} bytes.", rawFileSize);
 
   CheckMagic();
 
   if (!CheckMagic()) {
-    LOG_ERROR(System, "NAND: wrong magic found, Xbox 360 Retail NAND magic is 0xFF4F and Devkit NAND magic 0x0F4F.");
+    LOG_ERROR(System, "NAND: Wrong magic found, Xbox 360 Retail NAND magic is 0xFF4F and Devkit NAND magic 0x0F4F.");
     return false;
   }
 
