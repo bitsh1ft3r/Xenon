@@ -27,6 +27,7 @@ std::filesystem::path find_fs_path_or(const basic_value<TC> &v, const K &ky,
 namespace Config {
 
 // General.
+static int comPort = 2;
 static bool gpuRenderThreadEnabled = true;
 static bool isFullscreen = false;
 
@@ -45,6 +46,13 @@ static s32 screenHeight = 720;
 // static s32 gpuId = -1; // Vulkan physical device index. Set to negative for
 // auto select
 
+// Filepaths
+static std::string fusesTxtPath = "C:/Xbox/fuses.txt";
+static std::string oneBlBinPath = "C:/Xbox/1bl.bin";
+static std::string nandBinPath = "C:/Xbox/nand.bin";
+
+std::string COMPort() { return "\\\\.\\COM" + std::to_string(comPort); }
+
 bool fullscreenMode() { return isFullscreen; }
 
 bool gpuThreadEnabled() { return gpuRenderThreadEnabled; }
@@ -58,6 +66,12 @@ u64 HW_INIT_SKIP2() { return SKIP_HW_INIT_2; }
 s32 windowWidth() { return screenWidth; }
 
 s32 windowHeight() { return screenHeight; }
+
+std::string fusesPath() { return fusesTxtPath; }
+
+std::string oneBlPath() { return oneBlBinPath; }
+
+std::string nandPath() { return nandBinPath; }
 
 // s32 getGpuId() {
 //     return gpuId;
@@ -83,6 +97,7 @@ void loadConfig(const std::filesystem::path &path) {
 
   if (data.contains("General")) {
     const toml::value &general = data.at("General");
+    comPort = toml::find_or<int>(general, "COMPort", false);
     gpuRenderThreadEnabled =
         toml::find_or<bool>(general, "GPURenderThreadEnabled", false);
     isFullscreen = toml::find_or<bool>(general, "Fullscreen", false);
@@ -104,6 +119,16 @@ void loadConfig(const std::filesystem::path &path) {
     screenWidth = toml::find_or<int>(gpu, "screenWidth", screenWidth);
     screenHeight = toml::find_or<int>(gpu, "screenHeight", screenHeight);
     //        gpuId = toml::find_or<int>(gpu, "gpuId", -1);
+  }
+
+  if (data.contains("Paths")) {
+    const toml::value &paths = data.at("Paths");
+    fusesTxtPath =
+        toml::find_or<std::string>(paths, "Fuses", fusesTxtPath);
+    oneBlBinPath =
+        toml::find_or<std::string>(paths, "OneBL", oneBlBinPath);
+    nandBinPath =
+        toml::find_or<std::string>(paths, "Nand", nandBinPath);
   }
 }
 
@@ -127,6 +152,7 @@ void saveConfig(const std::filesystem::path &path) {
   }
 
   // General.
+  data["General"]["COMPort"] = comPort;
   data["General"]["GPURenderThreadEnabled"] = gpuRenderThreadEnabled;
   data["General"]["Fullscreen"] = isFullscreen;
 
@@ -141,6 +167,11 @@ void saveConfig(const std::filesystem::path &path) {
   data["GPU"]["screenWidth"] = screenWidth;
   data["GPU"]["screenHeight"] = screenHeight;
   //    data["GPU"]["gpuId"] = gpuId;
+
+  // Paths.
+  data["Paths"]["Fuses"] = fusesTxtPath;
+  data["Paths"]["OneBL"] = oneBlBinPath;
+  data["Paths"]["Nand"] = nandBinPath;
 
   std::ofstream file(path, std::ios::binary);
   file << data;

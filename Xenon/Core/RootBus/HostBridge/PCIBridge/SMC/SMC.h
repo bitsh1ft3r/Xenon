@@ -230,7 +230,7 @@ struct SMC_CORE_STATE {
   u8 fifoBufferPos = 0;
 
   // Default COM Port for opening.
-  LPWSTR currentCOMPort;
+  LPCSTR currentCOMPort;
   // UART Initialized.
   bool uartInitialized;
   // UART Present. Used to do a one time check on UART COM Port on the host

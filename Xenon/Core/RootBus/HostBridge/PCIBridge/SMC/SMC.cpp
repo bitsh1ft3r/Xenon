@@ -282,14 +282,14 @@ void Xe::PCIDev::SMC::SMCCore::setupUART(u32 uartConfig) {
 
   // Open COM# port using the CreateFile function.
   smcCoreState->comPortHandle =
-      CreateFile(TEXT("\\\\.\\COM2"), GENERIC_READ | GENERIC_WRITE, 0, nullptr,
+      CreateFileA(smcCoreState->currentCOMPort, GENERIC_READ | GENERIC_WRITE, 0, nullptr,
                  OPEN_EXISTING, 0, nullptr);
 
   if (smcCoreState->comPortHandle == INVALID_HANDLE_VALUE) {
     printf("[ERR] SMCCore: CreateFile failed with error %lu. Make sure the "
-           "Selected COM "
-           "Port is availeable in your system.\n",
-           GetLastError());
+           "Selected COM"
+           "Port (%s) is avaliable in your system.\n",
+           GetLastError(), smcCoreState->currentCOMPort);
     smcCoreState->uartPresent = false;
     return;
   }
