@@ -47,7 +47,7 @@ bool Xe::Xenos::XGPU::Read(u64 readAddress, u64 *data, u8 byteCount) {
     
     const u32 regIndex = (readAddress & 0xFFFFF) / 4;
 
-    LOG_TRACE(Xenos, "Read Addr = {0:#x}, reg: {0:#x}.", readAddress, regIndex);
+    LOG_TRACE(Xenos, "Read Addr = {:#x}, reg: {:#x}.", readAddress, regIndex);
 
     XeRegister reg = static_cast<XeRegister>(regIndex);
 
@@ -72,7 +72,7 @@ bool Xe::Xenos::XGPU::Write(u64 writeAddress, u64 data, u8 byteCount) {
 
     const u32 regIndex = (writeAddress & 0xFFFFF) / 4;
 
-    LOG_TRACE(Xenos, "Write Addr = {0:#x}, reg: {0:#x}, data = {0:#x}.", writeAddress, regIndex,
+    LOG_TRACE(Xenos, "Write Addr = {:#x}, reg: {:#x}, data = {:#x}.", writeAddress, regIndex,
         _byteswap_ulong(static_cast<u32>(data)));
 
     XeRegister reg = static_cast<XeRegister>(regIndex);
@@ -141,7 +141,7 @@ void Xe::Xenos::XGPU::XenosThread() {
   const u32 resHeight = 720;
 
   if (!SDL_Init(SDL_INIT_VIDEO)) {
-    LOG_ERROR(System, "Failed to initialize SDL video subsystem: {0:#x}", SDL_GetError());
+    LOG_ERROR(System, "Failed to initialize SDL video subsystem: {:#x}", SDL_GetError());
   }
 
   //	Set the title.

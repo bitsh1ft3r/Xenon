@@ -65,8 +65,8 @@ void PrintColoredMessage(const Entry& entry) {
     case Level::Critical: // Bright magenta
         color = FOREGROUND_RED | FOREGROUND_BLUE | FOREGROUND_INTENSITY;
         break;
-    case Level::DebugPrint: // Green
-        color = FOREGROUND_GREEN;
+    case Level::Guest: // Bright green
+        color = FOREGROUND_GREEN | FOREGROUND_INTENSITY;
         break;
     case Level::Count:
         UNREACHABLE();
@@ -95,8 +95,8 @@ void PrintColoredMessage(const Entry& entry) {
     case Level::Critical: // Bright magenta
         color = ESC "[1;35m";
         break;
-    case Level::Xbox360: // Green
-        color = ESC "[0;32m";
+    case Level::Guest: // Green
+        color = ESC "[0;92m";
         break;
     case Level::Count:
         UNREACHABLE();

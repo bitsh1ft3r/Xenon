@@ -652,7 +652,7 @@ void PPCInterpreter::PPCInterpreter_mfspr(PPU_STATE *hCore) {
     value = hCore->SPR.CTRL;
     break;
   default:
-    LOG_ERROR(Xenon_PostBus, "mfspr: Unknown SPR: 0x{0:#x}", sprNum);
+    LOG_ERROR(Xenon_PostBus, "mfspr: Unknown SPR: 0x{:#x}", sprNum);
     break;
   }
 
@@ -792,7 +792,7 @@ void PPCInterpreter::PPCInterpreter_mtspr(PPU_STATE *hCore) {
         (hCore->ppuThread[hCore->currentThread].GPR[rD] << 32);
     break;
   default:
-    LOG_ERROR(Xenon_PostBus, "{} SPR {0:#d} = 0x{0:#x}", hCore->ppuName, spr, hCore->ppuThread[hCore->currentThread].GPR[rD]);
+    LOG_ERROR(Xenon_PostBus, "{} SPR {0:#d} = 0x{:#x}", hCore->ppuName, spr, hCore->ppuThread[hCore->currentThread].GPR[rD]);
     break;
   }
 }

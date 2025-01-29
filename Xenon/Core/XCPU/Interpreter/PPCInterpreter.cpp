@@ -731,7 +731,7 @@ case PPCInstruction::td:
     break;
   default:
       LOG_CRITICAL(Xenon, "PPC Interpreter: Unknown or unimplemented instruction found: "
-          "data: {0:#x}, address: {0:#x}, OpCode: {}.", hCore->ppuThread[hCore->currentThread].CI,
+          "data: {:#x}, address: {:#x}, OpCode: {}.", hCore->ppuThread[hCore->currentThread].CI,
           hCore->ppuThread[hCore->currentThread].CIA, getOpcodeName(hCore->ppuThread[hCore->currentThread].CI));
     break;
   }
@@ -922,7 +922,7 @@ void PPCInterpreter::ppcInterpreterTrap(PPU_STATE *hCore, u32 trapNumber) {
       dbgString[idx] = MMURead8(
           hCore, hCore->ppuThread[hCore->currentThread].GPR[0x3] + idx);
     }
-    LOG_XBOX_DEBUGP(Guest, "{}", dbgString.c_str());
+    LOG_XBOX(Guest, "DebugPrint: {}", dbgString.c_str());
   }
 
   if (trapNumber == 0x17) {

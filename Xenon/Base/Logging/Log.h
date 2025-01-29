@@ -67,7 +67,7 @@ void FmtLogMessage(Class log_class, Level log_level, const char* filename, unsig
     Base::Log::FmtLogMessage(Base::Log::Class::log_class, Base::Log::Level::Critical,        \
                                Base::Log::TrimSourcePath(__FILE__), __LINE__, __func__,          \
                                __VA_ARGS__)
-#define LOG_XBOX_DEBUGP(log_class, ...)                                                               \
-    Base::Log::FmtLogMessage(Base::Log::Class::log_class, Base::Log::Level::DebugPrint,           \
+#define LOG_XBOX(log_class, ...)                                                               \
+    Base::Log::FmtLogMessage(Base::Log::Class::log_class, Base::Log::Level::Guest,           \
                                Base::Log::TrimSourcePath(__FILE__), __LINE__, __func__,          \
                                __VA_ARGS__)

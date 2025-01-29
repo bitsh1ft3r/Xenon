@@ -49,7 +49,7 @@ void RootBus::Read(u64 readAddress, u64 *data, u8 byteCount) {
   }
 
   // Device not found.
-  LOG_ERROR(RootBus, "Read failed at address {0:#x}", readAddress);
+  LOG_ERROR(RootBus, "Read failed at address {:#x}", readAddress);
 
   // Any reads to bus that dont belong to any device are always 0xFF.
   *data = 0xFFFFFFFFFFFFFFFF;
@@ -78,7 +78,7 @@ void RootBus::Write(u64 writeAddress, u64 data, u8 byteCount) {
   }
 
   // Device or address not found.
-  LOG_ERROR(RootBus, "Write failed at address: {0:#x} data: {0:#x}", writeAddress, data);
+  LOG_ERROR(RootBus, "Write failed at address: {:#x} data: {:#x}", writeAddress, data);
 }
 
 //

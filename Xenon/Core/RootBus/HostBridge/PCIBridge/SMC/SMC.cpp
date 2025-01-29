@@ -155,7 +155,7 @@ void Xe::PCIDev::SMC::SMCCore::Read(u64 readAddress, u64 *data, u8 byteCount) {
     smcCoreState->fifoBufferPos += 4;
     break;
   default:
-    LOG_ERROR(SMC, "Unknown register being read, offset {0:#x}", static_cast<u16>(regOffset));
+    LOG_ERROR(SMC, "Unknown register being read, offset {:#x}", static_cast<u16>(regOffset));
     break;
   }
 }
@@ -226,7 +226,7 @@ void Xe::PCIDev::SMC::SMCCore::Write(u64 writeAddress, u64 data, u8 byteCount) {
     smcCoreState->fifoBufferPos += 4;
     break;
   default:
-    LOG_ERROR(SMC, "Unknown register being written, offset {0:#x}, data {0:#x}", 
+    LOG_ERROR(SMC, "Unknown register being written, offset {:#x}, data {:#x}", 
         static_cast<u16>(regOffset), data);
     break;
   }
@@ -270,7 +270,7 @@ void Xe::PCIDev::SMC::SMCCore::setupUART(u32 uartConfig) {
     smcCoreState->comPortDCB.StopBits = ONESTOPBIT;
     break;
   default:
-    LOG_WARNING(SMC, "SMCCore: Unknown UART config being set: ConfigValue = {0:#x}", uartConfig);
+    LOG_WARNING(SMC, "SMCCore: Unknown UART config being set: ConfigValue = {:#x}", uartConfig);
     break;
   }
 
@@ -280,7 +280,7 @@ void Xe::PCIDev::SMC::SMCCore::setupUART(u32 uartConfig) {
                  OPEN_EXISTING, 0, nullptr);
 
   if (smcCoreState->comPortHandle == INVALID_HANDLE_VALUE) {
-    LOG_ERROR(SMC, "CreateFile failed with error {0:#x}. Make sure the Selected COM Port is avaliable "
+    LOG_ERROR(SMC, "CreateFile failed with error {:#x}. Make sure the Selected COM Port is avaliable "
         "in your system.", GetLastError());
     smcCoreState->uartPresent = false;
     return;
@@ -288,11 +288,11 @@ void Xe::PCIDev::SMC::SMCCore::setupUART(u32 uartConfig) {
 
   // Get Current COM Port State
   if (!GetCommState(smcCoreState->comPortHandle, &smcCoreState->comPortDCB)) {
-    LOG_ERROR(SMC, "UART: GetCommState failed with error {0:#x}.", GetLastError());
+    LOG_ERROR(SMC, "UART: GetCommState failed with error {:#x}.", GetLastError());
   }
   // Set The COM Port State as per config value.
   if (!SetCommState(smcCoreState->comPortHandle, &smcCoreState->comPortDCB)) {
-    LOG_ERROR(SMC, "UART: SetCommState failed with error {0:#x}.", GetLastError());
+    LOG_ERROR(SMC, "UART: SetCommState failed with error {:#x}.", GetLastError());
   }
 
   LOG_INFO(SMC, "UART Initialized Successfully.");
@@ -438,7 +438,7 @@ void Xe::PCIDev::SMC::SMCCore::smcMainThread() {
               (smcCoreState->fifoDataBuffer[7] << 24);
           break;
         default:
-            LOG_WARNING(SMC, "SMC_I2C_READ_WRITE: Unimplemented command {0:#x}", 
+            LOG_WARNING(SMC, "SMC_I2C_READ_WRITE: Unimplemented command {:#x}", 
                 smcCoreState->fifoDataBuffer[1]);
           smcCoreState->fifoDataBuffer[0] = SMC_I2C_READ_WRITE;
           smcCoreState->fifoDataBuffer[1] = 0x1; // Set R/W Failed.
@@ -517,7 +517,7 @@ void Xe::PCIDev::SMC::SMCCore::smcMainThread() {
           LOG_WARNING(SMC, "Unimplemented SMC_FIFO_CMD: SMC_SET_9F_INT");
         break;
       default:
-          LOG_WARNING(SMC, "Unknown SMC_FIFO_CMD: ID = {0:#x}", 
+          LOG_WARNING(SMC, "Unknown SMC_FIFO_CMD: ID = {:#x}", 
               static_cast<u16>(smcCoreState->fifoDataBuffer[0]));
         break;
       }

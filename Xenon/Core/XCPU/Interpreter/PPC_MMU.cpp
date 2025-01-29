@@ -1191,7 +1191,7 @@ u64 PPCInterpreter::MMURead(XENON_CONTEXT *cpuContext, PPU_STATE *ppuState,
       data = cpuContext->fuseSet.fuseLine11;
       break;
     default:
-      LOG_ERROR(Xenon_MMU, "Reading to unknown fuse at address {0:#x}", EA);
+      LOG_ERROR(Xenon_MMU, "Reading to unknown fuse at address {:#x}", EA);
       break;
     }
 
@@ -1240,7 +1240,7 @@ u64 PPCInterpreter::MMURead(XENON_CONTEXT *cpuContext, PPU_STATE *ppuState,
   }
 
   if (socRead && nand != true && pciBridge != true && pciConfigSpace != true) {
-      LOG_WARNING(Xenon_MMU, "SoC Read from {0:#x}, returning 0.", EA);
+      LOG_WARNING(Xenon_MMU, "SoC Read from {:#x}, returning 0.", EA);
     data = 0;
     return data;
   }
@@ -1297,7 +1297,7 @@ void PPCInterpreter::MMUWrite(XENON_CONTEXT *cpuContext, PPU_STATE *ppuState,
   // CPU VID Register
   if (socWrite && EA == 0x61188) {
     if (data != 0) {
-      LOG_WARNING(Xenon, "(SOC): New VID value being set: {0:#x}", data);
+      LOG_WARNING(Xenon, "(SOC): New VID value being set: {:#x}", data);
     }
     return;
   }
@@ -1348,7 +1348,7 @@ void PPCInterpreter::MMUWrite(XENON_CONTEXT *cpuContext, PPU_STATE *ppuState,
   }
 
   if (socWrite && nand != true && pciBridge != true && pciConfigSpace != true) {
-    LOG_WARNING(Xenon_MMU, "SoC Write to {0:#x}, data = {0:#x}, invalidating.", EA, data);
+    LOG_WARNING(Xenon_MMU, "SoC Write to {:#x}, data = {:#x}, invalidating.", EA, data);
     return;
   }
 
