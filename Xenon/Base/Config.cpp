@@ -28,7 +28,7 @@ namespace Config {
 // General.
 static bool gpuRenderThreadEnabled = true;
 static bool isFullscreen = false;
-Base::Log::Level currentLogLevel = Base::Log::Level::Info;
+Base::Log::Level currentLogLevel = Base::Log::Level::Warning;
 
 // SMC.
 static int smcPowerOnReason = 0x11; // Valid values are: 0x11 (SMC_PWR_REAS_PWRBTN) and 0x12
