@@ -922,7 +922,7 @@ void PPCInterpreter::ppcInterpreterTrap(PPU_STATE *hCore, u32 trapNumber) {
       dbgString[idx] = MMURead8(
           hCore, hCore->ppuThread[hCore->currentThread].GPR[0x3] + idx);
     }
-    LOG_XBOX(Guest, " > DebugPrint: {}", dbgString.c_str());
+    LOG_XBOX(DebugPrint, "> {}", dbgString);
   }
 
   if (trapNumber == 0x17) {

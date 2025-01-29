@@ -84,7 +84,7 @@ bool ParseFilterRule(Filter& instance, Iterator begin, Iterator end) {
     CLS(ODD)                                                                                       \
     CLS(SFCX)                                                                                      \
     CLS(XMA)                                                                                       \
-    CLS(Guest)                                                                                     \
+    CLS(DebugPrint)                                                                                \
     CLS(SMC)                                                                                       \
     CLS(UART)  
 
