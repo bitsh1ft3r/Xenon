@@ -17,7 +17,7 @@ enum class Level : u8 {
     ///< completed.
     Critical, ///< Major problems during execution that threaten the stability of the entire
     ///< application.
-
+    DebugPrint, ///< Output from the guest system DebugPrints.
     Count, ///< Total number of logging levels
 };
 
@@ -42,6 +42,7 @@ enum class Class : u8 {
     PCIBridge,              // PCI Bridge messages: Connected devices, failed lookups, etc.. 
     SMC,                    // System Management Controller messages.
     UART,                   // UART output.
+    Guest,                // Guest hardware output. Xbox Kernel Debug Prints.
     Count                   // Total number of logging classes.
 };
 

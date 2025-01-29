@@ -74,6 +74,7 @@ bool ParseFilterRule(Filter& instance, Iterator begin, Iterator end) {
     CLS(Xenos)                                                                                     \
     CLS(RootBus)                                                                                   \
     CLS(PCIBridge)                                                                                 \
+    CLS(Guest)                                                                                     \
     CLS(SMC)                                                                                       \
     CLS(UART)  
 
@@ -107,6 +108,7 @@ const char* GetLevelName(Level log_level) {
         LVL(Warning);
         LVL(Error);
         LVL(Critical);
+        LVL(DebugPrint);
     case Level::Count:
     default:
         break;
