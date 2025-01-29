@@ -83,6 +83,10 @@ int main(int argc, char *argv[]) {
   const auto user_dir = Base::FS::GetUserPath(Base::FS::PathType::UserDir);
   Config::loadConfig(user_dir / "xenon_config.toml");
 
+  // Set current log filter based on the config value.
+  Base::Log::Filter currentLogFilter(Config::getCurrentLogLevel());
+  Base::Log::SetGlobalFilter(currentLogFilter);
+
   RootBus RootBus;       // RootBus Object
   HostBridge hostBridge; // HostBridge Object
   PCIBridge pciBridge;   // PCIBridge Object

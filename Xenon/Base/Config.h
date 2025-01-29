@@ -2,8 +2,10 @@
 
 #pragma once
 
-#include "Types.h"
 #include <filesystem>
+
+#include "Types.h"
+#include "Logging/Backend.h"
 
 namespace Config {
 
@@ -20,6 +22,8 @@ std::string COMPort();
 bool fullscreenMode();
 // Enable GPU Render thread.
 bool gpuThreadEnabled();
+// Current log level.
+Base::Log::Level getCurrentLogLevel();
 
 //
 // SMC Options.

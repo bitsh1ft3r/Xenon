@@ -31,6 +31,7 @@ namespace Config {
 static int comPort = 2;
 static bool gpuRenderThreadEnabled = true;
 static bool isFullscreen = false;
+Base::Log::Level currentLogLevel = Base::Log::Level::Info;
 
 // SMC.
 static int smcPowerOnReason =
@@ -57,6 +58,8 @@ std::string COMPort() { return "\\\\.\\COM" + std::to_string(comPort); }
 bool fullscreenMode() { return isFullscreen; }
 
 bool gpuThreadEnabled() { return gpuRenderThreadEnabled; }
+
+Base::Log::Level getCurrentLogLevel() { return currentLogLevel; }
 
 int smcPowerOnType() { return smcPowerOnReason; }
 
@@ -99,14 +102,15 @@ void loadConfig(const std::filesystem::path &path) {
 
   if (data.contains("General")) {
     const toml::value &general = data.at("General");
-    comPort = toml::find_or<int>(general, "COMPort", false);
     gpuRenderThreadEnabled =
         toml::find_or<bool>(general, "GPURenderThreadEnabled", false);
     isFullscreen = toml::find_or<bool>(general, "Fullscreen", false);
+    currentLogLevel = (Base::Log::Level)find_or<int>(general, "Loglevel", false);
   }
 
   if (data.contains("SMC")) {
     const toml::value &smc = data.at("SMC");
+    comPort = toml::find_or<int>(smc, "COMPort", false);
     smcPowerOnReason = toml::find_or<int>(smc, "SMCPowerOnType", false);
   }
 
@@ -154,11 +158,12 @@ void saveConfig(const std::filesystem::path &path) {
   }
 
   // General.
-  data["General"]["COMPort"] = comPort;
   data["General"]["GPURenderThreadEnabled"] = gpuRenderThreadEnabled;
   data["General"]["Fullscreen"] = isFullscreen;
+  data["General"]["Loglevel"] = (int)currentLogLevel;
 
   // SMC.
+  data["SMC"]["COMPort"] = comPort;
   data["SMC"]["SMCPowerOnType"] = smcPowerOnReason;
 
   // PowerPC.
