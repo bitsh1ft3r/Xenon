@@ -1,7 +1,6 @@
 // Copyright 2025 Xenon Emulator Project
 
 #include <assert.h>
-#include <iostream>
 
 #include "PPCInterpreter.h"
 

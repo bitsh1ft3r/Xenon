@@ -1,10 +1,8 @@
 // Copyright 2025 Xenon Emulator Project
 
-#include <iostream>
-
+#include "Base/Logging/Log.h"
 #include "PPCInterpreter.h"
 #include "PPC_Instruction.h"
-#include "Base/Logging/Log.h"
 
 PPCInstruction PPCInterpreter::getOpcode(u32 instrData) {
   u32 OPCD = ExtractBits(instrData, 0, 5);

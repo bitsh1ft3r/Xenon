@@ -1,10 +1,7 @@
 // Copyright 2025 Xenon Emulator Project
 
-#include <iostream>
-#include <stdlib.h>
-
-#include "PPCInterpreter.h"
 #include "Base/Logging/Log.h"
+#include "PPCInterpreter.h"
 
 #define GPR(x) hCore->ppuThread[hCore->currentThread].GPR[x]
 #define XER_SET_CA(v) hCore->ppuThread[hCore->currentThread].SPR.XER.CA = v
