@@ -22,6 +22,8 @@ std::string* COMPort();
 bool fullscreenMode();
 // Enable GPU Render thread.
 bool gpuThreadEnabled();
+// Should we quit when our rendering window is closed?
+bool quitOnWindowClosure();
 // Current log level.
 Base::Log::Level getCurrentLogLevel();
 

@@ -28,6 +28,7 @@ namespace Config {
 // General.
 static bool gpuRenderThreadEnabled = true;
 static bool isFullscreen = false;
+static bool shouldQuitOnWindowClosure = false;
 Base::Log::Level currentLogLevel = Base::Log::Level::Warning;
 
 // SMC.
@@ -59,6 +60,8 @@ std::string* COMPort() {
 bool fullscreenMode() { return isFullscreen; }
 
 bool gpuThreadEnabled() { return gpuRenderThreadEnabled; }
+
+bool quitOnWindowClosure() { return shouldQuitOnWindowClosure; }
 
 Base::Log::Level getCurrentLogLevel() { return currentLogLevel; }
 
@@ -106,6 +109,8 @@ void loadConfig(const std::filesystem::path &path) {
     gpuRenderThreadEnabled =
         toml::find_or<bool>(general, "GPURenderThreadEnabled", false);
     isFullscreen = toml::find_or<bool>(general, "Fullscreen", false);
+    shouldQuitOnWindowClosure =
+        toml::find_or<bool>(general, "QuitOnWindowClosure", false);
     currentLogLevel = (Base::Log::Level)find_or<int>(general, "Loglevel", false);
   }
 
@@ -161,6 +166,7 @@ void saveConfig(const std::filesystem::path &path) {
   // General.
   data["General"]["GPURenderThreadEnabled"] = gpuRenderThreadEnabled;
   data["General"]["Fullscreen"] = isFullscreen;
+  data["General"]["QuitOnWindowClosure"] = shouldQuitOnWindowClosure;
   data["General"]["Loglevel"] = (int)currentLogLevel;
 
   // SMC.

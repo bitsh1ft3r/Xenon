@@ -30,9 +30,10 @@ endfunction()
 find_package(fmt 11.1.3 CONFIG)
 find_package(SDL3 3.2.0 CONFIG)
 find_package(toml11 4.3.0 CONFIG)
+find_package(OpenGL REQUIRED)
 
 add_subdirectory(third_party)
-include_directories(Xenon)
+include_directories(Xenon third_party/glad/include)
 
 set(Logging
     Xenon/Base/Logging/Backend.cpp
@@ -167,12 +168,13 @@ add_executable(Xenon
     ${Base}
     ${Core}
     Xenon/Xe_Main.cpp
+    third_party/glad/src/glad.c
 )
 
 create_target_directory_groups(Xenon)
 
 target_include_directories(Xenon PRIVATE ${CMAKE_CURRENT_SOURCE_DIR})
-target_link_libraries(Xenon PRIVATE fmt::fmt SDL3::SDL3 toml11::toml11)
+target_link_libraries(Xenon PRIVATE fmt::fmt SDL3::SDL3 OpenGL::GL toml11::toml11)
 
 add_definitions(-DNTDDI_VERSION=0x0A000006 -D_WIN32_WINNT=0x0A00 -DWINVER=0x0A00)
 add_definitions(-DNOMINMAX -DWIN32_LEAN_AND_MEAN)
