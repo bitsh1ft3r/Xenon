@@ -3,9 +3,6 @@
 #pragma once
 
 #include <Windows.h>
-#include <iostream>
-#include <stdio.h>
-#include <tchar.h>
 #include <thread>
 #include <vector>
 
