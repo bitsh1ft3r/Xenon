@@ -3,9 +3,7 @@
 #pragma once
 
 #include <thread>
-
-#include <chrono>
-using namespace std::chrono_literals;
+#include <fstream>
 
 #include <SDL3/SDL.h>
 #define GL_GLEXT_PROTOTYPES
@@ -90,7 +88,8 @@ struct XenosState {
   u8 *Regs;
 };
 
-#define COLOR(b, g, r, a) ((a) << 24 | (r) << 16 | (g) << 8 | (b))
+// ARGB (Console is BGRA)
+#define COLOR(r, g, b, a) ((a) << 24 | (r) << 16 | (g) << 8  | (b) << 0)
 class XGPU {
 public:
   XGPU(RAM *ram);

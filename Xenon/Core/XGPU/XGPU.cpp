@@ -5,6 +5,7 @@
 #include "XenosRegisters.h"
 
 #include "Base/Config.h"
+#include "Base/Path_util.h"
 #include "Base/Version.h"
 #include "Base/Logging/Log.h"
 
@@ -114,11 +115,15 @@ bool Xe::Xenos::XGPU::isAddressMappedInBAR(u32 address) {
   return false;
 }
 
+// Shaders
 constexpr const char* vertexShaderSource = R"(
 #version 430 core
+
 layout (location = 0) in vec2 i_pos;
 layout (location = 1) in vec2 i_texture_coord;
+
 out vec2 o_texture_coord;
+
 void main() {
   gl_Position = vec4(i_pos, 0.0, 1.0);
   o_texture_coord = i_texture_coord;
@@ -126,75 +131,55 @@ void main() {
 )";
 constexpr const char* fragmentShaderSource = R"(
 #version 430 core
-in vec2 o_texture_coord;
-out vec4 o_color;
-uniform usampler2D u_texture;
 
+in vec2 o_texture_coord;
+
+out vec4 o_color;
+
+uniform usampler2D u_texture;
 void main() {
-  uint pixel = texture(u_texture, o_texture_coord).r; // Read packed 32-bit BGRA value
-  float b = float((pixel >> 0)  & 0xFF) / 255.0;
-  float g = float((pixel >> 8)  & 0xFF) / 255.0;
-  float r = float((pixel >> 16) & 0xFF) / 255.0;
+  uint pixel = texture(u_texture, o_texture_coord).r;
+  // Gotta love BE vs LE (X360 works in BGRA, so we work in ARGB)
   float a = float((pixel >> 24) & 0xFF) / 255.0;
+  float r = float((pixel >> 16) & 0xFF) / 255.0;
+  float g = float((pixel >> 8) & 0xFF) / 255.0;
+  float b = float((pixel >> 0) & 0xFF) / 255.0;
   o_color = vec4(r, g, b, a);
 }
 )";
-// Vali: We may have to do some cursed hackry to dynamically change resolution. Whether that's recompiling the shader with placeholder text and string replacement, or passing some layout data
 constexpr const char* computeShaderSource = R"(
 #version 430 core
 
 layout (local_size_x = 16, local_size_y = 16) in;
+
 layout (r32ui, binding = 0) uniform writeonly uimage2D o_texture;
-layout (std430, binding = 1) buffer pixel_buffer {
+layout (std430, binding = 1) buffer pixel_buffer
+{
   uint pixel_data[];
 };
-
-uniform bool useXeFb;
 uniform int resWidth;
 uniform int resHeight;
 
-int xeFbConvert(int resWidth, int addr)
-{
-    int y = addr / (resWidth * 4);
-    int x = (addr % (resWidth * 4)) / 4;
-
-    // Adjust X & Y based on console tiling format
-    int tileX = (x >> 5) * 32;  // Tile-aligned X
-    int tileY = (y >> 5) * resWidth; // Tile-aligned Y
-
-    // Local offsets inside tile
-    int localX = x & 3;
-    int localY = y & 1;
-
-    // Compute offset like console_pset32
-    uint offset = (tileY + tileX) 
-                + (localX) 
-                + (localY << 2) 
-                + (((x & 31) >> 2) << 3) 
-                + (((y & 31) >> 1) << 6);
-
-    offset ^= ((y & 8) << 2); // Fix interleaving
-
-    return int(offset);
+// This is black magic to convert tiles to linear, just don't touch it
+int xeFbConvert(int width, int addr) {
+  int y = addr / (width * 4);
+  int x = (addr % (width * 4)) / 4;
+  return ((((y & ~31) * width) + (x & ~31) * 32) +
+         (((x & 3) + ((y & 1) << 2) + ((x & 28) << 1) + ((y & 30) << 5)) ^ 
+         ((y & 8) << 2)));
 }
-
-#define XE_PIXEL_TO_STD_ADDR(x, y) ((y * resWidth + x)) * 4
-#define XE_PIXEL_TO_XE_ADDR(x, y) xeFbConvert(resWidth, XE_PIXEL_TO_STD_ADDR(x, y))
 
 void main() {
   ivec2 texel_pos = ivec2(gl_GlobalInvocationID.xy);
+  // OOB check, but shouldn't be needed
   if (texel_pos.x >= resWidth || texel_pos.y >= resHeight)
     return;
-  int flippedX = resWidth - texel_pos.x - 1;
-  int flippedY = resHeight - texel_pos.y - 1;
 
-  int index = useXeFb ? XE_PIXEL_TO_XE_ADDR(texel_pos.x, texel_pos.y) 
-                      : XE_PIXEL_TO_STD_ADDR(texel_pos.x, texel_pos.y);
+  // God only knows how this indexing works
+  int stdIndex = (texel_pos.y * resWidth + texel_pos.x);
+  int xeIndex = xeFbConvert(resWidth, stdIndex * 4);
 
-  if (index < 0 || index >= (resWidth * resHeight)) return;
-  
-  uint packedColor = pixel_data[index / 4]; 
-  uint debugColor = ((texel_pos.x % 16) < 8) ? 0xFFFFFFFF : 0xFF000000;
+  uint packedColor = pixel_data[xeIndex]; 
   imageStore(o_texture, texel_pos, uvec4(packedColor, 0, 0, 0));
 }
 )";
@@ -225,46 +210,6 @@ GLuint createShaderProgram(const char* vertex, const char* fragment) {
     return program;
 }
 
-static inline int xeFbConvert(const int resWidth, const int addr) {
-  const int y = addr / (resWidth * 4);
-  const int x = addr % (resWidth * 4) / 4;
-  const u64 offset =
-      ((((y & ~31) * resWidth) + (x & ~31) * 32) +
-       (((x & 3) + ((y & 1) << 2) + ((x & 28) << 1) + ((y & 30) << 5)) ^
-        ((y & 8) << 2))) *
-      4;
-  return offset;
-}
-
-#define XE_PIXEL_TO_STD_ADDR(x, y) (y * resWidth + x) * 4
-#define XE_PIXEL_TO_XE_ADDR(x, y)                                              \
-  xeFbConvert(resWidth, XE_PIXEL_TO_STD_ADDR(x, y))
-
-void ConvertFramebufferCPU(std::vector<uint32_t>& outputBuffer, uint8_t* xeFramebuffer, int resWidth, int resHeight) {
-  int stdPixPos = 0;
-  int xePixPos = 0;
-  for (int x = 0; x < resWidth; x++) {
-      for (int y = 0; y < resHeight; y++) {
-          if (x < 5 && y < 5) { 
-            printf("X: %d, Y: %d -> Std: %d, XE: %d\n", x, y, stdPixPos, xePixPos); 
-          }
-          int flippedY = resHeight - y - 1;
-          
-          stdPixPos = XE_PIXEL_TO_STD_ADDR(x, flippedY);
-          xePixPos = XE_PIXEL_TO_XE_ADDR(x, y);
-          // Ensure within bounds
-          if (xePixPos + 3 >= resWidth * resHeight * 4) continue;
-          // Copy pixel data
-          uint8_t b = xeFramebuffer[xePixPos];      // Blue
-          uint8_t g = xeFramebuffer[xePixPos + 1];  // Green
-          uint8_t r = xeFramebuffer[xePixPos + 2];  // Red
-          uint8_t a = xeFramebuffer[xePixPos + 3];  // Alpha
-          // Store in OpenGL format (RGBA)
-          outputBuffer[stdPixPos / 4] = COLOR(b, g, r, a);
-      }
-  }
-}
-
 void Xe::Xenos::XGPU::XenosThread() {
   // TODO(bitsh1ft3r):
   // Change resolution/window size according to current AVPACK, that is
@@ -273,8 +218,11 @@ void Xe::Xenos::XGPU::XenosThread() {
   // TODO(Xphalnos):
   // Find a way to change the internal resolution without crashing the display.
   // Window Resolution.
-  const u32 resWidth = 1280;
-  const u32 resHeight = 720;
+  // Vali: This might be fixed? Not sure.
+  u32 resWidth = 1280;
+  u32 resHeight = 720;
+	resWidth = ((resWidth + 31) >> 5) << 5;
+	resHeight = ((resHeight + 31) >> 5) << 5;
 
   if (!SDL_Init(SDL_INIT_VIDEO)) {
     LOG_ERROR(System, "Failed to initialize SDL video subsystem: {:#x}", SDL_GetError());
@@ -341,28 +289,28 @@ void Xe::Xenos::XGPU::XenosThread() {
   // Init GL texture
 	glGenTextures(1, &texture);
 	glBindTexture(GL_TEXTURE_2D, texture);
-	glTexStorage2D(GL_TEXTURE_2D, 1, GL_R32UI, resWidth, resHeight); 
+  glTexStorage2D(GL_TEXTURE_2D, 1, GL_R32UI, resWidth, resHeight);
 	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_NEAREST);
 	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_NEAREST);
+  glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_EDGE);
+  glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_EDGE);
 	glBindImageTexture(0, texture, 0, GL_FALSE, 0, GL_READ_WRITE, GL_R32UI);
 
   // Init pixel buffer 
-  int pitch = resWidth * resHeight;
-  std::vector<uint32_t> pixels(pitch, COLOR(0, 0, 0, 255)); // Init with black
+  int pitch = resWidth * resHeight * sizeof(uint32_t);
+  std::vector<uint32_t> pixels(pitch, COLOR(30, 30, 30, 255)); // Init with dark grey
 	glGenBuffers(1, &pixelBuffer);
-  glUniform1i(glGetUniformLocation(shaderProgram, "useXeFb"), GL_FALSE);
-	glBindBuffer(GL_SHADER_STORAGE_BUFFER, pixelBuffer);
-	glBufferData(GL_SHADER_STORAGE_BUFFER, pixels.size() * sizeof(uint32_t), pixels.data(), GL_DYNAMIC_DRAW);
 	glBindBufferBase(GL_SHADER_STORAGE_BUFFER, 1, pixelBuffer);
+	glBufferData(GL_SHADER_STORAGE_BUFFER, pixels.size() * sizeof(uint32_t), pixels.data(), GL_DYNAMIC_DRAW);
 	glBindBuffer(GL_SHADER_STORAGE_BUFFER, 0);
 
   // Init the fullscreen quad
   constexpr float quadVertices[]{
-    // Positions   Texture coords
-    -1.0f, -1.0f,  0.0f, 0.0f,
-    1.0f , -1.0f,  1.0f, 0.0f,
-    1.0f ,  1.0f,  1.0f, 1.0f,
-    -1.0f,  1.0f,  0.0f, 1.0f
+    // Positions  Texture coords
+    -1.0f, -1.0f,  0.0f, 1.0f,
+    1.0f , -1.0f,  1.0f, 1.0f,
+    1.0f ,  1.0f,  1.0f, 0.0f,
+    -1.0f,  1.0f,  0.0f, 0.0f
   };
   // Bind the VAO and VBO for our quad
   glGenVertexArrays(1, &quadVAO);
@@ -412,6 +360,18 @@ void Xe::Xenos::XGPU::XenosThread() {
           LOG_INFO(Xenos, "RenderWindow: Setting Vsync to: {0:#b}", VSYNC);
           VSYNC = !VSYNC;
         }
+        if (windowEvent.key.key == SDLK_F9) {
+          LOG_INFO(Xenos, "RenderWindow: Taking a XenosFB snapshot");
+          std::ofstream f(Base::FS::GetUserPath(Base::FS::PathType::UserDir) / "fbmem.bin", std::ios::out | std::ios::binary | std::ios::trunc);
+          if (!f) {
+            LOG_ERROR(Xenos, "Failed to open fbmem.bin for writing");
+          }
+          else {
+            f.write(reinterpret_cast<const char*>(fbPointer), pitch * 4);
+            LOG_INFO(Xenos, "Framebuffer dumped to Xenon/fbmem.bin");
+          }
+          f.close();
+        }
         if (windowEvent.key.key == SDLK_F11) {
           SDL_WindowFlags flag = SDL_GetWindowFlags(mainWindow);
           bool fullscreenMode = flag & SDL_WINDOW_FULLSCREEN;
@@ -423,23 +383,22 @@ void Xe::Xenos::XGPU::XenosThread() {
       }
     }
 
-    //ConvertFramebufferCPU(pixels, fbPointer, resWidth, resHeight);
-
-    // Upload corrected buffer
+    // Upload buffer 
+    u32* ui_fbPointer = reinterpret_cast<uint32_t*>(fbPointer);
     glBindBuffer(GL_SHADER_STORAGE_BUFFER, pixelBuffer);
-    glBufferSubData(GL_SHADER_STORAGE_BUFFER, 0, resWidth * resHeight * sizeof(uint32_t), fbPointer);
+    glBufferSubData(GL_SHADER_STORAGE_BUFFER, 0, pitch * sizeof(*ui_fbPointer), ui_fbPointer);
     glBindBuffer(GL_SHADER_STORAGE_BUFFER, 0);
 
     // Use the compute shader
     glUseProgram(shaderProgram);
     glBindBufferBase(GL_SHADER_STORAGE_BUFFER, 1, pixelBuffer);
-    glUniform1i(glGetUniformLocation(shaderProgram, "useXeFb"), GL_TRUE);
     glUniform1i(glGetUniformLocation(shaderProgram, "resWidth"), resWidth);
     glUniform1i(glGetUniformLocation(shaderProgram, "resHeight"), resHeight);
     glDispatchCompute(resWidth / 16, resHeight / 16, 1);
     glMemoryBarrier(GL_SHADER_IMAGE_ACCESS_BARRIER_BIT | GL_TEXTURE_FETCH_BARRIER_BIT);
 
     // Render the texture
+    glMemoryBarrier(GL_TEXTURE_UPDATE_BARRIER_BIT);
     glClear(GL_COLOR_BUFFER_BIT);
     glUseProgram(renderShaderProgram);
     glBindTexture(GL_TEXTURE_2D, texture);
