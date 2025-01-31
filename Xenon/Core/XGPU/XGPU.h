@@ -3,8 +3,12 @@
 #pragma once
 
 #include <thread>
+#include <fstream>
 
 #include <SDL3/SDL.h>
+#define GL_GLEXT_PROTOTYPES
+#include <KHR/khrplatform.h>
+#include <glad/glad.h>
 
 #include "Base/Types.h"
 #include "Core/RAM/RAM.h"
@@ -84,6 +88,8 @@ struct XenosState {
   u8 *Regs;
 };
 
+// ARGB (Console is BGRA)
+#define COLOR(r, g, b, a) ((a) << 24 | (r) << 16 | (g) << 8  | (b) << 0)
 class XGPU {
 public:
   XGPU(RAM *ram);
@@ -111,9 +117,10 @@ private:
 
   // Rendering Stuff
   SDL_Window *mainWindow{};
-  SDL_Renderer *renderer{};
+  SDL_GLContext context;
+  GLuint texture, shaderProgram, pixelBuffer;
+  GLuint quadVAO, quadVBO, renderShaderProgram;
   SDL_Event windowEvent;
-  SDL_Texture *texture;
 };
 } // namespace Xenos
 } // namespace Xe
