@@ -57,33 +57,28 @@ private:
 //
 // Read Only Storage
 //
-class Storage
-{
+class Storage {
 public:
-    Storage(const std::filesystem::path& filepath) : path(filepath)
-    {
-        file.open(path, std::ios_base::in | std::ifstream::ate | std::ifstream::binary);
+    Storage(const std::filesystem::path& filepath) : path(filepath) {
+      file.open(path, std::ios_base::in | std::ifstream::ate | std::ifstream::binary);
     }
 
-    ~Storage(void)
-    {
-        if (file.is_open())
-            file.close();
+    ~Storage(void) {
+      if (file.is_open())
+        file.close();
     }
 
     u32 Size(void)
     {
-        return std::filesystem::file_size(path);
+      return std::filesystem::file_size(path);
     }
 
-    bool Read(u64 Offset, u8* Destination, u32 cu8s)
-    {
-        file.seekg(static_cast<std::streamoff>(Offset), std::ios::beg);
-        if (!file)
-        {
-            return false;
-        }
-        return file.read(reinterpret_cast<char*>(Destination), cu8s) && file.gcount() == static_cast<std::streamsize>(cu8s);
+    bool Read(u64 Offset, u8* Destination, u32 cu8s) {
+      file.seekg(static_cast<std::streamoff>(Offset), std::ios::beg);
+      if (!file) {
+          return false;
+      }
+      return file.read(reinterpret_cast<char*>(Destination), cu8s) && file.gcount() == static_cast<std::streamsize>(cu8s);
     }
 
 private:
