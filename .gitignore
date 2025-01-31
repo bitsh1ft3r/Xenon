@@ -408,6 +408,19 @@ FodyWeavers.xsd
 .idea
 cmake-build-*
 
+# Visual Studio proj files
+*.vcxproj
+*.vcxproj.*
+*.sln
+
+# Output files
+third_party/CMakeFiles
+third_party/cmake_install.cmake
+CMakeFiles
+CMakeCache.txt
+*.exe
+cmake_install.cmake
+
 # Specific to Xenon
 /Xenon/x64/*
 /Xenon/Debug/*

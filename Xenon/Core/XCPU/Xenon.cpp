@@ -27,19 +27,14 @@ Xenon::Xenon(RootBus *inBus, const std::string blPath, eFuses inFuseSet) {
   ppu2.Initialize(&xenonContext, mainBus, XE_PVR, 4, "PPU2"); // Threads 4-5
 
   // Load 1BL from path.
-  FILE *inputFile;
-  fopen_s(&inputFile, blPath.c_str(), "rb");
-
-  if (!inputFile) {
+  std::ifstream file(blPath, std::ios_base::in | std::ios_base::binary);
+  if (!file.is_open()) {
     LOG_CRITICAL(Xenon, "Unable to open file: {} for reading. Check your file path. System Stopped!", blPath);
     system("PAUSE");
   } else {
-    fseek(inputFile, 0, SEEK_END);
-    size_t fileSize = ftell(inputFile);
-    fseek(inputFile, 0, SEEK_SET);
-
-    if (fileSize == XE_SROM_SIZE) {
-      fread(xenonContext.SROM, 1, XE_SROM_SIZE, inputFile);
+    size_t fileSize = std::filesystem::file_size(blPath);
+    if (fileSize == XE_SROM_SIZE) {      
+      file.read(reinterpret_cast<char*>(xenonContext.SROM), XE_SROM_SIZE);
       LOG_INFO(Xenon, "1BL Loaded.");
     }
   }
@@ -56,6 +51,6 @@ void Xenon::Start(u64 resetVector) {
   ppu2Thread = std::thread(&PPU::StartExecution, PPU(ppu2));
 
   while (true) {
-    std::this_thread::sleep_for(std::chrono::seconds(60));
+    std::this_thread::sleep_for(std::chrono::seconds(1));
   }
 }

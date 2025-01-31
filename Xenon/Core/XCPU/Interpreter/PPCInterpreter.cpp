@@ -20,7 +20,7 @@ void PPCInterpreter::ppcExecuteSingleInstruction(PPU_STATE *hCore) {
 
   // RGH 2 17489 in a JRunner Corona XDKBuild.
   if (hCore->ppuThread[hCore->currentThread].CIA == 0x200c7f0) {
-    // hCore->ppuThread[hCore->currentThread].GPR[0x3] = 0;
+    hCore->ppuThread[hCore->currentThread].GPR[0x3] = 0;
   }
 
   // 3BL Check Bypass Devkit 2.0.1838.1

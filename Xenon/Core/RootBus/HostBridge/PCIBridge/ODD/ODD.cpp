@@ -1,5 +1,6 @@
 // Copyright 2025 Xenon Emulator Project
 
+#include "Base/Config.h"
 #include "Base/Logging/Log.h"
 
 #include "ODD.h"
@@ -401,9 +402,12 @@ void ODD::atapiReset() {
   const char vendorIdentification[] = "PLDS   16D2S";
   memcpy(&atapiState.atapiInquiryData.vendorIdentification,
          vendorIdentification, sizeof(vendorIdentification));
-
-  wchar_t *CdImageFilename = (wchar_t *)L"C:/Xbox/xenon.iso";
-  atapiState.mountedCDImage = new Storage(CdImageFilename);
+  std::filesystem::path oddImage = Config::oddImagePath();
+  if (!std::filesystem::file_size(oddImage))
+  {
+    LOG_CRITICAL(ODD, "No image found!");
+  }
+  atapiState.mountedCDImage = new Storage(oddImage);
 }
 
 void ODD::atapiIdentifyCommand() {
