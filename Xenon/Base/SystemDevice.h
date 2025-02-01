@@ -3,6 +3,7 @@
 #pragma once
 
 #include "Types.h"
+#include <cstring>
 
 struct deviceInfo {
   const char *deviceName; // Device Name
