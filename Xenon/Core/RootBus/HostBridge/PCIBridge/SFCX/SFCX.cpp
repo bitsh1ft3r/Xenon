@@ -274,7 +274,7 @@ bool SFCX::checkMagic() {
   char magic[2];
 
   nandFile.read(reinterpret_cast<char*>(magic), sizeof(magic));
-  LOG_DEBUG(SFCX, "Nand magic: 0x{:X} && 0x{:X}", (int)magic[0], (int)magic[1]);
+  LOG_DEBUG(SFCX, "Nand magic: 0x{:X} && 0x{:X}", (uint32_t)magic[0], (uint32_t)magic[1]);
 
   // Retail Nand Magic is 0xFF4F.
   // Devkit Nand Magic is 0x0F4F.

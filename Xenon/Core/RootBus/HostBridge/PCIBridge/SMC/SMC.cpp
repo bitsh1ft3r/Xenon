@@ -109,7 +109,7 @@ void Xe::PCIDev::SMC::SMCCore::Read(u64 readAddress, u64 *data, u8 byteCount) {
         ReadFile(smcCoreState->comPortHandle, &smcPCIState->uartOutReg, 1,
                  &smcCoreState->currentBytesReadCount, nullptr);
 #else
-    smcCoreState->retVal = false;
+    smcCoreState->retVal = true;
 #endif
     if (smcCoreState->retVal) {
       memcpy(data, &smcPCIState->uartOutReg, byteCount);
@@ -197,7 +197,7 @@ void Xe::PCIDev::SMC::SMCCore::Write(u64 writeAddress, u64 data, u8 byteCount) {
         WriteFile(smcCoreState->comPortHandle, &data, 1,
                   &smcCoreState->currentBytesWrittenCount, nullptr);
 #else
-    smcCoreState->retVal = false;
+    smcCoreState->retVal = true;
 #endif
     break;
   case SMI_INT_STATUS_REG: // SMI INT Status Register
@@ -315,7 +315,9 @@ void Xe::PCIDev::SMC::SMCCore::setupUART(u32 uartConfig) {
   smcCoreState->uartInitialized = true;
 
 #else
-    LOG_ERROR(SMC, "UART Initialization is not supported on this platform!");
+    smcCoreState->uartPresent = true;
+    smcCoreState->uartInitialized = true;
+    LOG_ERROR(SMC, "UART Initialization is not supported on this platform! Using dummy data");
 #endif // _WIN32
 }
 

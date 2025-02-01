@@ -405,7 +405,7 @@ void ODD::atapiReset() {
   std::filesystem::path oddImage = Config::oddImagePath();
   atapiState.mountedCDImage = new Storage(oddImage);
   if (!atapiState.mountedCDImage->IsFound()) {
-    LOG_CRITICAL(ODD, "No image found!");
+    LOG_ERROR(ODD, "No image found!");
   }
 }
 
