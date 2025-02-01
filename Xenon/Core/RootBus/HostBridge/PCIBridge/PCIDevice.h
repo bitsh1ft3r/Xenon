@@ -2,6 +2,7 @@
 
 #pragma once
 
+#include <cstring>
 #include "Core/RootBus/HostBridge/PCIe.h"
 
 struct PCIDeviceInfo {

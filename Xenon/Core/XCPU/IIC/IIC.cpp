@@ -24,15 +24,15 @@ void Xe::XCPU::IIC::XenonIIC::writeInterrupt(u64 intAddress, u64 intData) {
   switch (ppeIntCtrlBlckReg) {
   case Xe::XCPU::IIC::CPU_WHOAMI:
     iicState.ppeIntCtrlBlck[ppeIntCtrlBlckID].REG_CPU_WHOAMI =
-        static_cast<u32>(_byteswap_uint64(intData));
+        static_cast<u32>(std::byteswap(intData));
     break;
   case Xe::XCPU::IIC::CPU_CURRENT_TSK_PRI:
     iicState.ppeIntCtrlBlck[ppeIntCtrlBlckID].REG_CPU_CURRENT_TSK_PRI =
-        static_cast<u32>(_byteswap_uint64(intData));
+        static_cast<u32>(std::byteswap(intData));
     break;
   case Xe::XCPU::IIC::CPU_IPI_DISPATCH_0:
     iicState.ppeIntCtrlBlck[ppeIntCtrlBlckID].REG_CPU_IPI_DISPATCH_0 =
-        static_cast<u32>(_byteswap_uint64(intData));
+        static_cast<u32>(std::byteswap(intData));
     genInterrupt(intType, cpusToInterrupt);
     break;
   case Xe::XCPU::IIC::INT_0x30:
@@ -58,11 +58,11 @@ void Xe::XCPU::IIC::XenonIIC::writeInterrupt(u64 intAddress, u64 intData) {
     }
     // Set new Interrupt priority.
     iicState.ppeIntCtrlBlck[ppeIntCtrlBlckID].REG_CPU_CURRENT_TSK_PRI =
-        static_cast<u32>(_byteswap_uint64(intData));
+        static_cast<u32>(std::byteswap(intData));
     break;
   case Xe::XCPU::IIC::INT_MCACK:
     iicState.ppeIntCtrlBlck[ppeIntCtrlBlckID].REG_INT_MCACK =
-        static_cast<u32>(_byteswap_uint64(intData));
+        static_cast<u32>(std::byteswap(intData));
     break;
   default:
     LOG_ERROR(Xenon_IIC, "Unknown CPU Interrupt Ctrl Blck Reg being written: {:#x}", ppeIntCtrlBlckReg);
@@ -76,7 +76,7 @@ void Xe::XCPU::IIC::XenonIIC::readInterrupt(u64 intAddress, u64 *intData) {
   u8 ppeIntCtrlBlckReg = intAddress & 0xFF;
   switch (ppeIntCtrlBlckReg) {
   case Xe::XCPU::IIC::CPU_CURRENT_TSK_PRI:
-    *intData = _byteswap_uint64(
+    *intData = std::byteswap(
         (u64)iicState.ppeIntCtrlBlck[ppeIntCtrlBlckID].REG_CPU_CURRENT_TSK_PRI);
     break;
   case Xe::XCPU::IIC::ACK:
@@ -84,17 +84,17 @@ void Xe::XCPU::IIC::XenonIIC::readInterrupt(u64 intAddress, u64 *intData) {
     if (iicState.ppeIntCtrlBlck[ppeIntCtrlBlckID].intQueue.empty() != true) {
       // If the first interrupt is ACK'd we return PRIO_NONE.
       if (iicState.ppeIntCtrlBlck[ppeIntCtrlBlckID].intAck) {
-        *intData = _byteswap_uint64(PRIO_NONE);
+        *intData = std::byteswap(PRIO_NONE);
       } else {
         // Signal the Top Priority interrupt.
-        *intData = _byteswap_uint64(
+        *intData = std::byteswap(
             iicState.ppeIntCtrlBlck[ppeIntCtrlBlckID].intQueue.top());
         // Set the ACK flag.
         iicState.ppeIntCtrlBlck[ppeIntCtrlBlckID].intAck = true;
         return;
       }
     }
-    *intData = _byteswap_uint64(PRIO_NONE);
+    *intData = std::byteswap(PRIO_NONE);
     break;
   default:
     LOG_ERROR(Xenon_IIC, "Unknown interupt being read {:#x}", ppeIntCtrlBlckReg);

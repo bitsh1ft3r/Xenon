@@ -74,7 +74,7 @@ bool Xe::Xenos::XGPU::Write(u64 writeAddress, u64 data, u8 byteCount) {
     const u32 regIndex = (writeAddress & 0xFFFFF) / 4;
 
     LOG_TRACE(Xenos, "Write Addr = {:#x}, reg: {:#x}, data = {:#x}.", writeAddress, regIndex,
-        _byteswap_ulong(static_cast<u32>(data)));
+        std::byteswap(static_cast<u32>(data)));
 
     XeRegister reg = static_cast<XeRegister>(regIndex);
 
