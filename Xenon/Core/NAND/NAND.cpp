@@ -85,7 +85,7 @@ void NAND::CalculateECD(u8 *data, int offset, u8 ret[]) {
                       (u8)(data[count + offset + 1]) << 16 |
                       (u8)(data[count + offset + 2]) << 8 |
                       (u8)(data[count + offset + 3]));
-      value = uint32(value);
+      value = std::byteswap(value);
       v = ~value;
       count += 4;
     }
