@@ -11,7 +11,8 @@ enum class PathType {
   LogDir,    // Where log files are stored.
 };
 
-constexpr auto PORTABLE_DIR = "Xenon";
+// Vali: This needs to be blank for Linux to play nice
+constexpr auto PORTABLE_DIR = "";
 
 constexpr auto LOG_DIR = "log";
 

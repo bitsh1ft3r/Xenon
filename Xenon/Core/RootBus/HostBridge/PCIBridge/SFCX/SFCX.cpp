@@ -45,7 +45,7 @@ SFCX::SFCX(const std::string nandLoadPath, PCIBridge *parentPCIBridge) {
 
   // Check file magic.
   if (!checkMagic()) {
-    LOG_CRITICAL(SFCX, "Fatal error, loaded faile magic does'nt correspond to Xbox 360 NAND.");
+    LOG_CRITICAL(SFCX, "Fatal error, loaded file magic does'nt correspond to Xbox 360 NAND.");
     system("PAUSE");
   }
 
@@ -274,6 +274,7 @@ bool SFCX::checkMagic() {
   char magic[2];
 
   nandFile.read(reinterpret_cast<char*>(magic), sizeof(magic));
+  LOG_DEBUG(SFCX, "Nand magic: 0x{:X} && 0x{:X}", (int)magic[0], (int)magic[1]);
 
   // Retail Nand Magic is 0xFF4F.
   // Devkit Nand Magic is 0x0F4F.
