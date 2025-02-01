@@ -5,6 +5,7 @@
 #include <thread>
 
 #include "PPU.h"
+#include "Base/Config.h"
 #include "Base/Thread.h"
 #include "Base/Logging/Log.h"
 #include "Core/XCPU/Interpreter/PPCInterpreter.h"
@@ -32,6 +33,7 @@ PPU::PPU() {
   ppuState->SPR.TTR = 0x1000; // Execute 4096 instructions.
 }
 
+#define TPI_FORMULA(ips) ((ips) / 500000)
 void PPU::Initialize(XENON_CONTEXT *inXenonContext, RootBus *mainBus, u32 PVR,
                      u32 PIR, const char *ppuName) {
   // Asign global Xenon context.
@@ -46,7 +48,12 @@ void PPU::Initialize(XENON_CONTEXT *inXenonContext, RootBus *mainBus, u32 PVR,
   LOG_INFO(Xenon, "{} Speed: {:#d} instructions per second.", ppuName, instrPerSecond);
 
   // Find a way to calculate the right ticks/IPS ratio.
-  ticksPerIntruction = 1;
+  int configTpi = Config::tpi();
+  ticksPerIntruction = configTpi ? configTpi : TPI_FORMULA(instrPerSecond);
+  if (!configTpi)
+      LOG_INFO(Xenon, "{} TPI: {} ticks per instruction", ppuName, ticksPerIntruction);
+  else
+      LOG_INFO(Xenon, "{} TPI: {} ticks per instruction (overrwriten! actual tps: {})", ppuName, ticksPerIntruction, TPI_FORMULA(instrPerSecond));
 
   for (u8 thrdID = 0; thrdID < 2; thrdID++) {
     ppuState->ppuThread[thrdID].ppuRes = new PPU_RES;

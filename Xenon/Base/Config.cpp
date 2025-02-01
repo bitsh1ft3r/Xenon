@@ -47,10 +47,14 @@ static s32 screenHeight = 720;
 // static s32 gpuId = -1; // Vulkan physical device index. Set to negative for
 // auto select
 
-// Filepaths
+// Filepaths.
 static std::string fusesTxtPath = "C:/Xbox/fuses.txt";
 static std::string oneBlBinPath = "C:/Xbox/1bl.bin";
 static std::string nandBinPath = "C:/Xbox/nand.bin";
+static std::string oddDiscImagePath = "C:/Xbox/xenon.iso";
+
+// Highly experimental.
+static int ticksPerInstruction = 1;
 
 std::string* COMPort() {
     com = "\\\\.\\COM" + std::to_string(comPort);
@@ -81,9 +85,13 @@ std::string oneBlPath() { return oneBlBinPath; }
 
 std::string nandPath() { return nandBinPath; }
 
+std::string oddImagePath() { return oddDiscImagePath; }
+
 // s32 getGpuId() {
 //     return gpuId;
 // }
+
+int tpi() { return ticksPerInstruction; }
 
 void loadConfig(const std::filesystem::path &path) {
   // If the configuration file does not exist, create it and return.
@@ -141,6 +149,15 @@ void loadConfig(const std::filesystem::path &path) {
         toml::find_or<std::string>(paths, "OneBL", oneBlBinPath);
     nandBinPath =
         toml::find_or<std::string>(paths, "Nand", nandBinPath);
+    oddDiscImagePath =
+        toml::find_or<std::string>(paths, "ODDImage", oddDiscImagePath);
+  }
+
+  if (data.contains("HighlyExperimental")) {
+    const toml::value &highlyExperimental = data.at("HighlyExperimental");
+    toml::find_or<int>(highlyExperimental, "DoNotTouchTheseUnlessYouKnowWhatYouAreDoing", 0);
+    ticksPerInstruction =
+        toml::find_or<int>(highlyExperimental, "TPI", ticksPerInstruction);
   }
 }
 
@@ -186,6 +203,11 @@ void saveConfig(const std::filesystem::path &path) {
   data["Paths"]["Fuses"] = fusesTxtPath;
   data["Paths"]["OneBL"] = oneBlBinPath;
   data["Paths"]["Nand"] = nandBinPath;
+  data["Paths"]["ISO"] = oddDiscImagePath;
+
+  // HighlyExperimental.
+  data["HighlyExperimental"]["DoNotTouchTheseUnlessYouKnowWhatYouAreDoing"] = 0;
+  data["HighlyExperimental"]["TPI"] = ticksPerInstruction;
 
   std::ofstream file(path, std::ios::binary);
   file << data;

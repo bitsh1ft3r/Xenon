@@ -14,6 +14,8 @@
 // - 768 bits of IBM's eFuse technology.
 
 #include <thread>
+#include <fstream>
+#include <filesystem>
 
 #include "Core/RootBus/RootBus.h"
 #include "Core/XCPU/PPU/PPU.h"
