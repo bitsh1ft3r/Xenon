@@ -30,7 +30,7 @@ Xenon::Xenon(RootBus *inBus, const std::string blPath, eFuses inFuseSet) {
   std::ifstream file(blPath, std::ios_base::in | std::ios_base::binary);
   if (!file.is_open()) {
     LOG_CRITICAL(Xenon, "Unable to open file: {} for reading. Check your file path. System Stopped!", blPath);
-    system("PAUSE");
+    printf("Press Enter to continue..."); (void)getchar();
   } else {
     size_t fileSize = std::filesystem::file_size(blPath);
     if (fileSize == XE_SROM_SIZE) {      

@@ -175,7 +175,7 @@ int main(int argc, char *argv[]) {
   if (cpuFuses.fuseLine00 == 0x9999999999999999)
   {
       LOG_CRITICAL(System, "Unable to load eFuses from path: {}", Config::fusesPath());
-      system("PAUSE");
+      printf("Press Enter to continue..."); (void)getchar();
       return EXIT_FAILURE;
   }
 

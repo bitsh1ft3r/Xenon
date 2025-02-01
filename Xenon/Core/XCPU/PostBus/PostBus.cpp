@@ -134,7 +134,7 @@ void Xe::XCPU::POSTBUS::POST(u64 postCode) {
       break;
     }
     // Pause the system.
-    system("PAUSE");
+    printf("Press Enter to continue..."); (void)getchar();
   }
   /* CB */
   else if (postCode >= 0x20 && postCode <= 0x3b) {
@@ -295,7 +295,7 @@ void Xe::XCPU::POSTBUS::POST(u64 postCode) {
         LOG_ERROR(Xenon_PostBus, "CB > Unrecognized PANIC code {:#x}", postCode);
       break;
     }
-    system("PAUSE");
+    printf("Press Enter to continue..."); (void)getchar();
   }
   /* CB_A */
   else if (postCode >= 0xD0 && postCode <= 0xDB) {
@@ -358,7 +358,7 @@ void Xe::XCPU::POSTBUS::POST(u64 postCode) {
                    "(must be less than 0xC000).");
       break;
     }
-    system("PAUSE");
+    printf("Press Enter to continue..."); (void)getchar();
   }
   /* CD */
   else if (postCode >= 0x40 && postCode <= 0x53) {
@@ -457,7 +457,7 @@ void Xe::XCPU::POSTBUS::POST(u64 postCode) {
        LOG_ERROR(Xenon_PostBus, "PANIC - CF_HASH_AUTH - CF hash auth failed.");
       break;
     }
-    system("PAUSE");
+    printf("Press Enter to continue..."); (void)getchar();
   }
   /* CE/CF PANICS */
   else if (postCode >= 0xC1 && postCode <= 0xC8) {
@@ -487,7 +487,7 @@ void Xe::XCPU::POSTBUS::POST(u64 postCode) {
        LOG_ERROR(Xenon_PostBus, "PANIC - SHA_VERIFY - 7BL Signature Verify.");
       break;
     }
-    system("PAUSE");
+    printf("Press Enter to continue..."); (void)getchar();
   }
   /* HYPERVISOR */
   else if (postCode >= 0x58 && postCode <= 0x5E) {

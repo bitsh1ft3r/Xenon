@@ -40,13 +40,13 @@ SFCX::SFCX(const std::string nandLoadPath, PCIBridge *parentPCIBridge) {
 
   if (!nandFile.is_open()) {
     LOG_CRITICAL(SFCX, "Fatal error, check your nand dump path.");
-    system("PAUSE");
+    printf("Press Enter to continue..."); (void)getchar();
   }
 
   // Check file magic.
   if (!checkMagic()) {
-    LOG_CRITICAL(SFCX, "Fatal error, loaded file magic does'nt correspond to Xbox 360 NAND.");
-    system("PAUSE");
+    LOG_CRITICAL(SFCX, "Fatal error, loaded file magic doesn't correspond to Xbox 360 NAND.");
+    printf("Press Enter to continue..."); (void)getchar();
   }
 
   // Load NAND header and display info about it.

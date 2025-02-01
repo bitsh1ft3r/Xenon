@@ -319,7 +319,7 @@ void PPU::ppuCheckExceptions() {
         // TODO: Properly end execution.
         // A checkstop is a full - stop of the processor that requires a System
         // Reset to recover.
-        system("PAUSE");
+        printf("Press Enter to continue..."); (void)getchar();
       }
     }
 

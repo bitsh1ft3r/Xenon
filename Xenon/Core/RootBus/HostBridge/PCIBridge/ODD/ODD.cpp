@@ -403,10 +403,10 @@ void ODD::atapiReset() {
   memcpy(&atapiState.atapiInquiryData.vendorIdentification,
          vendorIdentification, sizeof(vendorIdentification));
   std::filesystem::path oddImage = Config::oddImagePath();
-  if (!std::filesystem::file_size(oddImage)) {
+  atapiState.mountedCDImage = new Storage(oddImage);
+  if (!atapiState.mountedCDImage->IsFound()) {
     LOG_CRITICAL(ODD, "No image found!");
   }
-  atapiState.mountedCDImage = new Storage(oddImage);
 }
 
 void ODD::atapiIdentifyCommand() {
