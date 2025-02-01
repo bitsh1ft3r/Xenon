@@ -2,7 +2,7 @@
 
 #pragma once
 
-#include <Windows.h>
+#include <mutex>
 #include <vector>
 
 #include "Base/Types.h"
@@ -17,19 +17,30 @@ class XenonReservations {
 public:
   XenonReservations();
   virtual bool Register(PPU_RES *Res);
-  void Increment(void) { InterlockedIncrement(&nReservations); }
-  void Decrement(void) { InterlockedDecrement(&nReservations); }
+  void Increment(void)
+  {
+    std::lock_guard lck(ReservationLock);
+    nReservations++;
+  }
+  void Decrement(void) {
+    std::lock_guard lck(ReservationLock);
+    nReservations--;
+  }
   void Check(u64 x) {
     if (nReservations)
       Scan(x);
   }
   virtual void Scan(u64 PhysAddress);
-  void AcquireLock(void) { EnterCriticalSection(&ReservationLock); }
-  void ReleaseLock(void) { LeaveCriticalSection(&ReservationLock); }
+  void AcquireLock(void) { 
+    ReservationLock.lock();
+  }
+  void ReleaseLock(void) {
+    ReservationLock.unlock();
+  }
 
 private:
   long nReservations;
-  CRITICAL_SECTION ReservationLock;
+  std::recursive_mutex ReservationLock;
   int nProcessors;
   struct PPU_RES *Reservations[6];
 };
