@@ -3,9 +3,6 @@
 #include "PostBus.h"
 #include "Base/Logging/Log.h"
 
-// Text colored output (for now)
-HANDLE hConsole;
-
 void Xe::XCPU::POSTBUS::POST(u64 postCode) {
   /* 1BL */
   if (postCode >= 0x10 && postCode <= 0x1e) {
