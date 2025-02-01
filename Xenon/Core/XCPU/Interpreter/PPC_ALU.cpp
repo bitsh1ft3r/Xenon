@@ -3,6 +3,14 @@
 #include "Base/Logging/Log.h"
 #include "PPCInterpreter.h"
 
+#ifndef _WIN32
+// God forbid GCC has rotl64
+static inline uint64_t rotl64_impl(uint64_t x, int8_t r) {
+  return (x << r) | (x >> (64 - r));
+}
+#define _rotl64 rotl64_impl
+#endif
+
 #define GPR(x) hCore->ppuThread[hCore->currentThread].GPR[x]
 #define XER_SET_CA(v) hCore->ppuThread[hCore->currentThread].SPR.XER.CA = v
 

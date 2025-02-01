@@ -627,7 +627,7 @@ bool PPCInterpreter::MMUTranslateAddress(u64 *EA, PPU_STATE *hCoreState,
   //
 
   // Machine State Register.
-  MSR _msr = hCoreState->ppuThread[hCoreState->currentThread].SPR.MSR;
+  MSRegister _msr = hCoreState->ppuThread[hCoreState->currentThread].SPR.MSR;
   // Logical Partition Control Register.
   u64 LPCR = hCoreState->SPR.LPCR;
   // Hypervisor Real Mode Offset Register.
