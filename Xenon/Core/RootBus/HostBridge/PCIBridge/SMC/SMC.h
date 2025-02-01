@@ -8,6 +8,10 @@
 #include <thread>
 #include <vector>
 
+#ifdef _WIN32
+#define UART_ENABLED
+#endif
+
 #include "Core/RootBus/HostBridge/PCIBridge/PCIBridge.h"
 #include "Core/RootBus/HostBridge/PCIBridge/PCIDevice.h"
 
@@ -235,7 +239,7 @@ struct SMC_CORE_STATE {
   // UART Present. Used to do a one time check on UART COM Port on the host
   // system.
   bool uartPresent;
-#ifdef _WIN32
+#if defined(_WIN32) && defined(UART_ENABLED)
   // Current COM Port Device Control Block.
   // See
   // https://learn.microsoft.com/en-us/windows/win32/api/winbase/ns-winbase-dcb

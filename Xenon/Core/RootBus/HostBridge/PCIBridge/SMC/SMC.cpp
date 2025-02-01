@@ -104,7 +104,7 @@ void Xe::PCIDev::SMC::SMCCore::Read(u64 readAddress, u64 *data, u8 byteCount) {
     memcpy(data, &smcPCIState->uartConfigReg, byteCount);
     break;
   case UART_BYTE_OUT_REG: // UART Data Out Register
-#ifdef _WIN32
+#if defined(_WIN32) && defined(UART_ENABLED)
     smcCoreState->retVal =
         ReadFile(smcCoreState->comPortHandle, &smcPCIState->uartOutReg, 1,
                  &smcCoreState->currentBytesReadCount, nullptr);
@@ -116,7 +116,7 @@ void Xe::PCIDev::SMC::SMCCore::Read(u64 readAddress, u64 *data, u8 byteCount) {
     }
     break;
   case UART_STATUS_REG: // UART Status Register
-#ifdef _WIN32
+#if defined(_WIN32) && defined(UART_ENABLED)
     // First lets check if the UART has already been setup, if so, proceed to do
     // the TX/RX.
     if (smcCoreState->uartInitialized) {
@@ -192,7 +192,7 @@ void Xe::PCIDev::SMC::SMCCore::Write(u64 writeAddress, u64 data, u8 byteCount) {
   case UART_BYTE_IN_REG: // UART Data In Register
     memcpy(&smcPCIState->uartInReg, &data, byteCount);
     // Write the data out.
-#ifdef _WIN32
+#if defined(_WIN32) && defined(UART_ENABLED)
     smcCoreState->retVal =
         WriteFile(smcCoreState->comPortHandle, &data, 1,
                   &smcCoreState->currentBytesWrittenCount, nullptr);
@@ -254,7 +254,7 @@ void Xe::PCIDev::SMC::SMCCore::ConfigWrite(u64 writeAddress, u64 data,
 
 // Setups the UART Communication at a given configuration.
 void Xe::PCIDev::SMC::SMCCore::setupUART(u32 uartConfig) {
-#ifdef _WIN32
+#if defined(_WIN32) && defined(UART_ENABLED)
   // Windows Init Code.
   LOG_INFO(SMC, "Initializing UART:");
 
