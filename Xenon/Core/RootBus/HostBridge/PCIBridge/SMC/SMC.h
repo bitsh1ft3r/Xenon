@@ -2,7 +2,9 @@
 
 #pragma once
 
+#ifdef _WIN32
 #include <Windows.h>
+#endif
 #include <thread>
 #include <vector>
 
@@ -227,12 +229,13 @@ struct SMC_CORE_STATE {
   u8 fifoBufferPos = 0;
 
   // Default COM Port for opening.
-  LPCSTR currentCOMPort;
+  const char* currentCOMPort;
   // UART Initialized.
   bool uartInitialized;
   // UART Present. Used to do a one time check on UART COM Port on the host
   // system.
   bool uartPresent;
+#ifdef _WIN32
   // Current COM Port Device Control Block.
   // See
   // https://learn.microsoft.com/en-us/windows/win32/api/winbase/ns-winbase-dcb
@@ -247,6 +250,7 @@ struct SMC_CORE_STATE {
   DWORD currentBytesWrittenCount = 0;
   // Bytes Read from the COM Port.
   DWORD currentBytesReadCount = 0;
+#endif
   // Read/Write Return Status Values
   bool retVal = false;
 };
