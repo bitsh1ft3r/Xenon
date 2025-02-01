@@ -4,6 +4,7 @@
 
 #include <thread>
 #include <fstream>
+#include <vector>
 
 #include <SDL3/SDL.h>
 #define GL_GLEXT_PROTOTYPES
