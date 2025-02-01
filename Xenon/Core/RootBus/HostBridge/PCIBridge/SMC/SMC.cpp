@@ -108,8 +108,12 @@ void Xe::PCIDev::SMC::SMCCore::Read(u64 readAddress, u64 *data, u8 byteCount) {
     smcCoreState->retVal =
         ReadFile(smcCoreState->comPortHandle, &smcPCIState->uartOutReg, 1,
                  &smcCoreState->currentBytesReadCount, nullptr);
+#else
+    smcCoreState->retVal = false;
 #endif
-    memcpy(data, &smcPCIState->uartOutReg, byteCount);
+    if (smcCoreState->retVal) {
+      memcpy(data, &smcPCIState->uartOutReg, byteCount);
+    }
     break;
   case UART_STATUS_REG: // UART Status Register
 #ifdef _WIN32
@@ -188,9 +192,13 @@ void Xe::PCIDev::SMC::SMCCore::Write(u64 writeAddress, u64 data, u8 byteCount) {
   case UART_BYTE_IN_REG: // UART Data In Register
     memcpy(&smcPCIState->uartInReg, &data, byteCount);
     // Write the data out.
+#ifdef _WIN32
     smcCoreState->retVal =
         WriteFile(smcCoreState->comPortHandle, &data, 1,
                   &smcCoreState->currentBytesWrittenCount, nullptr);
+#else
+    smcCoreState->retVal = false;
+#endif
     break;
   case SMI_INT_STATUS_REG: // SMI INT Status Register
     memcpy(&smcPCIState->smiIntPendingReg, &data, byteCount);
