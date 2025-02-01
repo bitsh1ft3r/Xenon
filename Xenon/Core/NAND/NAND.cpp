@@ -1,6 +1,7 @@
 // Copyright 2025 Xenon Emulator Project
 
 #include "Base/Logging/Log.h"
+#include "Base/BSwap.h"
 
 #include "NAND.h"
 
@@ -85,7 +86,7 @@ void NAND::CalculateECD(u8 *data, int offset, u8 ret[]) {
                       (u8)(data[count + offset + 1]) << 16 |
                       (u8)(data[count + offset + 2]) << 8 |
                       (u8)(data[count + offset + 3]));
-      value = _byteswap_ulong(value);
+      value = uint32(value);
       v = ~value;
       count += 4;
     }
