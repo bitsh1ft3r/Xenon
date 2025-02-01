@@ -7,15 +7,13 @@
 /********************Responsible for loading the NAND file********************/
 bool NAND::Load(const std::string filePath) {
   LOG_INFO(System, "NAND: Loading file {}", filePath.c_str());
-
-  if (fopen_s(&inputFile, filePath.c_str(), "rb") != 0) {
+  inputFile.open(filePath, std::ios_base::in | std::ios_base::binary);
+  if (!inputFile.is_open()) {
     LOG_CRITICAL(System, "NAND: Unable to load file!");
     return false;
   }
 
-  fseek(inputFile, 0, SEEK_END);
-  rawFileSize = ftell(inputFile);
-  fseek(inputFile, 0, SEEK_SET);
+  rawFileSize = std::filesystem::file_size(filePath);
 
   LOG_INFO(System, "NAND: File size = {:#x} bytes.", rawFileSize);
 
@@ -30,10 +28,9 @@ bool NAND::Load(const std::string filePath) {
 
   for (int currentBlock = 0; currentBlock < rawFileSize;
        currentBlock += blockSize) {
-    fread(&rawNANDData[currentBlock], 1, blockSize, inputFile);
+    inputFile.read(reinterpret_cast<char*>(rawNANDData + currentBlock), blockSize);
   }
 
-  fseek(inputFile, 0, SEEK_SET);
 
   CheckSpare();
 
@@ -44,7 +41,7 @@ bool NAND::Load(const std::string filePath) {
     imageMetaType = DetectSpareType();
   }
 
-  fclose(inputFile);
+  inputFile.close();
 
   return true;
 }
@@ -67,10 +64,9 @@ void NAND::Write(u64 writeAddress, u64 data, u8 byteCount) {
 bool NAND::CheckPageECD(u8 *data, s32 offset) {
   u8 actualData[4] = {0};
   u8 calculatedECD[4] = {0};
-
-  fseek(inputFile, offset + 524, SEEK_SET);
-  fread(&actualData[0], 1, 4, inputFile);
-  fseek(inputFile, 0, SEEK_SET);
+  inputFile.seekg(offset + 524);
+  inputFile.read(reinterpret_cast<char*>(actualData), sizeof(actualData));
+  inputFile.seekg(0, std::ios_base::_Seekbeg);
 
   CalculateECD(data, offset, calculatedECD);
 
@@ -110,8 +106,8 @@ void NAND::CalculateECD(u8 *data, int offset, u8 ret[]) {
 bool NAND::CheckMagic() {
   u8 magic[2];
 
-  fread(&magic, 1, 2, inputFile);
-  fseek(inputFile, 0, SEEK_SET);
+  inputFile.read(reinterpret_cast<char*>(magic), sizeof(magic));
+  inputFile.seekg(0, std::ios_base::_Seekbeg);
 
   if ((magic[0] == 0xff || magic[0] == 0x0f) &&
       (magic[1] == 0x3f || magic[1] == 0x4f)) {
@@ -122,9 +118,9 @@ bool NAND::CheckMagic() {
 
 //*Checks Spare.
 void NAND::CheckSpare() {
-  u8 data[0x630] = {0};
-  fseek(inputFile, 0, SEEK_SET);
-  fread(data, 1, 0x630, inputFile);
+  u8 data[0x630] = {0};                       
+  inputFile.seekg(0, std::ios_base::_Seekbeg);
+  inputFile.read(reinterpret_cast<char*>(data), sizeof(data));
   hasSpare = true;
   u8 *spare = nullptr;
 
@@ -141,14 +137,10 @@ MetaType NAND::DetectSpareType(bool firstTry) {
     return metaTypeNone;
   }
 
-  if (firstTry) {
-    fseek(inputFile, 0x4400, SEEK_SET);
-  } else {
-    fseek(inputFile, (u32)rawFileSize - 0x4400, SEEK_SET);
-  }
+  inputFile.seekg(firstTry ? 0x4400 : (u32)rawFileSize - 0x4400, std::ios_base::_Seekbeg);
 
   u8 tmp[0x10];
-  fread(tmp, 1, 0x10, inputFile);
+  inputFile.read(reinterpret_cast<char*>(tmp), sizeof(tmp));
 
   u8 a = 0;
   return metaTypeNone;

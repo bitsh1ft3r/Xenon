@@ -3,6 +3,7 @@
 #pragma once
 
 #include <fstream>
+#include <filesystem>
 
 #include "Base/SystemDevice.h"
 
@@ -26,7 +27,7 @@ public:
   void Write(u64 writeAddress, u64 data, u8 byteCount) override;
 
 private:
-  FILE *inputFile;
+  std::ifstream inputFile;
 
   // 64 Mb NAND Data
   u8 *rawNANDData = new (u8[0x4000000]);
