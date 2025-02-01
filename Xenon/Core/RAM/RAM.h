@@ -16,5 +16,5 @@ public:
   u8 *getPointerToAddress(u32 address);
 
 private:
-  u8 *RAMData = new u8[RAM_SIZE];
+  u8 *RAMData;
 };

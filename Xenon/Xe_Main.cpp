@@ -172,11 +172,10 @@ int main(int argc, char *argv[]) {
 
   // Load 1BL here from given path.
   eFuses cpuFuses = getFuses(Config::fusesPath());
-  if (cpuFuses.fuseLine00 == 0x9999999999999999)
-  {
-      LOG_CRITICAL(System, "Unable to load eFuses from path: {}", Config::fusesPath());
-      printf("Press Enter to continue..."); (void)getchar();
-      return EXIT_FAILURE;
+  if (cpuFuses.fuseLine00 == 0x9999999999999999) {
+    LOG_CRITICAL(System, "Unable to load eFuses from path: {}", Config::fusesPath());
+    printf("Press Enter to continue..."); (void)getchar();
+    return EXIT_FAILURE;
   }
 
   Xenon xenonCPU(&RootBus, Config::oneBlPath(), cpuFuses);

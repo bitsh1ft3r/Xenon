@@ -3,9 +3,17 @@
 #include <iostream>
 
 #include "RAM.h"
+#include "Base/Logging/Log.h"
 
 /***Sets the destination, value (205) and size (RAMData)***/
-RAM::RAM() { memset(RAMData, 0xcd, RAM_SIZE); }
+RAM::RAM() {
+  RAMData = new u8[RAM_SIZE];
+  memset(RAMData, 0xcd, RAM_SIZE);
+  if (!RAMData) {
+    LOG_CRITICAL(System, "RAM failed to allocate! This is really bad!");
+    printf("Press Enter to continue..."); (void)getchar();
+  }
+}
 
 /*****************Responsible for RAM reading*****************/
 void RAM::Read(u64 readAddress, u64 *data, u8 byteCount) {

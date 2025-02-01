@@ -1,0 +1,28 @@
+[Paths]
+ISO = "C:/Xbox/xenon.iso"
+Nand = "C:/Xbox/nand.bin"
+OneBL = "C:/Xbox/1bl.bin"
+Fuses = "C:/Xbox/fuses.txt"
+
+[GPU]
+screenHeight = 720
+screenWidth = 1280
+
+[PowerPC]
+HW_INIT_SKIP2 = 0
+HW_INIT_SKIP1 = 0
+
+[HighlyExperimental]
+TPI = 1
+DoNotTouchTheseUnlessYouKnowWhatYouAreDoing = 0
+
+[SMC]
+SMCPowerOnType = 17
+COMPort = 2
+
+[General]
+Loglevel = 3
+QuitOnWindowClosure = false
+Fullscreen = false
+GPURenderThreadEnabled = true
+
