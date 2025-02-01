@@ -36,9 +36,9 @@ SFCX::SFCX(const std::string nandLoadPath, PCIBridge *parentPCIBridge) {
   // Load the NAND dump.
   LOG_INFO(SFCX, "Loading NAND from path: {}", nandLoadPath);
 
-  fopen_s(&nandFile, nandLoadPath.c_str(), "rb");
+  nandFile.open(nandLoadPath, std::ios_base::in | std::ios_base::binary);
 
-  if (!nandFile) {
+  if (!nandFile.is_open()) {
     LOG_CRITICAL(SFCX, "Fatal error, check your nand dump path.");
     system("PAUSE");
   }
@@ -50,9 +50,8 @@ SFCX::SFCX(const std::string nandLoadPath, PCIBridge *parentPCIBridge) {
   }
 
   // Load NAND header and display info about it.
-  fseek(nandFile, 0, SEEK_SET);
-  fread_s(&sfcxState.nandHeader, sizeof(NAND_HEADER), sizeof(NAND_HEADER), 1,
-          nandFile);
+  nandFile.seekg(0, std::ios::beg);
+  nandFile.read(reinterpret_cast<char*>(&sfcxState.nandHeader), sizeof(sfcxState.nandHeader));
   // Fix Endiannes
   sfcxState.nandHeader.nandMagic =
       std::byteswap(sfcxState.nandHeader.nandMagic);
@@ -107,10 +106,7 @@ SFCX::SFCX(const std::string nandLoadPath, PCIBridge *parentPCIBridge) {
   LOG_INFO(SFCX, " * SMC Boot Addr: ", sfcxState.nandHeader.smcBootAddr);
 
   // Check Image size and Meta type.
-  size_t imageSize = 0;
-  fseek(nandFile, 0, SEEK_END);
-  imageSize = ftell(nandFile);
-  fseek(nandFile, 0, SEEK_SET);
+  size_t imageSize = std::filesystem::file_size(nandLoadPath);
 
   // There are two SFCX Versions, original (Pre Jasper) and Jasper+.
 
@@ -234,8 +230,8 @@ void SFCX::sfcxMainLoop() {
         // Read Phyisical page into page buffer.
         // Physical pages are 0x210 bytes long, logical page (0x200) + meta data
         // (0x10).
-        fseek(nandFile, sfcxState.addressReg, SEEK_SET);
-        fread_s(&sfcxState.pageBuffer, 0x210, 1, 0x210, nandFile);
+        nandFile.seekg(sfcxState.addressReg);
+        nandFile.read(reinterpret_cast<char*>(sfcxState.pageBuffer), sizeof(sfcxState.pageBuffer));
         // Issue Interrupt.
         if (sfcxState.configReg & CONFIG_INT_EN) {
           // Set a delay for our interrupt?
@@ -277,7 +273,7 @@ void SFCX::sfcxMainLoop() {
 bool SFCX::checkMagic() {
   char magic[2];
 
-  fread(&magic, 1, 2, nandFile);
+  nandFile.read(reinterpret_cast<char*>(magic), sizeof(magic));
 
   // Retail Nand Magic is 0xFF4F.
   // Devkit Nand Magic is 0x0F4F.

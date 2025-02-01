@@ -3,6 +3,8 @@
 #pragma once
 
 #include <thread>
+#include <fstream>
+#include <filesystem>
 
 #include "Core/RootBus/HostBridge/PCIBridge/PCIBridge.h"
 #include "Core/RootBus/HostBridge/PCIBridge/PCIDevice.h"
@@ -171,7 +173,7 @@ private:
   // SFCX State
   SFCX_STATE sfcxState;
   // I/O File stream.
-  FILE *nandFile;
+  std::ifstream nandFile;
   // PCI Bridge pointer. Used for Interrupts.
   PCIBridge *parentBus;
 };

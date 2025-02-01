@@ -84,7 +84,7 @@ void Xe::XCPU::IIC::XenonIIC::readInterrupt(u64 intAddress, u64 *intData) {
     if (iicState.ppeIntCtrlBlck[ppeIntCtrlBlckID].intQueue.empty() != true) {
       // If the first interrupt is ACK'd we return PRIO_NONE.
       if (iicState.ppeIntCtrlBlck[ppeIntCtrlBlckID].intAck) {
-        *intData = std::byteswap(PRIO_NONE);
+        *intData = std::byteswap<u64>(PRIO_NONE);
       } else {
         // Signal the Top Priority interrupt.
         *intData = std::byteswap(
@@ -94,7 +94,7 @@ void Xe::XCPU::IIC::XenonIIC::readInterrupt(u64 intAddress, u64 *intData) {
         return;
       }
     }
-    *intData = std::byteswap(PRIO_NONE);
+    *intData = std::byteswap<u64>(PRIO_NONE);
     break;
   default:
     LOG_ERROR(Xenon_IIC, "Unknown interupt being read {:#x}", ppeIntCtrlBlckReg);
