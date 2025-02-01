@@ -104,12 +104,15 @@ void Xe::PCIDev::SMC::SMCCore::Read(u64 readAddress, u64 *data, u8 byteCount) {
     memcpy(data, &smcPCIState->uartConfigReg, byteCount);
     break;
   case UART_BYTE_OUT_REG: // UART Data Out Register
+#ifdef _WIN32
     smcCoreState->retVal =
         ReadFile(smcCoreState->comPortHandle, &smcPCIState->uartOutReg, 1,
                  &smcCoreState->currentBytesReadCount, nullptr);
+#endif
     memcpy(data, &smcPCIState->uartOutReg, byteCount);
     break;
   case UART_STATUS_REG: // UART Status Register
+#ifdef _WIN32
     // First lets check if the UART has already been setup, if so, proceed to do
     // the TX/RX.
     if (smcCoreState->uartInitialized) {
@@ -131,6 +134,9 @@ void Xe::PCIDev::SMC::SMCCore::Read(u64 readAddress, u64 *data, u8 byteCount) {
       // it first then.
       setupUART(0x1e6); // 115200,8,N,1.
     }
+#else  
+      smcPCIState->uartStatusReg = UART_STATUS_EMPTY;
+#endif
     memcpy(data, &smcPCIState->uartStatusReg, byteCount);
     break;
   case SMI_INT_STATUS_REG: // SMI INT Status Register
@@ -300,7 +306,7 @@ void Xe::PCIDev::SMC::SMCCore::setupUART(u32 uartConfig) {
   // Everything OK.
   smcCoreState->uartInitialized = true;
 
-#elif
+#else
     LOG_ERROR(SMC, "UART Initialization is not supported on this platform!");
 #endif // _WIN32
 }
