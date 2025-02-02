@@ -43,4 +43,4 @@ We need talented developers more than ever to contribute to the project and move
 Check the build instructions for [**Windows**](https://github.com/bitsh1ft3r/Xenon/blob/main/Docs/Building/building-windows.md).
 
 # License
-- [**Mozilla Public License 2.0**](https://github.com/bitsh1ft3r/Xenon/blob/main/LICENSE.txt)
+- [**GPL-2.0 license**](https://github.com/bitsh1ft3r/Xenon/blob/main/LICENSE)
