@@ -2,9 +2,11 @@
 
 #include "Base/Logging/Log.h"
 #include "PPCInterpreter.h"
-#include <sstream>
 
 // Forward Declaration
+#ifdef CORE_DUMP
+bool PPCInterpreter::startCoredump = false;
+#endif
 XENON_CONTEXT *PPCInterpreter::intXCPUContext = nullptr;
 RootBus *PPCInterpreter::sysBus = nullptr;
 
@@ -49,203 +51,227 @@ void PPCInterpreter::ppcExecuteSingleInstruction(PPU_STATE *hCore) {
   if ((u32)hCore->ppuThread[hCore->currentThread].CIA == 0x8009ce40) {
     u8 a = 0;
   }
-  
-  auto thread = hCore->ppuThread[hCore->currentThread];
 
-  std::stringstream data;
+#ifdef CORE_DUMP
+  if (PPCInterpreter::startCoredump) {
+    auto thread = hCore->ppuThread[hCore->currentThread];
+    static std::ofstream f;
+    if (!f.is_open()) {
+       f.open("log/coredump.txt");
+    }
+    
+    f << fmt::format(
+#ifdef DUMP_SPRS
+#ifdef DUMP_FPU
+      "{:#x}"
+      "|{:#x}"
+      "|{:#x}"
+      "|{:#x}"
+      "|{:#x}"
+      "|{:#x}"
+      "|{:#x}"
+#else   
+      "{:#x}"
+#endif
+      "|{:#x}"
+      "|{:#x}"
+      "|{:#x}"
+      "|{:#x}"
+      "|{:#x}"
+      "|{:#x}"
+      "|{:#x}"
+      "|{:#x}"
+      "|{:#x}"
+      "|{:#x}"
+      "|{:#x}"
+      "|{:#x}"
+      "|{:#x}"
+      "|{:#x}"
+      "|{:#x}"
+      "|{:#x}"
+      "|{:#x}"
+      "|{:#x}"
+      "|{:#x}"
+      "|{:#x}"
+      "|{:#x}"
+#ifdef DUMP_MSR
+      "|{:#x}"
+      "|{:#x}"
+      "|{:#x}"
+      "|{:#x}"
+      "|{:#x}"
+      "|{:#x}"
+      "|{:#x}"
+      "|{:#x}"
+      "|{:#x}"
+      "|{:#x}"
+      "|{:#x}"
+      "|{:#x}"
+      "|{:#x}"
+      "|{:#x}"
+      "|{:#x}"
+      "|{:#x}"
+      "|{:#x}"
+      "|{:#x}"
+      "|{:#x}"
+#endif
+      "|{:#x}"
+      "|{:#x}"
+#else
+      "{:#x}"
+#endif
+      "|{:#x}"
+      "|{:#x}",
+#ifdef DUMP_SPRS
+#ifdef DUMP_FPU
+      (u64)thread.SPR.XER.XER_Hex,
+      (u64)thread.SPR.XER.ByteCount,
+      (u64)thread.SPR.XER.R0,
+      (u64)thread.SPR.XER.CA,
+      (u64)thread.SPR.XER.OV,
+      (u64)thread.SPR.XER.SO,
+#endif
+      (u64)thread.SPR.LR,
+      (u64)thread.SPR.CTR,
+      (u64)thread.SPR.CFAR,
+      (u64)thread.SPR.VRSAVE,
+      (u64)thread.SPR.DSISR,
+      (u64)thread.SPR.DAR,
+      (u64)thread.SPR.SRR0,
+      (u64)thread.SPR.SRR1,
+      (u64)thread.SPR.ACCR,
+      (u64)thread.SPR.SPRG0,
+      (u64)thread.SPR.SPRG1,
+      (u64)thread.SPR.SPRG2,
+      (u64)thread.SPR.SPRG3,
+      (u64)thread.SPR.HSPRG0,
+      (u64)thread.SPR.HSPRG1,
+      (u64)thread.SPR.HSRR0,
+      (u64)thread.SPR.HSRR1,
+      (u64)thread.SPR.TSRL,
+      (u64)thread.SPR.TSSR,
+      (u64)thread.SPR.PPE_TLB_Index_Hint,
+      (u64)thread.SPR.DABR,
+      (u64)thread.SPR.DABRX,
+#ifdef DUMP_MSR
+      (u64)thread.SPR.MSR.MSR_Hex,
+      (u64)thread.SPR.MSR.LE,
+      (u64)thread.SPR.MSR.RI,
+      (u64)thread.SPR.MSR.PMM,
+      (u64)thread.SPR.MSR.DR,
+      (u64)thread.SPR.MSR.IR,
+      (u64)thread.SPR.MSR.FE1,
+      (u64)thread.SPR.MSR.BE,
+      (u64)thread.SPR.MSR.SE,
+      (u64)thread.SPR.MSR.FE0,
+      (u64)thread.SPR.MSR.ME,
+      (u64)thread.SPR.MSR.FP,
+      (u64)thread.SPR.MSR.PR,
+      (u64)thread.SPR.MSR.EE,
+      (u64)thread.SPR.MSR.ILE,
+      (u64)thread.SPR.MSR.VXU,
+      (u64)thread.SPR.MSR.HV,
+      (u64)thread.SPR.MSR.TA,
+      (u64)thread.SPR.MSR.SF,
+#endif
+      (u64)thread.SPR.PIR,
+#endif
+      (u64)thread.CIA,
+      (u64)thread.NIA,
+      (u64)thread.CI);
+    
+    f << "|" << (int)thread.iFetch;
 
-  data << "GPR: ";
-  for (int i{}; i != 32; ++i) {
-    data << "  0x" << std::uppercase << std::hex << thread.GPR[i];
+#ifdef DUMP_GPRS
+    f << "|GPR:";
+    for (int i{}; i != 32; ++i) {
+      f << "|0x" << std::hex << thread.GPR[i];
+    }
+#endif
+    
+#ifdef DUMP_FPU
+    f << "|FPR:";
+    for (int i{}; i != 32; ++i) {
+      f << "|" << thread.FPR[i].valueAsDouble << "(0x" << std::hex << thread.FPR[i].valueAsU64 << ")";
+    }
+#endif
+    
+#ifdef DUMP_CRS
+    f << "|CR:"
+    << "0x" << std::hex << thread.CR.CR_Hex
+    << "|0x" << std::hex << thread.CR.CR0
+    << "|0x" << std::hex << thread.CR.CR1
+    << "|0x" << std::hex << thread.CR.CR2
+    << "|0x" << std::hex << thread.CR.CR3
+    << "|0x" << std::hex << thread.CR.CR4
+    << "|0x" << std::hex << thread.CR.CR5
+    << "|0x" << std::hex << thread.CR.CR6
+    << "|0x" << std::hex << thread.CR.CR7;
+#endif
+
+#ifdef DUMP_FPU
+    f << "|FPSCR:"
+    << "|0x" << std::hex << thread.FPSCR.FPSCR_Hex
+    << "|0x" << std::hex << thread.FPSCR.RN
+    << "|0x" << std::hex << thread.FPSCR.NI
+    << "|0x" << std::hex << thread.FPSCR.XE
+    << "|0x" << std::hex << thread.FPSCR.ZE
+    << "|0x" << std::hex << thread.FPSCR.UE
+    << "|0x" << std::hex << thread.FPSCR.OE
+    << "|0x" << std::hex << thread.FPSCR.VE
+    << "|0x" << std::hex << thread.FPSCR.VXCVI
+    << "|0x" << std::hex << thread.FPSCR.VXSQRT
+    << "|0x" << std::hex << thread.FPSCR.VXSOFT
+    << "|0x" << std::hex << thread.FPSCR.R0
+    << "|0x" << std::hex << thread.FPSCR.FPRF
+    << "|0x" << std::hex << thread.FPSCR.FI
+    << "|0x" << std::hex << thread.FPSCR.FR
+    << "|0x" << std::hex << thread.FPSCR.VXVC
+    << "|0x" << std::hex << thread.FPSCR.VXIMZ
+    << "|0x" << std::hex << thread.FPSCR.VXZDZ
+    << "|0x" << std::hex << thread.FPSCR.VXIDI
+    << "|0x" << std::hex << thread.FPSCR.VXISI
+    << "|0x" << std::hex << thread.FPSCR.VXSNAN 
+    << "|0x" << std::hex << thread.FPSCR.XX
+    << "|0x" << std::hex << thread.FPSCR.ZX
+    << "|0x" << std::hex << thread.FPSCR.UX
+    << "|0x" << std::hex << thread.FPSCR.OX
+    << "|0x" << std::hex << thread.FPSCR.VX
+    << "|0x" << std::hex << thread.FPSCR.FEX
+    << "|0x" << std::hex << thread.FPSCR.FX;
+#endif
+    
+#ifdef DUMP_SLBS
+    f << "|SLB:";
+    for (int i{}; i != 64; ++i) {
+      f
+      << "|0x" << std::hex << (u32)thread.SLB[i].V
+      << "|0x" << std::hex << (u32)thread.SLB[i].LP
+      << "|0x" << std::hex << (u32)thread.SLB[i].C
+      << "|0x" << std::hex << (u32)thread.SLB[i].L
+      << "|0x" << std::hex << (u32)thread.SLB[i].N
+      << "|0x" << std::hex << (u32)thread.SLB[i].Kp
+      << "|0x" << std::hex << (u32)thread.SLB[i].Ks
+      << "|0x" << std::hex << thread.SLB[i].VSID
+      << "|0x" << std::hex << thread.SLB[i].ESID
+      << "|0x" << std::hex << thread.SLB[i].vsidReg
+      << "|0x" << std::hex << thread.SLB[i].esidReg;
+    }
+#endif
+    
+#ifdef DUMP_EXCPR
+    f << "|0x" << std::hex << thread.exceptReg;
+    f << "|" << (int)thread.exceptionTaken;
+    f << "|0x" << std::hex << thread.exceptEA;
+    f << "|0x" << std::hex << thread.exceptTrapType;
+    f << "|" << (int)thread.exceptHVSysCall;
+    f << "|0x" << std::hex << thread.intEA;
+    f << "|0x" << std::hex << thread.lastWriteAddress;
+    f << "|0x" << std::hex << thread.lastRegValue;
+#endif
+    f << std::endl;
   }
-  
-  data << "FPR: ";
-  for (int i{}; i != 32; ++i) {
-    data << "  " << thread.FPR[i].valueAsDouble << " (0x" << std::uppercase << std::hex << thread.FPR[i].valueAsU64 << ")";
-  }
-
-  data << "  CR: "
-  << "    CR_Hex: 0x" << std::uppercase << std::hex << thread.CR.CR_Hex
-  << "    CR0: 0x" << std::uppercase << std::hex << thread.CR.CR0
-  << "    CR1: 0x" << std::uppercase << std::hex << thread.CR.CR1
-  << "    CR2: 0x" << std::uppercase << std::hex << thread.CR.CR2
-  << "    CR3: 0x" << std::uppercase << std::hex << thread.CR.CR3
-  << "    CR4: 0x" << std::uppercase << std::hex << thread.CR.CR4
-  << "    CR5: 0x" << std::uppercase << std::hex << thread.CR.CR5
-  << "    CR6: 0x" << std::uppercase << std::hex << thread.CR.CR6
-  << "    CR7: 0x" << std::uppercase << std::hex << thread.CR.CR7;
-
-  data << "  FPSCR: "
-  "    FPSCR_Hex: 0x" << std::uppercase << std::hex << thread.FPSCR.FPSCR_Hex
-  << "    RN: 0x" << std::uppercase << std::hex << thread.FPSCR.RN
-  << "    NI: 0x" << std::uppercase << std::hex << thread.FPSCR.NI
-  << "    XE: 0x" << std::uppercase << std::hex << thread.FPSCR.XE
-  << "    ZE: 0x" << std::uppercase << std::hex << thread.FPSCR.ZE
-  << "    UE: 0x" << std::uppercase << std::hex << thread.FPSCR.UE
-  << "    OE: 0x" << std::uppercase << std::hex << thread.FPSCR.OE
-  << "    VE: 0x" << std::uppercase << std::hex << thread.FPSCR.VE
-  << "    VXCVI: 0x" << std::uppercase << std::hex << thread.FPSCR.VXCVI
-  << "    VXSQRT: 0x" << std::uppercase << std::hex << thread.FPSCR.VXSQRT
-  << "    VXSOFT: 0x" << std::uppercase << std::hex << thread.FPSCR.VXSOFT
-  << "    R0: 0x" << std::uppercase << std::hex << thread.FPSCR.R0
-  << "    FPRF: 0x" << std::uppercase << std::hex << thread.FPSCR.FPRF
-  << "    FI: 0x" << std::uppercase << std::hex << thread.FPSCR.FI
-  << "    FR: 0x" << std::uppercase << std::hex << thread.FPSCR.FR
-  << "    VXVC: 0x" << std::uppercase << std::hex << thread.FPSCR.VXVC
-  << "    VXIMZ: 0x" << std::uppercase << std::hex << thread.FPSCR.VXIMZ
-  << "    VXZDZ: 0x" << std::uppercase << std::hex << thread.FPSCR.VXZDZ
-  << "    VXIDI: 0x" << std::uppercase << std::hex << thread.FPSCR.VXIDI
-  << "    VXISI: 0x" << std::uppercase << std::hex << thread.FPSCR.VXISI
-  << "    VXSNAN: 0x" << std::uppercase << std::hex << thread.FPSCR.VXSNAN 
-  << "    XX: 0x" << std::uppercase << std::hex << thread.FPSCR.XX
-  << "    ZX: 0x" << std::uppercase << std::hex << thread.FPSCR.ZX
-  << "    UX: 0x" << std::uppercase << std::hex << thread.FPSCR.UX
-  << "    OX: 0x" << std::uppercase << std::hex << thread.FPSCR.OX
-  << "    VX: 0x" << std::uppercase << std::hex << thread.FPSCR.VX
-  << "    FEX: 0x" << std::uppercase << std::hex << thread.FPSCR.FEX
-  << "    FX: 0x" << std::uppercase << std::hex << thread.FPSCR.FX;
-  
-  data << "  SLB: ";
-  for (int i{}; i != 64; ++i) {
-    data
-    << "    V: 0x" << std::uppercase << std::hex << (u32)thread.SLB[i].V
-    << "    LP: 0x" << std::uppercase << std::hex << (u32)thread.SLB[i].LP
-    << "    C: 0x" << std::uppercase << std::hex << (u32)thread.SLB[i].C
-    << "    L: 0x" << std::uppercase << std::hex << (u32)thread.SLB[i].L
-    << "    N: 0x" << std::uppercase << std::hex << (u32)thread.SLB[i].N
-    << "    Kp: 0x" << std::uppercase << std::hex << (u32)thread.SLB[i].Kp
-    << "    Ks: 0x" << std::uppercase << std::hex << (u32)thread.SLB[i].Ks
-    << "    VSID: 0x" << std::uppercase << std::hex << thread.SLB[i].VSID
-    << "    ESID: 0x" << std::uppercase << std::hex << thread.SLB[i].ESID
-    << "    vsidReg: 0x" << std::uppercase << std::hex << thread.SLB[i].vsidReg
-    << "    esidReg: 0x" << std::uppercase << std::hex << thread.SLB[i].esidReg;
-  }
-
-  LOG_DEBUG(System, "Core dump:\n"
-    "  SPR.XER.XER_Hex: {:#x}"
-    "  SPR.XER.R0: {:#x}"
-    "  SPR.XER.CA: {:#x}"
-    "  SPR.XER.OV: {:#x}"
-    "  SPR.XER.SO: {:#x}"
-    "  SPR.LR: {:#x}"
-    "  SPR.CTR: {:#x}"
-    "  SPR.CFAR: {:#x}"
-    "  SPR.VRSAVE: {:#x}"
-    "  SPR.DSISR: {:#x}"
-    "  SPR.DAR: {:#x}"
-    "  SPR.DEC: {:#x}"
-    "  SPR.SRR0: {:#x}"
-    "  SPR.SRR1: {:#x}"
-    "  SPR.ACCR: {:#x}"
-    "  SPR.SPRG0: {:#x}"
-    "  SPR.SPRG1: {:#x}"
-    "  SPR.SPRG2: {:#x}"
-    "  SPR.SPRG3: {:#x}"
-    "  SPR.HSPRG0: {:#x}"
-    "  SPR.HSPRG1: {:#x}"
-    "  SPR.HSRR0: {:#x}"
-    "  SPR.HSRR1: {:#x}"
-    "  SPR.TSRL: {:#x}"
-    "  SPR.TSSR: {:#x}"
-    "  SPR.PPE_TLB_Index_Hint: {:#x}"
-    "  SPR.DABR: {:#x}"
-    "  SPR.DABRX: {:#x}"
-    "  SPR.MSR.MSR_Hex: {:#x}"
-    "  SPR.MSR.LE: {:#x}"
-    "  SPR.MSR.RI: {:#x}"
-    "  SPR.MSR.PMM: {:#x}"
-    "  SPR.MSR.DR: {:#x}"
-    "  SPR.MSR.IR: {:#x}"
-    "  SPR.MSR.FE1: {:#x}"
-    "  SPR.MSR.BE: {:#x}"
-    "  SPR.MSR.SE: {:#x}"
-    "  SPR.MSR.FE0: {:#x}"
-    "  SPR.MSR.ME: {:#x}"
-    "  SPR.MSR.FP: {:#x}"
-    "  SPR.MSR.PR: {:#x}"
-    "  SPR.MSR.EE: {:#x}"
-    "  SPR.MSR.ILE: {:#x}"
-    "  SPR.MSR.VXU: {:#x}"
-    "  SPR.MSR.HV: {:#x}"
-    "  SPR.MSR.TA: {:#x}"
-    "  SPR.MSR.SF: {:#x}"
-    "  SPR.PIR: {:#x}"   
-    "  CIA: {:#x}"
-    "  NIA: {:#x}"
-    "  CI: {:#x}"
-    "  iFetch: {}"
-    "{}"
-    "  exceptReg: {:#x}"
-    "  exceptionTaken: {}"
-    "  exceptEA: {:#x}"
-    "  exceptTrapType: {:#x}"
-    "  exceptHVSysCall: {}"
-    "  intEA: {:#x}"
-    "  lastWriteAddress: {:#x}"
-    "  lastRegValue: {:#x}"   
-    ,
-    thread.SPR.XER.XER_Hex,
-    thread.SPR.XER.ByteCount,
-    thread.SPR.XER.R0,
-    thread.SPR.XER.CA,
-    thread.SPR.XER.OV,
-    thread.SPR.XER.SO,
-    thread.SPR.LR,
-    thread.SPR.CTR,
-    thread.SPR.CFAR,
-    thread.SPR.VRSAVE,
-    thread.SPR.DSISR,
-    thread.SPR.DAR,
-    thread.SPR.SRR0,
-    thread.SPR.SRR1,
-    thread.SPR.ACCR,
-    thread.SPR.SPRG0,
-    thread.SPR.SPRG1,
-    thread.SPR.SPRG2,
-    thread.SPR.SPRG3,
-    thread.SPR.HSPRG0,
-    thread.SPR.HSPRG1,
-    thread.SPR.HSRR0,
-    thread.SPR.HSRR1,
-    thread.SPR.TSRL,
-    thread.SPR.TSSR,
-    thread.SPR.PPE_TLB_Index_Hint,
-    thread.SPR.DABR,
-    thread.SPR.DABRX,
-    thread.SPR.MSR.MSR_Hex,
-    thread.SPR.MSR.LE,
-    thread.SPR.MSR.RI,
-    thread.SPR.MSR.PMM,
-    thread.SPR.MSR.DR,
-    thread.SPR.MSR.IR,
-    thread.SPR.MSR.FE1,
-    thread.SPR.MSR.BE,
-    thread.SPR.MSR.SE,
-    thread.SPR.MSR.FE0,
-    thread.SPR.MSR.ME,
-    thread.SPR.MSR.FP,
-    thread.SPR.MSR.PR,
-    thread.SPR.MSR.EE,
-    thread.SPR.MSR.ILE,
-    thread.SPR.MSR.VXU,
-    thread.SPR.MSR.HV,
-    thread.SPR.MSR.TA,
-    thread.SPR.MSR.SF,
-    thread.SPR.PIR,
-    thread.CIA,
-    thread.NIA,
-    thread.CI,
-    thread.iFetch ? "true" : "false",
-    data.str(),
-    thread.exceptReg,
-    thread.exceptionTaken ? "true" : "false",
-    thread.exceptEA,
-    thread.exceptTrapType,
-    thread.exceptHVSysCall ? "true" : "false",
-    thread.intEA,
-    thread.lastWriteAddress,
-    thread.lastRegValue
-  );
+#endif
 
   // This is to set a PPU0[Thread0] breakpoint.
   if (hCore->ppuThread[hCore->currentThread].SPR.PIR == 0) {

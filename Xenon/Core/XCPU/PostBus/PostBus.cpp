@@ -2,6 +2,7 @@
 
 #include "PostBus.h"
 #include "Base/Logging/Log.h"
+#include "Core/XCPU/Interpreter/PPCInterpreter.h"
 
 void Xe::XCPU::POSTBUS::POST(u64 postCode) {
   /* 1BL */
@@ -12,6 +13,9 @@ void Xe::XCPU::POSTBUS::POST(u64 postCode) {
       break;
     case 0x11:
       LOG_XBOX(Xenon_PostBus, "FSB_CONFIG_PHY_CONTROL - Execute FSB function1.");
+#ifdef CORE_DUMP 
+      PPCInterpreter::startCoredump = true;
+#endif
       break;
     case 0x12:
        LOG_XBOX(Xenon_PostBus, "FSB_CONFIG_RX_STATE - Execute FSB function2");

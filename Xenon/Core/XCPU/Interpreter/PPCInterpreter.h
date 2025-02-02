@@ -2,6 +2,18 @@
 
 #pragma once
 
+#define CORE_DUMP
+#ifdef CORE_DUMP 
+//#define DUMP_SPRS
+//#define DUMP_FPU 
+#define DUMP_MSR
+//#define DUMP_VPU
+#define DUMP_GPRS
+#define DUMP_CRS
+//#define DUMP_SLBS
+//#define DUMP_EXCPR
+#endif
+
 #include "PPCInternal.h"
 #include "PPC_Instruction.h"
 
@@ -9,6 +21,9 @@
 #include "Core/XCPU/PPU/PowerPC.h"
 
 namespace PPCInterpreter {
+#ifdef CORE_DUMP
+extern bool startCoredump;
+#endif
 extern RootBus *sysBus;
 extern XENON_CONTEXT *intXCPUContext;
 
