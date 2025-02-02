@@ -124,9 +124,10 @@ layout (location = 1) in vec2 i_texture_coord;
 
 out vec2 o_texture_coord;
 
+// https://www.gamedev.net/forums/topic/609917-full-screen-quad-without-vertex-buffer/
 void main() {
-  gl_Position = vec4(i_pos, 0.0, 1.0);
-  o_texture_coord = i_texture_coord;
+  o_texture_coord = vec2((gl_VertexID << 1) & 2, gl_VertexID & 2);
+  gl_Position = vec4(o_texture_coord * vec2(2.0f, -2.0f) + vec2(-1.0f, 1.0f), 0.0f, 1.0f);
 }
 )";
 constexpr const char* fragmentShaderSource = R"(
@@ -304,25 +305,6 @@ void Xe::Xenos::XGPU::XenosThread() {
 	glBufferData(GL_SHADER_STORAGE_BUFFER, pixels.size() * sizeof(uint32_t), pixels.data(), GL_DYNAMIC_DRAW);
 	glBindBuffer(GL_SHADER_STORAGE_BUFFER, 0);
 
-  // Init the fullscreen quad
-  constexpr float quadVertices[]{
-    // Positions  Texture coords
-    -1.0f, -1.0f,  0.0f, 1.0f,
-    1.0f , -1.0f,  1.0f, 1.0f,
-    1.0f ,  1.0f,  1.0f, 0.0f,
-    -1.0f,  1.0f,  0.0f, 0.0f
-  };
-  // Bind the VAO and VBO for our quad
-  glGenVertexArrays(1, &quadVAO);
-  glGenBuffers(1, &quadVBO);
-  glBindVertexArray(quadVAO);
-  glBindBuffer(GL_ARRAY_BUFFER, quadVBO);
-  glBufferData(GL_ARRAY_BUFFER, sizeof(quadVertices), quadVertices, GL_STATIC_DRAW);
-  // Set shader attributes
-  glVertexAttribPointer(0, 2, GL_FLOAT, GL_FALSE, 4 * sizeof(float), (void*)0);
-  glEnableVertexAttribArray(0);
-  glVertexAttribPointer(1, 2, GL_FLOAT, GL_FALSE, 4 * sizeof(float), (void*)(2 * sizeof(float)));
-  glEnableVertexAttribArray(1);
   // Set clear color
   glClearColor(0.7f, 0.7f, 0.7f, 1.f);
   glViewport(0, 0, resWidth, resHeight);
@@ -401,9 +383,7 @@ void Xe::Xenos::XGPU::XenosThread() {
     glMemoryBarrier(GL_TEXTURE_UPDATE_BARRIER_BIT);
     glClear(GL_COLOR_BUFFER_BIT);
     glUseProgram(renderShaderProgram);
-    glBindTexture(GL_TEXTURE_2D, texture);
-    glBindVertexArray(quadVAO);
-    glDrawArrays(GL_TRIANGLE_FAN, 0, 4);
+    glDrawArrays(GL_TRIANGLE_FAN, 0, 3);
 
     SDL_GL_SwapWindow(mainWindow);
   }
