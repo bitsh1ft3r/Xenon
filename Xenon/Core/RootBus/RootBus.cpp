@@ -74,12 +74,6 @@ void RootBus::Write(u64 writeAddress, u64 data, u8 byteCount) {
   if (hostBridge->Write(writeAddress, data, byteCount)) {
     return;
   }
-
-  // Wrong bitshift? Attempt to correct
-  if (writeAddress >= 0x2000000) {
-    LOG_INFO(RootBus, "Changing 0x{:X} to 0x{:X}", writeAddress, writeAddress - 0x2000000);
-    return Write(writeAddress - 0x2000000, data, byteCount);
-  }
   
   // Device or address not found.
   LOG_ERROR(RootBus, "Write failed at address: {:#x} data: {:#x}", writeAddress, data);
