@@ -45,7 +45,7 @@ Xe::Xenos::XGPU::XGPU(RAM *ram) {
 
 bool Xe::Xenos::XGPU::Read(u64 readAddress, u64 *data, u8 byteCount) {
   if (isAddressMappedInBAR(static_cast<u32>(readAddress))) {
-    
+
     const u32 regIndex = (readAddress & 0xFFFFF) / 4;
 
     LOG_TRACE(Xenos, "Read Addr = {:#x}, reg: {:#x}.", readAddress, regIndex);
@@ -166,7 +166,7 @@ int xeFbConvert(int width, int addr) {
   int y = addr / (width * 4);
   int x = (addr % (width * 4)) / 4;
   return ((((y & ~31) * width) + (x & ~31) * 32) +
-         (((x & 3) + ((y & 1) << 2) + ((x & 28) << 1) + ((y & 30) << 5)) ^ 
+         (((x & 3) + ((y & 1) << 2) + ((x & 28) << 1) + ((y & 30) << 5)) ^
          ((y & 8) << 2)));
 }
 
@@ -180,7 +180,7 @@ void main() {
   int stdIndex = (texel_pos.y * resWidth + texel_pos.x);
   int xeIndex = xeFbConvert(resWidth, stdIndex * 4);
 
-  uint packedColor = pixel_data[xeIndex]; 
+  uint packedColor = pixel_data[xeIndex];
   imageStore(o_texture, texel_pos, uvec4(packedColor, 0, 0, 0));
 }
 )";
@@ -297,7 +297,7 @@ void Xe::Xenos::XGPU::XenosThread() {
   glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_EDGE);
 	glBindImageTexture(0, texture, 0, GL_FALSE, 0, GL_READ_WRITE, GL_R32UI);
 
-  // Init pixel buffer 
+  // Init pixel buffer
   int pitch = resWidth * resHeight * sizeof(uint32_t);
   std::vector<uint32_t> pixels(pitch, COLOR(30, 30, 30, 255)); // Init with dark grey
 	glGenBuffers(1, &pixelBuffer);
@@ -333,8 +333,8 @@ void Xe::Xenos::XGPU::XenosThread() {
         if (Config::quitOnWindowClosure()) {
           SDL_Quit();
           exit(0);
-        } 
-        rendering = false;       
+        }
+        rendering = false;
         break;
       case SDL_EVENT_KEY_DOWN:
         if (windowEvent.key.key == SDLK_F5) {
@@ -365,7 +365,7 @@ void Xe::Xenos::XGPU::XenosThread() {
       }
     }
 
-    // Upload buffer 
+    // Upload buffer
     u32* ui_fbPointer = reinterpret_cast<uint32_t*>(fbPointer);
     glBindBuffer(GL_SHADER_STORAGE_BUFFER, pixelBuffer);
     glBufferSubData(GL_SHADER_STORAGE_BUFFER, 0, pitch * sizeof(*ui_fbPointer), ui_fbPointer);
