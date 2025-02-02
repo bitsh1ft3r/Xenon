@@ -119,12 +119,8 @@ bool Xe::Xenos::XGPU::isAddressMappedInBAR(u32 address) {
 constexpr const char* vertexShaderSource = R"(
 #version 430 core
 
-layout (location = 0) in vec2 i_pos;
-layout (location = 1) in vec2 i_texture_coord;
-
 out vec2 o_texture_coord;
 
-// https://www.gamedev.net/forums/topic/609917-full-screen-quad-without-vertex-buffer/
 void main() {
   o_texture_coord = vec2((gl_VertexID << 1) & 2, gl_VertexID & 2);
   gl_Position = vec4(o_texture_coord * vec2(2.0f, -2.0f) + vec2(-1.0f, 1.0f), 0.0f, 1.0f);
@@ -305,11 +301,13 @@ void Xe::Xenos::XGPU::XenosThread() {
 	glBufferData(GL_SHADER_STORAGE_BUFFER, pixels.size() * sizeof(uint32_t), pixels.data(), GL_DYNAMIC_DRAW);
 	glBindBuffer(GL_SHADER_STORAGE_BUFFER, 0);
 
+  GLuint dummy;
+  glGenVertexArrays(1, &dummy);
+
   // Set clear color
-  glClearColor(0.7f, 0.7f, 0.7f, 1.f);
+  glClearColor(0.0f, 0.0f, 0.0f, 1.f);
   glViewport(0, 0, resWidth, resHeight);
   glDisable(GL_BLEND);
-  //glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
   glDisable(GL_DEPTH_TEST);
 
   // Framebuffer pointer from main memory.
@@ -381,8 +379,10 @@ void Xe::Xenos::XGPU::XenosThread() {
 
     // Render the texture
     glMemoryBarrier(GL_TEXTURE_UPDATE_BARRIER_BIT);
-    glClear(GL_COLOR_BUFFER_BIT);
+    glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT | GL_STENCIL_BUFFER_BIT);
     glUseProgram(renderShaderProgram);
+    glBindTexture(GL_TEXTURE_2D, texture);
+    glBindVertexArray(dummy);
     glDrawArrays(GL_TRIANGLE_FAN, 0, 3);
 
     SDL_GL_SwapWindow(mainWindow);
