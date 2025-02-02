@@ -45,7 +45,7 @@ Xe::Xenos::XGPU::XGPU(RAM *ram) {
 
 bool Xe::Xenos::XGPU::Read(u64 readAddress, u64 *data, u8 byteCount) {
   if (isAddressMappedInBAR(static_cast<u32>(readAddress))) {
-    
+
     const u32 regIndex = (readAddress & 0xFFFFF) / 4;
 
     LOG_TRACE(Xenos, "Read Addr = {:#x}, reg: {:#x}.", readAddress, regIndex);
@@ -119,14 +119,11 @@ bool Xe::Xenos::XGPU::isAddressMappedInBAR(u32 address) {
 constexpr const char* vertexShaderSource = R"(
 #version 430 core
 
-layout (location = 0) in vec2 i_pos;
-layout (location = 1) in vec2 i_texture_coord;
-
 out vec2 o_texture_coord;
 
 void main() {
-  gl_Position = vec4(i_pos, 0.0, 1.0);
-  o_texture_coord = i_texture_coord;
+  o_texture_coord = vec2((gl_VertexID << 1) & 2, gl_VertexID & 2);
+  gl_Position = vec4(o_texture_coord * vec2(2.0f, -2.0f) + vec2(-1.0f, 1.0f), 0.0f, 1.0f);
 }
 )";
 constexpr const char* fragmentShaderSource = R"(
@@ -165,7 +162,7 @@ int xeFbConvert(int width, int addr) {
   int y = addr / (width * 4);
   int x = (addr % (width * 4)) / 4;
   return ((((y & ~31) * width) + (x & ~31) * 32) +
-         (((x & 3) + ((y & 1) << 2) + ((x & 28) << 1) + ((y & 30) << 5)) ^ 
+         (((x & 3) + ((y & 1) << 2) + ((x & 28) << 1) + ((y & 30) << 5)) ^
          ((y & 8) << 2)));
 }
 
@@ -179,7 +176,7 @@ void main() {
   int stdIndex = (texel_pos.y * resWidth + texel_pos.x);
   int xeIndex = xeFbConvert(resWidth, stdIndex * 4);
 
-  uint packedColor = pixel_data[xeIndex]; 
+  uint packedColor = pixel_data[xeIndex];
   imageStore(o_texture, texel_pos, uvec4(packedColor, 0, 0, 0));
 }
 )";
@@ -296,7 +293,7 @@ void Xe::Xenos::XGPU::XenosThread() {
   glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_EDGE);
 	glBindImageTexture(0, texture, 0, GL_FALSE, 0, GL_READ_WRITE, GL_R32UI);
 
-  // Init pixel buffer 
+  // Init pixel buffer
   int pitch = resWidth * resHeight * sizeof(uint32_t);
   std::vector<uint32_t> pixels(pitch, COLOR(30, 30, 30, 255)); // Init with dark grey
 	glGenBuffers(1, &pixelBuffer);
@@ -304,30 +301,13 @@ void Xe::Xenos::XGPU::XenosThread() {
 	glBufferData(GL_SHADER_STORAGE_BUFFER, pixels.size() * sizeof(uint32_t), pixels.data(), GL_DYNAMIC_DRAW);
 	glBindBuffer(GL_SHADER_STORAGE_BUFFER, 0);
 
-  // Init the fullscreen quad
-  constexpr float quadVertices[]{
-    // Positions  Texture coords
-    -1.0f, -1.0f,  0.0f, 1.0f,
-    1.0f , -1.0f,  1.0f, 1.0f,
-    1.0f ,  1.0f,  1.0f, 0.0f,
-    -1.0f,  1.0f,  0.0f, 0.0f
-  };
-  // Bind the VAO and VBO for our quad
-  glGenVertexArrays(1, &quadVAO);
-  glGenBuffers(1, &quadVBO);
-  glBindVertexArray(quadVAO);
-  glBindBuffer(GL_ARRAY_BUFFER, quadVBO);
-  glBufferData(GL_ARRAY_BUFFER, sizeof(quadVertices), quadVertices, GL_STATIC_DRAW);
-  // Set shader attributes
-  glVertexAttribPointer(0, 2, GL_FLOAT, GL_FALSE, 4 * sizeof(float), (void*)0);
-  glEnableVertexAttribArray(0);
-  glVertexAttribPointer(1, 2, GL_FLOAT, GL_FALSE, 4 * sizeof(float), (void*)(2 * sizeof(float)));
-  glEnableVertexAttribArray(1);
+  GLuint dummy;
+  glGenVertexArrays(1, &dummy);
+
   // Set clear color
-  glClearColor(0.7f, 0.7f, 0.7f, 1.f);
+  glClearColor(0.0f, 0.0f, 0.0f, 1.f);
   glViewport(0, 0, resWidth, resHeight);
   glDisable(GL_BLEND);
-  //glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
   glDisable(GL_DEPTH_TEST);
 
   // Framebuffer pointer from main memory.
@@ -351,8 +331,8 @@ void Xe::Xenos::XGPU::XenosThread() {
         if (Config::quitOnWindowClosure()) {
           SDL_Quit();
           exit(0);
-        } 
-        rendering = false;       
+        }
+        rendering = false;
         break;
       case SDL_EVENT_KEY_DOWN:
         if (windowEvent.key.key == SDLK_F5) {
@@ -383,7 +363,7 @@ void Xe::Xenos::XGPU::XenosThread() {
       }
     }
 
-    // Upload buffer 
+    // Upload buffer
     u32* ui_fbPointer = reinterpret_cast<uint32_t*>(fbPointer);
     glBindBuffer(GL_SHADER_STORAGE_BUFFER, pixelBuffer);
     glBufferSubData(GL_SHADER_STORAGE_BUFFER, 0, pitch * sizeof(*ui_fbPointer), ui_fbPointer);
@@ -399,11 +379,11 @@ void Xe::Xenos::XGPU::XenosThread() {
 
     // Render the texture
     glMemoryBarrier(GL_TEXTURE_UPDATE_BARRIER_BIT);
-    glClear(GL_COLOR_BUFFER_BIT);
+    glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT | GL_STENCIL_BUFFER_BIT);
     glUseProgram(renderShaderProgram);
     glBindTexture(GL_TEXTURE_2D, texture);
-    glBindVertexArray(quadVAO);
-    glDrawArrays(GL_TRIANGLE_FAN, 0, 4);
+    glBindVertexArray(dummy);
+    glDrawArrays(GL_TRIANGLE_FAN, 0, 3);
 
     SDL_GL_SwapWindow(mainWindow);
   }

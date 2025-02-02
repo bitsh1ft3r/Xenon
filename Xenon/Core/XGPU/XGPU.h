@@ -119,7 +119,7 @@ private:
   SDL_Window *mainWindow{};
   SDL_GLContext context;
   GLuint texture, shaderProgram, pixelBuffer;
-  GLuint quadVAO, quadVBO, renderShaderProgram;
+  GLuint renderShaderProgram;
   SDL_Event windowEvent;
 };
 } // namespace Xenos
