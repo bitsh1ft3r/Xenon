@@ -601,6 +601,18 @@ void PPCInterpreter::PPCInterpreter_norx(PPU_STATE *hCore) {
     ppcUpdateCR(hCore, 0, CR);
   }
 }
+/* Or with Complement */
+void PPCInterpreter::PPCInterpreter_orcx(PPU_STATE* hCore)
+{
+    X_FORM_rS_rA_rB_RC;
+
+    GPR(rA) = (GPR(rS) | ~GPR(rB));
+
+    if (RC) {
+        u32 CR = CRCompS(hCore, GPR(rA), 0);
+        ppcUpdateCR(hCore, 0, CR);
+    }
+}
 /* Or Immediate */
 void PPCInterpreter::PPCInterpreter_ori(PPU_STATE *hCore) {
   D_FORM_rS_rA_UI;

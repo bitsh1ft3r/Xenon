@@ -491,10 +491,9 @@ case PPCInstruction::mulhwx:
   case PPCInstruction::norx:
     PPCInterpreter_norx(hCore);
     break;
-    /*
 case PPCInstruction::orcx:
+    PPCInterpreter_orcx(hCore);
     break;
-    */
   case PPCInstruction::ori:
     PPCInterpreter_ori(hCore);
     break;
