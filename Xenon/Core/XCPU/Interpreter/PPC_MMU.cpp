@@ -1226,6 +1226,7 @@ u64 PPCInterpreter::MMURead(XENON_CONTEXT *cpuContext, PPU_STATE *ppuState,
   bool nand = false;
   bool pciConfigSpace = false;
   bool pciBridge = false;
+  bool xGPU = false;
 
   if (EA >= 0xC8000000 && EA <= 0xCC000000) {
     nand = true;
@@ -1239,7 +1240,11 @@ u64 PPCInterpreter::MMURead(XENON_CONTEXT *cpuContext, PPU_STATE *ppuState,
     pciBridge = true;
   }
 
-  if (socRead && nand != true && pciBridge != true && pciConfigSpace != true) {
+  if (EA >= 0xEC800000 && EA <= 0xEC810000) {
+      xGPU = true;
+  }
+
+  if (socRead && nand != true && pciBridge != true && pciConfigSpace != true && xGPU != true) {
       LOG_WARNING(Xenon_MMU, "SoC Read from {:#x}, returning 0.", EA);
     data = 0;
     return data;
@@ -1334,6 +1339,7 @@ void PPCInterpreter::MMUWrite(XENON_CONTEXT *cpuContext, PPU_STATE *ppuState,
   bool nand = false;
   bool pciConfigSpace = false;
   bool pciBridge = false;
+  bool xGPU = false;
 
   if (EA >= 0xC8000000 && EA <= 0xCC000000) {
     nand = true;
@@ -1347,7 +1353,11 @@ void PPCInterpreter::MMUWrite(XENON_CONTEXT *cpuContext, PPU_STATE *ppuState,
     pciBridge = true;
   }
 
-  if (socWrite && nand != true && pciBridge != true && pciConfigSpace != true) {
+  if (EA >= 0xEC800000 && EA <= 0xEC810000) {
+      xGPU = true;
+  }
+
+  if (socWrite && nand != true && pciBridge != true && pciConfigSpace != true && xGPU != true) {
     LOG_WARNING(Xenon_MMU, "SoC Write to {:#x}, data = {:#x}, invalidating.", EA, data);
     return;
   }

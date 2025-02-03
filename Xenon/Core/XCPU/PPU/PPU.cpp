@@ -49,11 +49,11 @@ void PPU::Initialize(XENON_CONTEXT *inXenonContext, RootBus *mainBus, u32 PVR,
 
   // Find a way to calculate the right ticks/IPS ratio.
   int configTpi = Config::tpi();
-  ticksPerIntruction = configTpi ? configTpi : TPI_FORMULA(instrPerSecond);
+  ticksPerInstruction = configTpi ? configTpi : TPI_FORMULA(instrPerSecond);
   if (!configTpi)
-      LOG_INFO(Xenon, "{} TPI: {} ticks per instruction", ppuName, ticksPerIntruction);
+    LOG_INFO(Xenon, "{} TPI: {} ticks per instruction", ppuName, ticksPerInstruction);
   else
-      LOG_INFO(Xenon, "{} TPI: {} ticks per instruction (overrwriten! actual tps: {})", ppuName, ticksPerIntruction, TPI_FORMULA(instrPerSecond));
+    LOG_INFO(Xenon, "{} TPI: {} ticks per instruction (overrwriten! actual tps: {})", ppuName, ticksPerInstruction, TPI_FORMULA(instrPerSecond));
 
   for (u8 thrdID = 0; thrdID < 2; thrdID++) {
     ppuState->ppuThread[thrdID].ppuRes = new PPU_RES;
@@ -458,10 +458,10 @@ void PPU::updateTimeBase() {
   u32 newDec = 0;
   u32 dec = 0;
   // Update the Time Base.
-  ppuState->SPR.TB += ticksPerIntruction;
+  ppuState->SPR.TB += ticksPerInstruction;
   // Get the decrementer value.
   dec = ppuState->ppuThread[ppuState->currentThread].SPR.DEC;
-  newDec = dec - ticksPerIntruction;
+  newDec = dec - ticksPerInstruction;
   // Update the new decrementer value.
   ppuState->ppuThread[ppuState->currentThread].SPR.DEC = newDec;
   // Check if Previous decrementer measurement is smaller than current and a

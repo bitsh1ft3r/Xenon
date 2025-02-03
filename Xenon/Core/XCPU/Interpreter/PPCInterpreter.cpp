@@ -15,7 +15,12 @@ void PPCInterpreter::ppcExecuteSingleInstruction(PPU_STATE *hCore) {
 
   // RGH 2 for CB_A 9188 in a JRunner XDKBuild.
   if (hCore->ppuThread[hCore->currentThread].CIA == 0x000000000200c870) {
-    hCore->ppuThread[hCore->currentThread].GPR[0x5] = 0;
+    //hCore->ppuThread[hCore->currentThread].GPR[0x5] = 0;
+  }
+
+  // RGH 2 for CB_A 9188 in a JRunner Normal Build.
+  if (hCore->ppuThread[hCore->currentThread].CIA == 0x000000000200c820) {
+      hCore->ppuThread[hCore->currentThread].GPR[0x3] = 0;
   }
 
   // RGH 2 17489 in a JRunner Corona XDKBuild.
@@ -491,10 +496,9 @@ case PPCInstruction::mulhwx:
   case PPCInstruction::norx:
     PPCInterpreter_norx(hCore);
     break;
-    /*
 case PPCInstruction::orcx:
+    PPCInterpreter_orcx(hCore);
     break;
-    */
   case PPCInstruction::ori:
     PPCInterpreter_ori(hCore);
     break;

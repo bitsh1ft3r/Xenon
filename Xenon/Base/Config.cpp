@@ -155,7 +155,6 @@ void loadConfig(const std::filesystem::path &path) {
 
   if (data.contains("HighlyExperimental")) {
     const toml::value &highlyExperimental = data.at("HighlyExperimental");
-    toml::find_or<int>(highlyExperimental, "DoNotTouchTheseUnlessYouKnowWhatYouAreDoing", 0);
     ticksPerInstruction =
         toml::find_or<int>(highlyExperimental, "TPI", ticksPerInstruction);
   }
@@ -186,7 +185,7 @@ void saveConfig(const std::filesystem::path &path) {
   data["General"]["QuitOnWindowClosure"] = shouldQuitOnWindowClosure;
   data["General"]["Loglevel"] = (int)currentLogLevel;
 
-  // SMC.
+  // SMC.                                      
   data["SMC"]["COMPort"] = comPort;
   data["SMC"]["SMCPowerOnType"] = smcPowerOnReason;
 
@@ -206,7 +205,8 @@ void saveConfig(const std::filesystem::path &path) {
   data["Paths"]["ISO"] = oddDiscImagePath;
 
   // HighlyExperimental.
-  data["HighlyExperimental"]["DoNotTouchTheseUnlessYouKnowWhatYouAreDoing"] = 0;
+  data["HighlyExperimental"].comments().push_back("# Do not touch these options unless you know what you're doing!");
+  data["HighlyExperimental"].comments().push_back("# It can break execution! User beware.");
   data["HighlyExperimental"]["TPI"] = ticksPerInstruction;
 
   std::ofstream file(path, std::ios::binary);
