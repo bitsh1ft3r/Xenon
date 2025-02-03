@@ -50,7 +50,7 @@ eFuses getFuses(const std::filesystem::path& path) {
   for (int i = 0; i < 12; i++) {
     fuseset = fusesets[i];
     fuses[i] = strtoull(fuseset.c_str(), 0, 16);
-    LOG_INFO(System, " * FuseSet 0{}: 0x{}", i, fuseset.c_str());
+    LOG_INFO(System, " * FuseSet {:02}: 0x{}", i, fuseset.c_str());
   }
 
   // Return the fuses.
