@@ -58,8 +58,8 @@ private:
 //
 class Storage {
 public:
-  Storage(wchar_t *Filename) {
-    hFile = CreateFileW(Filename, GENERIC_READ, FILE_SHARE_READ, nullptr,
+  Storage(std::string Filename) {
+    hFile = CreateFileA(Filename.data(), GENERIC_READ, FILE_SHARE_READ, nullptr,
                         OPEN_EXISTING, FILE_ATTRIBUTE_NORMAL, nullptr);
   }
 
