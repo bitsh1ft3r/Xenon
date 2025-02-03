@@ -421,7 +421,6 @@ third_party/cmake_install.cmake
 CMakeFiles
 CMakeCache.txt
 cmake_install.cmake
-CMakeSettings.json
 
 # Specific to Xenon
 Xenon.dir/
