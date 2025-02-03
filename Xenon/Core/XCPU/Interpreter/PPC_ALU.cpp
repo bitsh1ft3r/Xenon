@@ -117,7 +117,8 @@ void PPCInterpreter::PPCInterpreter_andis(PPU_STATE *hCore) {
   D_FORM_rS_rA_UI;
 
   GPR(rA) = GPR(rS) & (UI << 16);
-  ppcUpdateCR(hCore, 0, static_cast<u32>(GPR(rA)));
+  u32 CR = CRCompS(hCore, GPR(rA), 0);
+  ppcUpdateCR(hCore, 0, CR);
 }
 
 void PPCInterpreter::PPCInterpreter_cmp(PPU_STATE *hCore) {
