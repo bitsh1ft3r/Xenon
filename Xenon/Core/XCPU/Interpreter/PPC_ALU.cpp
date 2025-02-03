@@ -510,6 +510,11 @@ void PPCInterpreter::PPCInterpreter_mulldx(PPU_STATE *hCore) {
   ppcMul64Signed(GPR(rA), GPR(rB), &qwH, &qwL);
 
   GPR(rD) = qwL;
+
+  if (RC) {
+      u32 CR = CRCompS(hCore, GPR(rD), 0);
+      ppcUpdateCR(hCore, 0, CR);
+  }
 }
 
 void PPCInterpreter::PPCInterpreter_mullw(PPU_STATE *hCore) {
