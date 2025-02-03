@@ -129,7 +129,8 @@ void PPCInterpreter::PPCInterpreter_andis(PPU_STATE *hCore) {
   D_FORM_rS_rA_UI;
 
   GPR(rA) = GPR(rS) & (UI << 16);
-  ppcUpdateCR(hCore, 0, static_cast<u32>(GPR(rA)));
+  u32 CR = CRCompS(hCore, GPR(rA), 0);
+  ppcUpdateCR(hCore, 0, CR);
 }
 
 void PPCInterpreter::PPCInterpreter_cmp(PPU_STATE *hCore) {
@@ -521,6 +522,11 @@ void PPCInterpreter::PPCInterpreter_mulldx(PPU_STATE *hCore) {
   ppcMul64Signed(GPR(rA), GPR(rB), &qwH, &qwL);
 
   GPR(rD) = qwL;
+
+  if (RC) {
+      u32 CR = CRCompS(hCore, GPR(rD), 0);
+      ppcUpdateCR(hCore, 0, CR);
+  }
 }
 
 void PPCInterpreter::PPCInterpreter_mullw(PPU_STATE *hCore) {
@@ -606,6 +612,18 @@ void PPCInterpreter::PPCInterpreter_norx(PPU_STATE *hCore) {
     u32 CR = CRCompS(hCore, GPR(rA), 0);
     ppcUpdateCR(hCore, 0, CR);
   }
+}
+/* Or with Complement */
+void PPCInterpreter::PPCInterpreter_orcx(PPU_STATE* hCore)
+{
+    X_FORM_rS_rA_rB_RC;
+
+    GPR(rA) = (GPR(rS) | ~GPR(rB));
+
+    if (RC) {
+        u32 CR = CRCompS(hCore, GPR(rA), 0);
+        ppcUpdateCR(hCore, 0, CR);
+    }
 }
 /* Or Immediate */
 void PPCInterpreter::PPCInterpreter_ori(PPU_STATE *hCore) {

@@ -168,6 +168,7 @@ void PPCInterpreter_mulhdux(PPU_STATE *hCore);
 void PPCInterpreter_nandx(PPU_STATE *hCore);
 void PPCInterpreter_negx(PPU_STATE *hCore);
 void PPCInterpreter_norx(PPU_STATE *hCore);
+void PPCInterpreter_orcx(PPU_STATE *hCore);
 void PPCInterpreter_ori(PPU_STATE *hCore);
 void PPCInterpreter_oris(PPU_STATE *hCore);
 void PPCInterpreter_orx(PPU_STATE *hCore);

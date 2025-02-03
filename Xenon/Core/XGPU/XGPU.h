@@ -3,6 +3,7 @@
 #pragma once
 
 #include <thread>
+#include <vector>
 #include <fstream>
 #include <vector>
 
@@ -91,6 +92,7 @@ struct XenosState {
 
 // ARGB (Console is BGRA)
 #define COLOR(r, g, b, a) ((a) << 24 | (r) << 16 | (g) << 8  | (b) << 0)
+#define TILE(x) ((x + 31) >> 5) << 5
 class XGPU {
 public:
   XGPU(RAM *ram);
@@ -114,14 +116,20 @@ private:
 
   std::thread renderThread;
 
+  void XenosResize(int x, int y);
+  void XenosThreadShutdown();
   void XenosThread();
 
-  // Rendering Stuff
+  // Pixel buffer
+  int pitch = 0;
+  std::vector<uint32_t> pixels{};
+  // SDL Window data
   SDL_Window *mainWindow{};
   SDL_GLContext context;
-  GLuint texture, shaderProgram, pixelBuffer;
-  GLuint quadVAO, quadVBO, renderShaderProgram;
   SDL_Event windowEvent;
+  // GL Handles
+  GLuint texture, dummyVAO, shaderProgram, pixelBuffer;
+  GLuint renderShaderProgram;
 };
 } // namespace Xenos
 } // namespace Xe

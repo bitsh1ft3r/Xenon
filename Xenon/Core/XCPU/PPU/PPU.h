@@ -32,7 +32,7 @@ private:
   XENON_CONTEXT *xenonContext = nullptr;
 
   // Amount of CPU ticks per instruction executed.
-  u32 ticksPerIntruction = 0;
+  u32 ticksPerInstruction = 0;
 
   // Helpers
 

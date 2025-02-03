@@ -4,9 +4,6 @@
 #include "PPCInterpreter.h"
 
 // Forward Declaration
-#ifdef CORE_DUMP
-bool PPCInterpreter::startCoredump = false;
-#endif
 XENON_CONTEXT *PPCInterpreter::intXCPUContext = nullptr;
 RootBus *PPCInterpreter::sysBus = nullptr;
 
@@ -18,7 +15,12 @@ void PPCInterpreter::ppcExecuteSingleInstruction(PPU_STATE *hCore) {
 
   // RGH 2 for CB_A 9188 in a JRunner XDKBuild.
   if (hCore->ppuThread[hCore->currentThread].CIA == 0x000000000200c870) {
-    hCore->ppuThread[hCore->currentThread].GPR[0x5] = 0;
+    //hCore->ppuThread[hCore->currentThread].GPR[0x5] = 0;
+  }
+
+  // RGH 2 for CB_A 9188 in a JRunner Normal Build.
+  if (hCore->ppuThread[hCore->currentThread].CIA == 0x000000000200c820) {
+      hCore->ppuThread[hCore->currentThread].GPR[0x3] = 0;
   }
 
   // RGH 2 17489 in a JRunner Corona XDKBuild.
@@ -51,227 +53,6 @@ void PPCInterpreter::ppcExecuteSingleInstruction(PPU_STATE *hCore) {
   if ((u32)hCore->ppuThread[hCore->currentThread].CIA == 0x8009ce40) {
     u8 a = 0;
   }
-
-#ifdef CORE_DUMP
-  if (PPCInterpreter::startCoredump) {
-    auto thread = hCore->ppuThread[hCore->currentThread];
-    static std::ofstream f;
-    if (!f.is_open()) {
-       f.open("log/coredump.txt");
-    }
-    
-    f << fmt::format(
-#ifdef DUMP_SPRS
-#ifdef DUMP_FPU
-      "{:#x}"
-      "|{:#x}"
-      "|{:#x}"
-      "|{:#x}"
-      "|{:#x}"
-      "|{:#x}"
-      "|{:#x}"
-#else   
-      "{:#x}"
-#endif
-      "|{:#x}"
-      "|{:#x}"
-      "|{:#x}"
-      "|{:#x}"
-      "|{:#x}"
-      "|{:#x}"
-      "|{:#x}"
-      "|{:#x}"
-      "|{:#x}"
-      "|{:#x}"
-      "|{:#x}"
-      "|{:#x}"
-      "|{:#x}"
-      "|{:#x}"
-      "|{:#x}"
-      "|{:#x}"
-      "|{:#x}"
-      "|{:#x}"
-      "|{:#x}"
-      "|{:#x}"
-      "|{:#x}"
-#ifdef DUMP_MSR
-      "|{:#x}"
-      "|{:#x}"
-      "|{:#x}"
-      "|{:#x}"
-      "|{:#x}"
-      "|{:#x}"
-      "|{:#x}"
-      "|{:#x}"
-      "|{:#x}"
-      "|{:#x}"
-      "|{:#x}"
-      "|{:#x}"
-      "|{:#x}"
-      "|{:#x}"
-      "|{:#x}"
-      "|{:#x}"
-      "|{:#x}"
-      "|{:#x}"
-      "|{:#x}"
-#endif
-      "|{:#x}"
-      "|{:#x}"
-#else
-      "{:#x}"
-#endif
-      "|{:#x}"
-      "|{:#x}",
-#ifdef DUMP_SPRS
-#ifdef DUMP_FPU
-      (u64)thread.SPR.XER.XER_Hex,
-      (u64)thread.SPR.XER.ByteCount,
-      (u64)thread.SPR.XER.R0,
-      (u64)thread.SPR.XER.CA,
-      (u64)thread.SPR.XER.OV,
-      (u64)thread.SPR.XER.SO,
-#endif
-      (u64)thread.SPR.LR,
-      (u64)thread.SPR.CTR,
-      (u64)thread.SPR.CFAR,
-      (u64)thread.SPR.VRSAVE,
-      (u64)thread.SPR.DSISR,
-      (u64)thread.SPR.DAR,
-      (u64)thread.SPR.SRR0,
-      (u64)thread.SPR.SRR1,
-      (u64)thread.SPR.ACCR,
-      (u64)thread.SPR.SPRG0,
-      (u64)thread.SPR.SPRG1,
-      (u64)thread.SPR.SPRG2,
-      (u64)thread.SPR.SPRG3,
-      (u64)thread.SPR.HSPRG0,
-      (u64)thread.SPR.HSPRG1,
-      (u64)thread.SPR.HSRR0,
-      (u64)thread.SPR.HSRR1,
-      (u64)thread.SPR.TSRL,
-      (u64)thread.SPR.TSSR,
-      (u64)thread.SPR.PPE_TLB_Index_Hint,
-      (u64)thread.SPR.DABR,
-      (u64)thread.SPR.DABRX,
-#ifdef DUMP_MSR
-      (u64)thread.SPR.MSR.MSR_Hex,
-      (u64)thread.SPR.MSR.LE,
-      (u64)thread.SPR.MSR.RI,
-      (u64)thread.SPR.MSR.PMM,
-      (u64)thread.SPR.MSR.DR,
-      (u64)thread.SPR.MSR.IR,
-      (u64)thread.SPR.MSR.FE1,
-      (u64)thread.SPR.MSR.BE,
-      (u64)thread.SPR.MSR.SE,
-      (u64)thread.SPR.MSR.FE0,
-      (u64)thread.SPR.MSR.ME,
-      (u64)thread.SPR.MSR.FP,
-      (u64)thread.SPR.MSR.PR,
-      (u64)thread.SPR.MSR.EE,
-      (u64)thread.SPR.MSR.ILE,
-      (u64)thread.SPR.MSR.VXU,
-      (u64)thread.SPR.MSR.HV,
-      (u64)thread.SPR.MSR.TA,
-      (u64)thread.SPR.MSR.SF,
-#endif
-      (u64)thread.SPR.PIR,
-#endif
-      (u64)thread.CIA,
-      (u64)thread.NIA,
-      (u64)thread.CI);
-    
-    f << "|" << (int)thread.iFetch;
-
-#ifdef DUMP_GPRS
-    f << "|GPR:";
-    for (int i{}; i != 32; ++i) {
-      f << "|0x" << std::hex << thread.GPR[i];
-    }
-#endif
-    
-#ifdef DUMP_FPU
-    f << "|FPR:";
-    for (int i{}; i != 32; ++i) {
-      f << "|" << thread.FPR[i].valueAsDouble << "(0x" << std::hex << thread.FPR[i].valueAsU64 << ")";
-    }
-#endif
-    
-#ifdef DUMP_CRS
-    f << "|CR:"
-    << "0x" << std::hex << thread.CR.CR_Hex
-    << "|0x" << std::hex << thread.CR.CR0
-    << "|0x" << std::hex << thread.CR.CR1
-    << "|0x" << std::hex << thread.CR.CR2
-    << "|0x" << std::hex << thread.CR.CR3
-    << "|0x" << std::hex << thread.CR.CR4
-    << "|0x" << std::hex << thread.CR.CR5
-    << "|0x" << std::hex << thread.CR.CR6
-    << "|0x" << std::hex << thread.CR.CR7;
-#endif
-
-#ifdef DUMP_FPU
-    f << "|FPSCR:"
-    << "|0x" << std::hex << thread.FPSCR.FPSCR_Hex
-    << "|0x" << std::hex << thread.FPSCR.RN
-    << "|0x" << std::hex << thread.FPSCR.NI
-    << "|0x" << std::hex << thread.FPSCR.XE
-    << "|0x" << std::hex << thread.FPSCR.ZE
-    << "|0x" << std::hex << thread.FPSCR.UE
-    << "|0x" << std::hex << thread.FPSCR.OE
-    << "|0x" << std::hex << thread.FPSCR.VE
-    << "|0x" << std::hex << thread.FPSCR.VXCVI
-    << "|0x" << std::hex << thread.FPSCR.VXSQRT
-    << "|0x" << std::hex << thread.FPSCR.VXSOFT
-    << "|0x" << std::hex << thread.FPSCR.R0
-    << "|0x" << std::hex << thread.FPSCR.FPRF
-    << "|0x" << std::hex << thread.FPSCR.FI
-    << "|0x" << std::hex << thread.FPSCR.FR
-    << "|0x" << std::hex << thread.FPSCR.VXVC
-    << "|0x" << std::hex << thread.FPSCR.VXIMZ
-    << "|0x" << std::hex << thread.FPSCR.VXZDZ
-    << "|0x" << std::hex << thread.FPSCR.VXIDI
-    << "|0x" << std::hex << thread.FPSCR.VXISI
-    << "|0x" << std::hex << thread.FPSCR.VXSNAN 
-    << "|0x" << std::hex << thread.FPSCR.XX
-    << "|0x" << std::hex << thread.FPSCR.ZX
-    << "|0x" << std::hex << thread.FPSCR.UX
-    << "|0x" << std::hex << thread.FPSCR.OX
-    << "|0x" << std::hex << thread.FPSCR.VX
-    << "|0x" << std::hex << thread.FPSCR.FEX
-    << "|0x" << std::hex << thread.FPSCR.FX;
-#endif
-    
-#ifdef DUMP_SLBS
-    f << "|SLB:";
-    for (int i{}; i != 64; ++i) {
-      f
-      << "|0x" << std::hex << (u32)thread.SLB[i].V
-      << "|0x" << std::hex << (u32)thread.SLB[i].LP
-      << "|0x" << std::hex << (u32)thread.SLB[i].C
-      << "|0x" << std::hex << (u32)thread.SLB[i].L
-      << "|0x" << std::hex << (u32)thread.SLB[i].N
-      << "|0x" << std::hex << (u32)thread.SLB[i].Kp
-      << "|0x" << std::hex << (u32)thread.SLB[i].Ks
-      << "|0x" << std::hex << thread.SLB[i].VSID
-      << "|0x" << std::hex << thread.SLB[i].ESID
-      << "|0x" << std::hex << thread.SLB[i].vsidReg
-      << "|0x" << std::hex << thread.SLB[i].esidReg;
-    }
-#endif
-    
-#ifdef DUMP_EXCPR
-    f << "|0x" << std::hex << thread.exceptReg;
-    f << "|" << (int)thread.exceptionTaken;
-    f << "|0x" << std::hex << thread.exceptEA;
-    f << "|0x" << std::hex << thread.exceptTrapType;
-    f << "|" << (int)thread.exceptHVSysCall;
-    f << "|0x" << std::hex << thread.intEA;
-    f << "|0x" << std::hex << thread.lastWriteAddress;
-    f << "|0x" << std::hex << thread.lastRegValue;
-#endif
-    f << std::endl;
-  }
-#endif
 
   // This is to set a PPU0[Thread0] breakpoint.
   if (hCore->ppuThread[hCore->currentThread].SPR.PIR == 0) {
@@ -715,10 +496,9 @@ case PPCInstruction::mulhwx:
   case PPCInstruction::norx:
     PPCInterpreter_norx(hCore);
     break;
-    /*
 case PPCInstruction::orcx:
+    PPCInterpreter_orcx(hCore);
     break;
-    */
   case PPCInstruction::ori:
     PPCInterpreter_ori(hCore);
     break;
