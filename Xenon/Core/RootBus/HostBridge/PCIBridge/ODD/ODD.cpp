@@ -1,5 +1,6 @@
 // Copyright 2025 Xenon Emulator Project
 
+#include "Base/Config.h"
 #include "Base/Logging/Log.h"
 
 #include "ODD.h"
@@ -75,24 +76,24 @@
 */
 
 /*
-    Bit 0 (ERR / CHK – Error / Check) is defined as ERR for all commands except
+    Bit 0 (ERR / CHK ï¿½ Error / Check) is defined as ERR for all commands except
    for the Packet and Service commands, for which this bit is defined as CHK.
 */
 #define ATA_STATUS_ERR_CHK 0x1
 /*
-    Bit 3 (DRQ – Data Request) indicates by value 1 that the disk drive is ready
+    Bit 3 (DRQ ï¿½ Data Request) indicates by value 1 that the disk drive is ready
    to transfer data between the host computer and the drive. After the computer
    writes a commmand code to the Command register, the drive sets the BSY bit or
    the DRQ bit to 1 until command completion.
 */
 #define ATA_STATUS_DRQ 0x08
 /*
-    Bit 5 (DF – Device Fault) indicates by value 1 that a device fault has been
+    Bit 5 (DF ï¿½ Device Fault) indicates by value 1 that a device fault has been
    detected.
 */
 #define ATA_STATUS_DF 0x10
 /*
-    Bit 6 (DRDY – Device Ready) is set to 1 to indicate that the disk drive
+    Bit 6 (DRDY ï¿½ Device Ready) is set to 1 to indicate that the disk drive
    accepts commands. If the DRDY bit is 0, the drive will accept and attempt to
    execute the Device Reset and Execute Device Diagnostic commands. Other
    commands will not be accepted, and the drive will set the ABRT bit in the
@@ -101,7 +102,7 @@
 */
 #define ATA_STATUS_DRDY 0x40
 /*
-    Bit 7 (BSY – Busy) is set to 1 whenever the disk drive has control of the
+    Bit 7 (BSY ï¿½ Busy) is set to 1 whenever the disk drive has control of the
    Command Block registers. If the BSY bit is 1, a write to any Command Block
    register by the host computer will be ignored by the drive. The BSY bit is
    cleared to 0 by the drive at command completion and after setting the DRQ
@@ -136,7 +137,7 @@
 */
 
 /*
-    Bit 2 (ABRT – Command Aborted) indicates by value 1 that the requested
+    Bit 2 (ABRT ï¿½ Command Aborted) indicates by value 1 that the requested
    command has been aborted because the command code or a command parameter is
    invalid, the command is not implemented, or some other error has occurred.
 */
@@ -158,7 +159,7 @@
 */
 
 /*
-    Bit 4 (DEV – Device Select) selects by value 0 the drive 0, and by value 1
+    Bit 4 (DEV ï¿½ Device Select) selects by value 0 the drive 0, and by value 1
    the drive 1.
 */
 #define ATA_DEV_DEV 0x8
@@ -206,22 +207,22 @@
 */
 
 /*
-    Bit 1 (nIEN – INTRQ Enable) enables by value 0 the assertion of the INTRQ
+    Bit 1 (nIEN ï¿½ INTRQ Enable) enables by value 0 the assertion of the INTRQ
    interrupt request signal by the disk drive.
 */
 #define ATA_DEVICE_CONTROL_NIEN 0x02
 /*
-    Bit 2 (SRST – Software Reset) is the software reset bit of the disk drives.
+    Bit 2 (SRST ï¿½ Software Reset) is the software reset bit of the disk drives.
    If there are two daisy-chained drives, by setting this bit to 1 both drives
    are reset.
 */
 #define ATA_DEVICE_CONTROL_SRST 0x04
 /*
-    Bit 7 (HOB – High Order Byte) is defined only when the 48-bit LBA addressing
+    Bit 7 (HOB ï¿½ High Order Byte) is defined only when the 48-bit LBA addressing
    is implemented. If this bit is set to 1, reading of the Features register,
    the Sector Count register, and the LBA address registers is performed from
-   the “previous content” location. If the HOB bit is set to 0, reading is
-   performed from the “most recently written” location. Writing to any Command
+   the ï¿½previous contentï¿½ location. If the HOB bit is set to 0, reading is
+   performed from the ï¿½most recently writtenï¿½ location. Writing to any Command
    Block register has the effect of resetting the HOB bit to 0.
 */
 #define ATA_DEVICE_CONTROL_HOB 0x80
@@ -402,8 +403,7 @@ void ODD::atapiReset() {
   memcpy(&atapiState.atapiInquiryData.vendorIdentification,
          vendorIdentification, sizeof(vendorIdentification));
 
-  wchar_t *CdImageFilename = (wchar_t *)L"C:/Xbox/xenon.iso";
-  atapiState.mountedCDImage = new Storage(CdImageFilename);
+  atapiState.mountedCDImage = new Storage(Config::oddImagePath());
 }
 
 void ODD::atapiIdentifyCommand() {
