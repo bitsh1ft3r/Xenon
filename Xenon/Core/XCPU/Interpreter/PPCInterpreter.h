@@ -2,17 +2,18 @@
 
 #pragma once
 
-#define CORE_DUMP
-#ifdef CORE_DUMP 
+//#define CORE_DUMP
+
+#ifdef CORE_DUMP
 //#define DUMP_SPRS
-//#define DUMP_FPU 
+//#define DUMP_FPU
 #define DUMP_MSR
 //#define DUMP_VPU
 #define DUMP_GPRS
 #define DUMP_CRS
 //#define DUMP_SLBS
 //#define DUMP_EXCPR
-#endif
+#endif // CORE_DUMP
 
 #include "PPCInternal.h"
 #include "PPC_Instruction.h"
