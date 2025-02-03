@@ -154,6 +154,10 @@ layout (std430, binding = 1) buffer pixel_buffer
 {
   uint pixel_data[];
 };
+
+uniform int internalWidth;
+uniform int internalHeight;
+
 uniform int resWidth;
 uniform int resHeight;
 
@@ -162,9 +166,11 @@ int xeFbConvert(int width, int addr) {
   int y = addr / (width * 4);
   int x = (addr % (width * 4)) / 4;
   return ((((y & ~31) * width) + (x & ~31) * 32) +
-         (((x & 3) + ((y & 1) << 2) + ((x & 28) << 1) + ((y & 30) << 5)) ^
+         (((x & 3) + ((y & 1) << 2) + ((x & 28) << 1) + ((y & 30) << 5)) ^ 
          ((y & 8) << 2)));
 }
+
+#define TILE(x) ((x + 31) >> 5) << 5
 
 void main() {
   ivec2 texel_pos = ivec2(gl_GlobalInvocationID.xy);
@@ -172,9 +178,21 @@ void main() {
   if (texel_pos.x >= resWidth || texel_pos.y >= resHeight)
     return;
 
+  // Precalc whatever it would be with extra sizing for 32x32 tiles
+  int tiledWidth = TILE(internalWidth);
+  int tiledHeight = TILE(internalHeight);
+
+  // Scale accordingly
+  float scaleX = tiledWidth / float(resWidth);
+  float scaleY = tiledHeight / float(resHeight);
+
+  // Map to source resolution
+  int srcX = int(float(texel_pos.x) * scaleX);
+  int srcY = int(float(texel_pos.y) * scaleY);
+
   // God only knows how this indexing works
-  int stdIndex = (texel_pos.y * resWidth + texel_pos.x);
-  int xeIndex = xeFbConvert(resWidth, stdIndex * 4);
+  int stdIndex = (srcY * tiledWidth + srcX);
+  int xeIndex = xeFbConvert(tiledWidth, stdIndex * 4);
 
   uint packedColor = pixel_data[xeIndex];
   imageStore(o_texture, texel_pos, uvec4(packedColor, 0, 0, 0));
@@ -207,28 +225,53 @@ GLuint createShaderProgram(const char* vertex, const char* fragment) {
     return program;
 }
 
-void Xe::Xenos::XGPU::XenosThread() {
-  // TODO(bitsh1ft3r):
-  // Change resolution/window size according to current AVPACK, that is
-  // according to corresponding registers inside Xenos.
+void Xe::Xenos::XGPU::XenosResize(int x, int y) {
+  // Normalize our x and y for tiling
+  u32 resWidth = TILE(x);
+  u32 resHeight = TILE(y);
+  // Resize viewport
+  glViewport(0, 0, resWidth, y);
+  // Recreate our texture with the new size
+  glBindTexture(GL_TEXTURE_2D, texture);
+  glTexStorage2D(GL_TEXTURE_2D, 1, GL_R32UI, resWidth, resHeight);
+  glBindImageTexture(0, texture, 0, GL_FALSE, 0, GL_READ_WRITE, GL_R32UI);
+  // Set our new pitch
+  pitch = resWidth * resHeight * sizeof(uint32_t);
+  // Resize our pixel buffer
+  pixels.resize(pitch);
+  // Recreate the buffer
+  glBindBufferBase(GL_SHADER_STORAGE_BUFFER, 1, pixelBuffer);
+  glBufferData(GL_SHADER_STORAGE_BUFFER, pixels.size(), pixels.data(), GL_DYNAMIC_DRAW);
+  LOG_DEBUG(Xenos, "Resized window to {}x{}", resWidth, resHeight);
+}
 
-  // TODO(Xphalnos):
-  // Find a way to change the internal resolution without crashing the display.
-  // Window Resolution.
-  // Vali: This might be fixed? Not sure.
-  u32 resWidth = 1280;
-  u32 resHeight = 720;
-	resWidth = ((resWidth + 31) >> 5) << 5;
-	resHeight = ((resHeight + 31) >> 5) << 5;
+void Xe::Xenos::XGPU::XenosThreadShutdown() {
+  // Ensure all objects are cleaned up
+  glDeleteVertexArrays(1, &dummyVAO);
+  glDeleteBuffers(1, &pixelBuffer);
+  glDeleteTextures(1, &texture);
+  glDeleteProgram(shaderProgram);
+  glDeleteProgram(renderShaderProgram);
+  SDL_GL_DestroyContext(context);
+  SDL_DestroyWindow(mainWindow);
+  SDL_Quit();
+}
+
+void Xe::Xenos::XGPU::XenosThread() {
+  // TODO(Vali0004): Pull internal width/height from ANA init
+  u32 internalWidth = 1280;
+  u32 internalHeight = 720;
+  u32 resWidth = TILE(Config::windowWidth());
+  u32 resHeight = TILE(Config::windowHeight());
 
   if (!SDL_Init(SDL_INIT_VIDEO)) {
     LOG_ERROR(System, "Failed to initialize SDL video subsystem: {:#x}", SDL_GetError());
   }
 
-  //	Set the title.
+  // Set the title.
   std::string TITLE = "Xenon " + std::string(Base::VERSION);
 
-  //	SDL3 window properties.
+  // SDL3 window properties.
   SDL_PropertiesID props = SDL_CreateProperties();
   SDL_SetStringProperty(props, SDL_PROP_WINDOW_CREATE_TITLE_STRING,
                         std::string(TITLE).c_str());
@@ -240,8 +283,8 @@ void Xe::Xenos::XGPU::XenosThread() {
                         Config::windowWidth());
   SDL_SetNumberProperty(props, SDL_PROP_WINDOW_CREATE_HEIGHT_NUMBER,
                         Config::windowHeight());
-  //	Only putting this back when a Vulkan implementation is done.
-  //	SDL_SetNumberProperty(props, "flags", SDL_WINDOW_VULKAN);
+  // Only putting this back when a Vulkan implementation is done.
+  //SDL_SetNumberProperty(props, "flags", SDL_WINDOW_VULKAN);
   SDL_SetBooleanProperty(props, SDL_PROP_WINDOW_CREATE_RESIZABLE_BOOLEAN, true);
   SDL_SetBooleanProperty(props, SDL_PROP_WINDOW_CREATE_OPENGL_BOOLEAN, true);
   mainWindow = SDL_CreateWindowWithProperties(props);
@@ -284,30 +327,27 @@ void Xe::Xenos::XGPU::XenosThread() {
   renderShaderProgram = createShaderProgram(vertexShaderSource, fragmentShaderSource);
 
   // Init GL texture
-	glGenTextures(1, &texture);
-	glBindTexture(GL_TEXTURE_2D, texture);
+  glGenTextures(1, &texture);
+  glBindTexture(GL_TEXTURE_2D, texture);
   glTexStorage2D(GL_TEXTURE_2D, 1, GL_R32UI, resWidth, resHeight);
-	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_NEAREST);
-	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_NEAREST);
-  glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_EDGE);
-  glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_EDGE);
-	glBindImageTexture(0, texture, 0, GL_FALSE, 0, GL_READ_WRITE, GL_R32UI);
+  glBindImageTexture(0, texture, 0, GL_FALSE, 0, GL_READ_WRITE, GL_R32UI);
 
   // Init pixel buffer
-  int pitch = resWidth * resHeight * sizeof(uint32_t);
-  std::vector<uint32_t> pixels(pitch, COLOR(30, 30, 30, 255)); // Init with dark grey
-	glGenBuffers(1, &pixelBuffer);
-	glBindBufferBase(GL_SHADER_STORAGE_BUFFER, 1, pixelBuffer);
-	glBufferData(GL_SHADER_STORAGE_BUFFER, pixels.size() * sizeof(uint32_t), pixels.data(), GL_DYNAMIC_DRAW);
-	glBindBuffer(GL_SHADER_STORAGE_BUFFER, 0);
+  pitch = resWidth * resHeight * sizeof(uint32_t);
+  pixels.resize(pitch, COLOR(30, 30, 30, 255)); // Init with dark grey
+  glGenBuffers(1, &pixelBuffer);
+  glBindBufferBase(GL_SHADER_STORAGE_BUFFER, 1, pixelBuffer);
+  glBufferData(GL_SHADER_STORAGE_BUFFER, pixels.size(), pixels.data(), GL_DYNAMIC_DRAW);
 
-  GLuint dummy;
-  glGenVertexArrays(1, &dummy);
+  // Create a dummy VAO
+  glGenVertexArrays(1, &dummyVAO);
 
   // Set clear color
-  glClearColor(0.0f, 0.0f, 0.0f, 1.f);
+  glClearColor(0.f, 0.f, 0.f, 1.f);
+  // Setup viewport
   glViewport(0, 0, resWidth, resHeight);
-  glDisable(GL_BLEND);
+  // Disable unneeded things
+  glDisable(GL_BLEND); // Xenos does not have alpha, and blending breaks anyways
   glDisable(GL_DEPTH_TEST);
 
   // Framebuffer pointer from main memory.
@@ -325,11 +365,13 @@ void Xe::Xenos::XGPU::XenosThread() {
     // Process events.
     while (SDL_PollEvent(&windowEvent)) {
       switch (windowEvent.type) {
+      case SDL_EVENT_WINDOW_RESIZED:
+        LOG_DEBUG(Xenos, "Resizing window...");
+        XenosResize(windowEvent.window.data1, windowEvent.window.data2);
+        break;
       case SDL_EVENT_QUIT:
-        SDL_GL_DestroyContext(context);
-        SDL_DestroyWindow(mainWindow);
+        XenosThreadShutdown();
         if (Config::quitOnWindowClosure()) {
-          SDL_Quit();
           exit(0);
         }
         rendering = false;
@@ -366,23 +408,22 @@ void Xe::Xenos::XGPU::XenosThread() {
     // Upload buffer
     u32* ui_fbPointer = reinterpret_cast<uint32_t*>(fbPointer);
     glBindBuffer(GL_SHADER_STORAGE_BUFFER, pixelBuffer);
-    glBufferSubData(GL_SHADER_STORAGE_BUFFER, 0, pitch * sizeof(*ui_fbPointer), ui_fbPointer);
-    glBindBuffer(GL_SHADER_STORAGE_BUFFER, 0);
+    glBufferSubData(GL_SHADER_STORAGE_BUFFER, 0, pitch, ui_fbPointer);
 
     // Use the compute shader
     glUseProgram(shaderProgram);
     glBindBufferBase(GL_SHADER_STORAGE_BUFFER, 1, pixelBuffer);
+    glUniform1i(glGetUniformLocation(shaderProgram, "internalWidth"), internalWidth);
+    glUniform1i(glGetUniformLocation(shaderProgram, "internalHeight"), internalHeight);
     glUniform1i(glGetUniformLocation(shaderProgram, "resWidth"), resWidth);
     glUniform1i(glGetUniformLocation(shaderProgram, "resHeight"), resHeight);
     glDispatchCompute(resWidth / 16, resHeight / 16, 1);
-    glMemoryBarrier(GL_SHADER_IMAGE_ACCESS_BARRIER_BIT | GL_TEXTURE_FETCH_BARRIER_BIT);
+    glMemoryBarrier(GL_SHADER_IMAGE_ACCESS_BARRIER_BIT | GL_TEXTURE_UPDATE_BARRIER_BIT | GL_TEXTURE_FETCH_BARRIER_BIT);
 
     // Render the texture
-    glMemoryBarrier(GL_TEXTURE_UPDATE_BARRIER_BIT);
-    glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT | GL_STENCIL_BUFFER_BIT);
     glUseProgram(renderShaderProgram);
     glBindTexture(GL_TEXTURE_2D, texture);
-    glBindVertexArray(dummy);
+    glBindVertexArray(dummyVAO);
     glDrawArrays(GL_TRIANGLE_FAN, 0, 3);
 
     SDL_GL_SwapWindow(mainWindow);

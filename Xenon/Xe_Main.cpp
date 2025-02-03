@@ -44,31 +44,14 @@ eFuses getFuses(const std::filesystem::path& path) {
   }
   // Got some fuses, let's print them!
   eFuses cpuFuses;
+  u64* fuses = reinterpret_cast<u64*>(&cpuFuses);
+
   LOG_INFO(System, "Current FuseSet:");
-  cpuFuses.fuseLine00 = strtoull(fusesets[0].data(), 0, 16);
-  LOG_INFO(System, " * FuseSet 00: 0x{}", fusesets[0].data());
-  cpuFuses.fuseLine01 = strtoull(fusesets[1].data(), 0, 16);
-  LOG_INFO(System, " * FuseSet 01: 0x{}", fusesets[1].data());
-  cpuFuses.fuseLine02 = strtoull(fusesets[2].data(), 0, 16);
-  LOG_INFO(System, " * FuseSet 02: 0x{}", fusesets[2].data());
-  cpuFuses.fuseLine03 = strtoull(fusesets[3].data(), 0, 16);
-  LOG_INFO(System, " * FuseSet 03: 0x{}", fusesets[3].data());
-  cpuFuses.fuseLine04 = strtoull(fusesets[4].data(), 0, 16);
-  LOG_INFO(System, " * FuseSet 04: 0x{}", fusesets[4].data());
-  cpuFuses.fuseLine05 = strtoull(fusesets[5].data(), 0, 16);
-  LOG_INFO(System, " * FuseSet 05: 0x{}", fusesets[5].data());
-  cpuFuses.fuseLine06 = strtoull(fusesets[6].data(), 0, 16);
-  LOG_INFO(System, " * FuseSet 06: 0x{}", fusesets[6].data());
-  cpuFuses.fuseLine07 = strtoull(fusesets[7].data(), 0, 16);
-  LOG_INFO(System, " * FuseSet 07: 0x{}", fusesets[7].data());
-  cpuFuses.fuseLine08 = strtoull(fusesets[8].data(), 0, 16);
-  LOG_INFO(System, " * FuseSet 08: 0x{}", fusesets[8].data());
-  cpuFuses.fuseLine09 = strtoull(fusesets[9].data(), 0, 16);
-  LOG_INFO(System, " * FuseSet 09: 0x{}", fusesets[9].data());
-  cpuFuses.fuseLine10 = strtoull(fusesets[10].data(), 0, 16);
-  LOG_INFO(System, " * FuseSet 10: 0x{}", fusesets[10].data());
-  cpuFuses.fuseLine11 = strtoull(fusesets[11].data(), 0, 16);
-  LOG_INFO(System, " * FuseSet 11: 0x{}", fusesets[11].data());
+  for (int i = 0; i < 12; i++) {
+    fuseset = fusesets[i];
+    fuses[i] = strtoull(fuseset.c_str(), 0, 16);
+    LOG_INFO(System, " * FuseSet 0{}: 0x{}", i, fuseset.c_str());
+  }
 
   // Return the fuses.
   return cpuFuses;

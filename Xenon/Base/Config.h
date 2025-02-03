@@ -53,7 +53,7 @@ s32 windowHeight();
 // s32 getGpuId();
 
 //
-// Filepaths
+// Filepaths.
 //
 
 // Fuses path
@@ -62,5 +62,12 @@ std::string fusesPath();
 std::string oneBlPath();
 // nand.bin path
 std::string nandPath();
+// ODD Image path
+std::string oddImagePath();
+
+//
+// Highly experimental. (things that can either break the emulator or drastically increase performance)
+//
+int tpi();
 
 } // namespace Config
