@@ -1,7 +1,7 @@
 // Copyright 2025 Xenon Emulator Project
 
 #pragma once
-   
+
 #include <fstream>
 #include <filesystem>
 #include <vector>

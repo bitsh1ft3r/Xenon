@@ -52,7 +52,23 @@ bool Xe::Xenos::XGPU::Read(u64 readAddress, u64 *data, u8 byteCount) {
 
     XeRegister reg = static_cast<XeRegister>(regIndex);
 
-    memcpy(data, &xenosState.Regs[regIndex * 4], byteCount);
+    u32 regData = 0;
+    memcpy(&regData, &xenosState.Regs[regIndex * 4], 4);
+
+    // Switch for properly return the requested amount of data.
+    switch (byteCount) {
+  case 2:
+      regData = regData >> 16;
+      break;
+  case 1:
+      regData = regData >> 24;
+      break;
+  default:
+      break;
+  }
+
+*data = regData;
+    
     if (regIndex == 0x00000a07)
       *data = 0x2000000;
 
