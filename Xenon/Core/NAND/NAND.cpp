@@ -4,6 +4,11 @@
 
 #include "NAND.h"
 
+NAND::NAND(const char* deviceName, const std::string filePath,
+  u64 startAddress, u64 endAddress,
+  bool isSOCDevice) : SystemDevice(deviceName, startAddress, endAddress, isSOCDevice) {
+  Load(filePath);
+}
 /********************Responsible for loading the NAND file********************/
 bool NAND::Load(const std::string filePath) {
   LOG_INFO(System, "NAND: Loading file {}", filePath.c_str());

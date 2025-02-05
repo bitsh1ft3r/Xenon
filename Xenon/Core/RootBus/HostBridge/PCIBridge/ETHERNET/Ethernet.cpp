@@ -5,7 +5,7 @@
 
 #define XE_NET_STATUS_INT 0x0000004C
 
-Xe::PCIDev::ETHERNET::ETHERNET::ETHERNET() {
+Xe::PCIDev::ETHERNET::ETHERNET::ETHERNET(const char *deviceName, u64 size) : PCIDevice(deviceName, size) {
   // Set PCI Ven & Dev ID.
   u32 devID = 0x580A1414;
   memcpy(&pciConfigSpace.data[0], &devID, 4);

@@ -4,7 +4,8 @@
 
 #include "SFCX.h"
 
-SFCX::SFCX(const std::string nandLoadPath, PCIBridge *parentPCIBridge) {
+SFCX::SFCX(const char* deviceName, const std::string nandLoadPath, u64 size,
+  PCIBridge *parentPCIBridge) : PCIDevice(deviceName, size) {
   // Asign parent PCI Bridge pointer.
   parentBus = parentPCIBridge;
 

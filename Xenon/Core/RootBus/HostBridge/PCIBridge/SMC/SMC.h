@@ -12,7 +12,11 @@
 #include <condition_variable>
 
 #ifdef _WIN32
-#define COM_UART_ENABLED
+//#define COM_UART_ENABLED
+#endif
+
+#ifndef COM_UART_ENABLED
+//#define UART_THREAD
 #endif
 
 #include "Core/RootBus/HostBridge/PCIBridge/PCIBridge.h"
@@ -311,7 +315,9 @@ struct SMC_CORE_STATE {
   std::queue<u8> uartRxBuffer;
   std::mutex uartMutex;
   std::condition_variable uartConditionVar;
+#ifdef UART_THREAD
   bool uartThreadRunning;
+#endif
 #endif
   // Read/Write Return Status Values
   bool retVal = false;
@@ -320,7 +326,7 @@ struct SMC_CORE_STATE {
 // SMC Core Object.
 class SMCCore : public PCIDevice {
 public:
-  SMCCore(PCIBridge *parentPCIBridge, SMC_CORE_STATE *newSMCCoreState);
+  SMCCore(const char *deviceName, u64 size, PCIBridge* parentPCIBridge, SMC_CORE_STATE* newSMCCoreState);
   ~SMCCore();
 
   // Read/Write functions.
@@ -329,6 +335,31 @@ public:
   void Write(u64 writeAddress, u64 data, u8 byteCount) override;
   void ConfigWrite(u64 writeAddress, u64 data, u8 byteCount) override;
 
+#if !defined(COM_UART_ENABLED)
+  void WriteUART(const std::string& buffer) {
+    for (auto& c : buffer) {
+      UARTReceiveBuffer().push(c);
+    }
+  }
+  char ReadUART() {
+    char c = '\0';
+    std::unique_lock<std::mutex> lock(smcCoreState->uartMutex);
+    if (!smcCoreState->uartTxBuffer.empty()) {
+      c = smcCoreState->uartTxBuffer.front();
+      smcCoreState->uartTxBuffer.pop();
+    }
+    // We need to do *something* for rx
+    lock.unlock();
+    return c;
+  }
+  std::queue<u8>& UARTTransferBuffer() { return smcCoreState->uartTxBuffer; }
+  std::queue<u8>& UARTReceiveBuffer() { return smcCoreState->uartRxBuffer; }
+  std::mutex& UARTMutex() { return smcCoreState->uartMutex; }
+  std::condition_variable& UARTConditionVariable() { return smcCoreState->uartConditionVar; }
+#ifdef UART_THREAD
+  bool& UARTThreadRunning() { return smcCoreState->uartThreadRunning; }
+#endif
+#endif
 private:
   // Parent PCI Bridge (Used for interrupts/communication):
   PCIBridge *pciBridge;
@@ -342,7 +373,7 @@ private:
   // SMC Thread object
   std::thread smcThread;
 
-#if !defined(COM_UART_ENABLED)
+#if !defined(COM_UART_ENABLED) && defined(UART_THREAD)
   // UART Thread object
   std::thread uartThread;
 #endif
@@ -350,7 +381,7 @@ private:
   // SMC Main Thread
   void smcMainThread();
 
-#if !defined(COM_UART_ENABLED)
+#if !defined(COM_UART_ENABLED) && defined(UART_THREAD)
   // UART Thread
   void uartMainThread();
 #endif

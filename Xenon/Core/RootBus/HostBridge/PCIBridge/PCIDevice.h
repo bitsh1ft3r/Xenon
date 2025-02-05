@@ -12,6 +12,9 @@ struct PCIDeviceInfo {
 
 class PCIDevice {
 public:
+  PCIDevice(const char *deviceName, u64 size) {
+    Initialize(deviceName, size);
+  }
   void Initialize(const char *deviceName, u64 size) {
     deviceInfo.deviceName = deviceName;
     deviceInfo.size = size;

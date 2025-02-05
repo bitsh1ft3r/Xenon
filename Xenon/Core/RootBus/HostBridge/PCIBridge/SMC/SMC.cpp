@@ -59,8 +59,8 @@
 #define CLCK_INT_TAKEN 0x3
 
 // Class Constructor.
-Xe::PCIDev::SMC::SMCCore::SMCCore(PCIBridge *parentPCIBridge,
-                                  SMC_CORE_STATE *newSMCCoreState) {
+Xe::PCIDev::SMC::SMCCore::SMCCore(const char *deviceName, u64 size,
+  PCIBridge *parentPCIBridge, SMC_CORE_STATE *newSMCCoreState) : PCIDevice(deviceName, size) {
   LOG_INFO(SMC, "Core: Initializing.");
 
   // Assign our parent PCI Bus Ptr.
@@ -93,7 +93,7 @@ Xe::PCIDev::SMC::SMCCore::SMCCore(PCIBridge *parentPCIBridge,
 
 // Class Destructor.
 Xe::PCIDev::SMC::SMCCore::~SMCCore() {
-#if !defined(COM_UART_ENABLED)
+#if !defined(COM_UART_ENABLED) && defined(UART_THREAD)
     smcCoreState->uartThreadRunning = false;
 #endif
     LOG_INFO(SMC, "Core: Exiting.");
@@ -343,15 +343,20 @@ void Xe::PCIDev::SMC::SMCCore::setupUART(u32 uartConfig) {
   smcCoreState->uartInitialized = true;
 
 #else
+#ifdef UART_THREAD
     smcCoreState->uartThreadRunning = true;
     uartThread = std::thread(&SMCCore::uartMainThread, this);
+#endif
     smcCoreState->uartPresent = true;
+    smcCoreState->uartInitialized = true;
+#ifdef UART_THREAD
     uartThread.detach();
+#endif
     LOG_ERROR(SMC, "UART Initialization is not supported on this platform! Using emulator");
 #endif // _WIN32
 }
 
-#if !defined(COM_UART_ENABLED)
+#if !defined(COM_UART_ENABLED) && defined(UART_THREAD)
 // UART Thread
 void Xe::PCIDev::SMC::SMCCore::uartMainThread() {
     smcCoreState->uartInitialized = true;

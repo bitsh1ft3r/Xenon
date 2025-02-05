@@ -21,6 +21,9 @@ enum MetaType {
 
 class NAND : public SystemDevice {
 public:
+  NAND(const char* deviceName, const std::string filePath,
+    u64 startAddress, u64 endAddress,
+    bool isSOCDevice);
   bool Load(const std::string filePath);
 
   void Read(u64 readAddress, u64 *data, u8 byteCount) override;

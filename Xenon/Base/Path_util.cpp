@@ -2,27 +2,40 @@
 
 #include "Path_util.h"
 #include <unordered_map>
+#include <fstream>
 
 namespace Base::FS {
 
-namespace fs = std::filesystem;
-
 static auto UserPaths = [] {
-  auto user_dir = std::filesystem::current_path() / PORTABLE_DIR;
+  auto userDir = fs::current_path() / PORTABLE_DIR;
 
   std::unordered_map<PathType, fs::path> paths;
 
-  const auto create_path = [&](PathType xenon_path, const fs::path &new_path) {
-    std::filesystem::create_directory(new_path);
+  bool createUserDir = true;
+
+  // Vali: This is required to play nice
+  if (!fs::exists(userDir)) {
+    userDir = fs::current_path();
+    // If we have xenon_config in the root of our directory, then just use it and create files there instead.
+    std::ifstream f(userDir / "xenon_config.toml");
+    if (f.is_open()) {
+      createUserDir = false;
+    }
+  }
+
+  const auto insert_path = [&](PathType xenon_path, const fs::path &new_path, bool create = true) {
+    if (create && !fs::exists(new_path))
+      fs::create_directory(new_path);
+
     paths.insert_or_assign(xenon_path, new_path);
   };
 
-  create_path(PathType::UserDir, user_dir);
-  create_path(PathType::LogDir, user_dir / LOG_DIR);
+  insert_path(PathType::UserDir, userDir, createUserDir);
+  insert_path(PathType::LogDir, userDir / LOG_DIR);
   return paths;
 }();
 
-std::string PathToUTF8String(const std::filesystem::path &path) {
+std::string PathToUTF8String(const fs::path &path) {
   const auto u8_string = path.u8string();
   return std::string{u8_string.begin(), u8_string.end()};
 }

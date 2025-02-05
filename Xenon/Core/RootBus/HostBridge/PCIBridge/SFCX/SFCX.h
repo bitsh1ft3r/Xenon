@@ -156,8 +156,8 @@ struct SFCX_STATE {
 
 class SFCX : public PCIDevice {
 public:
-  SFCX(const std::string nandLoadPath, PCIBridge *parentPCIBridge);
-  bool LoadNANDDump(char *nandPath);
+  SFCX(const char* deviceName, const std::string nandLoadPath, u64 size,
+    PCIBridge *parentPCIBridge);
   void Read(u64 readAddress, u64 *data, u8 byteCount) override;
   void ConfigRead(u64 readAddress, u64 *data, u8 byteCount) override;
   void Write(u64 writeAddress, u64 data, u8 byteCount) override;

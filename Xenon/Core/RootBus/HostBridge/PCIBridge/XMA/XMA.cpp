@@ -2,7 +2,8 @@
 
 #include "XMA.h"
 
-XMA::XMA() {
+XMA::XMA(const char *deviceName, u64 size) :
+  PCIDevice(deviceName, size) {
   // Set PCI Ven & Dev ID.
   u32 devID = 0x58011414;
   memcpy(&pciConfigSpace.data[0], &devID, 4);

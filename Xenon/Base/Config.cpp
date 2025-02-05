@@ -25,43 +25,14 @@ std::filesystem::path find_fs_path_or(const basic_value<TC> &v, const K &ky,
 
 namespace Config {
 
-// General.
-static bool gpuRenderThreadEnabled = true;
-static bool isFullscreen = false;
-static bool shouldQuitOnWindowClosure = false;
-Base::Log::Level currentLogLevel = Base::Log::Level::Warning;
-
-// SMC.
-static int smcPowerOnReason = 0x11; // Valid values are: 0x11 (SMC_PWR_REAS_PWRBTN) and 0x12
-                                    // (SMC_PWR_REAS_EJECT).
-static int comPort = 2;
-static std::string com = "";
-
-// PowerPC.
-static u64 SKIP_HW_INIT_1 = 0;
-static u64 SKIP_HW_INIT_2 = 0;
-
-// GPU.
-static s32 screenWidth = 1280;
-static s32 screenHeight = 720;
-// static s32 gpuId = -1; // Vulkan physical device index. Set to negative for
-// auto select
-
-// Filepaths.
-static std::string fusesTxtPath = "C:/Xbox/fuses.txt";
-static std::string oneBlBinPath = "C:/Xbox/1bl.bin";
-static std::string nandBinPath = "C:/Xbox/nand.bin";
-static std::string oddDiscImagePath = "C:/Xbox/xenon.iso";
-
-// Highly experimental.
-static int ticksPerInstruction = 1;
-
 std::string* COMPort() {
     com = "\\\\.\\COM" + std::to_string(comPort);
     return &com;
 }
 
 bool fullscreenMode() { return isFullscreen; }
+
+bool vsync() { return vsyncEnabled; }
 
 bool gpuThreadEnabled() { return gpuRenderThreadEnabled; }
 
@@ -117,6 +88,7 @@ void loadConfig(const std::filesystem::path &path) {
     gpuRenderThreadEnabled =
         toml::find_or<bool>(general, "GPURenderThreadEnabled", false);
     isFullscreen = toml::find_or<bool>(general, "Fullscreen", false);
+    vsyncEnabled = toml::find_or<bool>(general, "VSync", false);
     shouldQuitOnWindowClosure =
         toml::find_or<bool>(general, "QuitOnWindowClosure", false);
     currentLogLevel = (Base::Log::Level)find_or<int>(general, "Loglevel", false);
@@ -182,6 +154,7 @@ void saveConfig(const std::filesystem::path &path) {
   // General.
   data["General"]["GPURenderThreadEnabled"] = gpuRenderThreadEnabled;
   data["General"]["Fullscreen"] = isFullscreen;
+  data["General"]["VSync"] = vsyncEnabled;
   data["General"]["QuitOnWindowClosure"] = shouldQuitOnWindowClosure;
   data["General"]["Loglevel"] = (int)currentLogLevel;
 
@@ -196,7 +169,7 @@ void saveConfig(const std::filesystem::path &path) {
   // GPU.
   data["GPU"]["screenWidth"] = screenWidth;
   data["GPU"]["screenHeight"] = screenHeight;
-  //    data["GPU"]["gpuId"] = gpuId;
+  //data["GPU"]["gpuId"] = gpuId;
 
   // Paths.
   data["Paths"]["Fuses"] = fusesTxtPath;

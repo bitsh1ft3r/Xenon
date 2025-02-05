@@ -2,7 +2,7 @@
 
 #include "EHCI0.h"
 
-Xe::PCIDev::EHCI0::EHCI0::EHCI0() {
+Xe::PCIDev::EHCI0::EHCI0::EHCI0(const char *deviceName, u64 size) : PCIDevice(deviceName, size) {
   // Set PCI Ven & Dev ID.
   u32 devID = 0x58051414;
   memcpy(&pciConfigSpace.data[0], &devID, 4);

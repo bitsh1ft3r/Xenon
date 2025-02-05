@@ -524,7 +524,8 @@ void ODD::doDMA() {
   }
 }
 
-ODD::ODD(PCIBridge *parentPCIBridge, RAM *ram) {
+ODD::ODD(const char* deviceName, u64 size,
+  PCIBridge *parentPCIBridge, RAM *ram) : PCIDevice(deviceName, size) {
   // Set PCI Ven & Dev ID.
   u32 devID = 0x58021414;
   memcpy(&pciConfigSpace.data[0], &devID, 4);

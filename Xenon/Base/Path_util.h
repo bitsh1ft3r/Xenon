@@ -6,24 +6,25 @@
 
 namespace Base::FS {
 
+namespace fs = std::filesystem;
+
 enum class PathType {
   UserDir,   // Where Xenon stores its data.
   LogDir,    // Where log files are stored.
 };
 
-// Vali: This needs to be blank for Linux to play nice
-constexpr auto PORTABLE_DIR = "";
+constexpr auto PORTABLE_DIR = "Xenon";
 
 constexpr auto LOG_DIR = "log";
 
 constexpr auto LOG_FILE = "xenon_log.txt";
 
-[[nodiscard]] std::string PathToUTF8String(const std::filesystem::path &path);
+[[nodiscard]] std::string PathToUTF8String(const fs::path &path);
 
-[[nodiscard]] const std::filesystem::path &GetUserPath(PathType user_path);
+[[nodiscard]] const fs::path &GetUserPath(PathType user_path);
 
 [[nodiscard]] std::string GetUserPathString(PathType user_path);
 
-void SetUserPath(PathType user_path, const std::filesystem::path &new_path);
+void SetUserPath(PathType user_path, const fs::path &new_path);
 
 } // namespace Base::FS

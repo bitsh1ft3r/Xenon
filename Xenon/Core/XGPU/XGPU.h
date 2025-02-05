@@ -20,6 +20,9 @@
  *	XGPU.h Basic Xenos implementation.
  */
 
+// Forward decls for ImGui
+struct ImFont;
+
 namespace Xe {
 namespace Xenos {
 
@@ -90,6 +93,8 @@ struct XenosState {
   u8 *Regs;
 };
 
+#define IMGUI
+
 // ARGB (Console is BGRA)
 #define COLOR(r, g, b, a) ((a) << 24 | (r) << 16 | (g) << 8  | (b) << 0)
 #define TILE(x) ((x + 31) >> 5) << 5
@@ -116,10 +121,23 @@ private:
 
   std::thread renderThread;
 
+#ifdef IMGUI
+  void XenosGUIInit();
+  bool styleEditor;
+  bool demoWindow;
+  ImFont* defaultFont13;
+  ImFont* robotRegular19;
+#endif
+
   void XenosResize(int x, int y);
   void XenosThreadShutdown();
   void XenosThread();
 
+  // Window size & state
+  int resWidth, xenosWidth;
+  int resHeight, xenosHeight;
+  bool useVsync;
+  bool isFullscreen;
   // Pixel buffer
   int pitch = 0;
   std::vector<uint32_t> pixels{};
