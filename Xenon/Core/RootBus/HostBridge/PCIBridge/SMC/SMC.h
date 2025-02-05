@@ -6,10 +6,13 @@
 #include <Windows.h>
 #endif
 #include <thread>
+#include <mutex>
+#include <queue>
 #include <vector>
+#include <condition_variable>
 
 #ifdef _WIN32
-#define UART_ENABLED
+#define COM_UART_ENABLED
 #endif
 
 #include "Core/RootBus/HostBridge/PCIBridge/PCIBridge.h"
@@ -221,6 +224,54 @@ struct SMC_PCI_STATE {
   u32 regF8;
   u32 regFC;
 };
+ 
+class UARTEmulator {
+public:
+  UARTEmulator() : running(true) {
+    std::thread(&UARTEmulator::uartThread, this).detach();
+  }
+  
+  ~UARTEmulator() {
+    running = false;
+  }
+  
+  void writeData(u8 data) {
+    std::lock_guard<std::mutex> lock(mutex);
+    txBuffer.push(data);
+    conditionVar.notify_one();
+  }
+  
+  bool readData(void* data) {
+    std::lock_guard<std::mutex> lock(mutex);
+    if (!rxBuffer.empty()) {
+        *(u8*)data = rxBuffer.front();
+        rxBuffer.pop();
+        return true;
+    }
+    return false;
+  }
+
+  bool hasDataAvaliable() {
+    return !rxBuffer.empty();
+  }
+private:
+  void uartThread() {
+    while (running) {
+      std::unique_lock<std::mutex> lock(mutex);
+      if (!txBuffer.empty()) {
+        printf("%c", txBuffer.front());
+        txBuffer.pop();
+      }
+      lock.unlock();
+    }
+  }
+
+  std::queue<u8> txBuffer;
+  std::queue<u8> rxBuffer;
+  std::mutex mutex;
+  std::condition_variable conditionVar;
+  bool running;
+};
 
 // SMC Core State, tracks current state of the system as per view from the SMC.
 struct SMC_CORE_STATE {
@@ -239,7 +290,7 @@ struct SMC_CORE_STATE {
   // UART Present. Used to do a one time check on UART COM Port on the host
   // system.
   bool uartPresent;
-#if defined(_WIN32) && defined(UART_ENABLED)
+#if defined(_WIN32) && defined(COM_UART_ENABLED)
   // Current COM Port Device Control Block.
   // See
   // https://learn.microsoft.com/en-us/windows/win32/api/winbase/ns-winbase-dcb
@@ -254,6 +305,13 @@ struct SMC_CORE_STATE {
   DWORD currentBytesWrittenCount = 0;
   // Bytes Read from the COM Port.
   DWORD currentBytesReadCount = 0;
+#else
+  // Do some fucked shit to get UART on Linux
+  std::queue<u8> uartTxBuffer;
+  std::queue<u8> uartRxBuffer;
+  std::mutex uartMutex;
+  std::condition_variable uartConditionVar;
+  bool uartThreadRunning;
 #endif
   // Read/Write Return Status Values
   bool retVal = false;
@@ -284,8 +342,18 @@ private:
   // SMC Thread object
   std::thread smcThread;
 
+#if !defined(COM_UART_ENABLED)
+  // UART Thread object
+  std::thread uartThread;
+#endif
+
   // SMC Main Thread
   void smcMainThread();
+
+#if !defined(COM_UART_ENABLED)
+  // UART Thread
+  void uartMainThread();
+#endif
 
   // UART/COM Port Setup
   void setupUART(u32 uartConfig);

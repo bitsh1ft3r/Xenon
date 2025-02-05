@@ -45,7 +45,6 @@ Xe::Xenos::XGPU::XGPU(RAM *ram) {
 
 bool Xe::Xenos::XGPU::Read(u64 readAddress, u64 *data, u8 byteCount) {
   if (isAddressMappedInBAR(static_cast<u32>(readAddress))) {
-
     const u32 regIndex = (readAddress & 0xFFFFF) / 4;
 
     LOG_TRACE(Xenos, "Read Addr = {:#x}, reg: {:#x}.", readAddress, regIndex);
@@ -57,26 +56,29 @@ bool Xe::Xenos::XGPU::Read(u64 readAddress, u64 *data, u8 byteCount) {
 
     // Switch for properly return the requested amount of data.
     switch (byteCount) {
-  case 2:
-      regData = regData >> 16;
-      break;
-  case 1:
-      regData = regData >> 24;
-      break;
-  default:
-      break;
-  }
+    case 2:
+        regData = regData >> 16;
+        break;
+    case 1:
+        regData = regData >> 24;
+        break;
+    default:
+        break;
+    }
 
-*data = regData;
+    *data = regData;
     
-    if (regIndex == 0x00000a07)
+    if (regIndex == 0x00000a07) { 
       *data = 0x2000000;
+    }
 
-    if (regIndex == 0x00001928)
+    if (regIndex == 0x00001928) {
       *data = 0x2000000;
+    }
 
-    if (regIndex == 0x00001e54)
+    if (regIndex == 0x00001e54) {
       *data = 0;
+    }
 
     return true;
   }

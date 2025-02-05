@@ -103,6 +103,9 @@ void Xe::XCPU::IIC::XenonIIC::readInterrupt(u64 intAddress, u64 *intData) {
 }
 
 bool Xe::XCPU::IIC::XenonIIC::checkExtInterrupt(u8 ppuID) {
+  if (ppuID >= 6) {
+      return false;
+  }
   // 1. Check if there's any interrupt already taken.
   if (iicState.ppeIntCtrlBlck[ppuID].intAck) {
     return false;
