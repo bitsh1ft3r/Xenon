@@ -53,4 +53,8 @@ void Xenon::Start(u64 resetVector) {
 
   ppu2Thread = std::thread(&PPU::StartExecution, PPU(ppu2));
   ppu2Thread.detach();
+
+  while (Xe_Main->isRunning()) {
+    std::this_thread::sleep_for(std::chrono::milliseconds(1));
+  }
 }

@@ -13,6 +13,7 @@
 #include <pthread.h>
 #elif defined(_WIN32)
 #include <Windows.h>
+#include <processthreadsapi.h>
 #include "String_util.h"
 #else
 #if defined(__Bitrig__) || defined(__DragonFly__) || defined(__FreeBSD__) || defined(__OpenBSD__)
