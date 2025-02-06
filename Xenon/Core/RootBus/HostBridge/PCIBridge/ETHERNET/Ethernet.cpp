@@ -6,9 +6,12 @@
 #define XE_NET_STATUS_INT 0x0000004C
 
 Xe::PCIDev::ETHERNET::ETHERNET::ETHERNET(const char *deviceName, u64 size) : PCIDevice(deviceName, size) {
-  // Set PCI Ven & Dev ID.
-  u32 devID = 0x580A1414;
-  memcpy(&pciConfigSpace.data[0], &devID, 4);
+  // Set PCI Properties.
+  pciConfigSpace.configSpaceHeader.reg0.hexData = 0x580A1414;
+  pciConfigSpace.configSpaceHeader.reg1.hexData = 0x02100006;
+  pciConfigSpace.configSpaceHeader.reg2.hexData = 0x02000001;
+  // Set our PCI Dev Sizes.
+  pciDevSizes[0] = 0x80; // BAR0
 }
 
 void Xe::PCIDev::ETHERNET::ETHERNET::Read(u64 readAddress, u64 *data,
@@ -151,5 +154,26 @@ void Xe::PCIDev::ETHERNET::ETHERNET::Write(u64 writeAddress, u64 data,
 
 void Xe::PCIDev::ETHERNET::ETHERNET::ConfigWrite(u64 writeAddress, u64 data,
                                                  u8 byteCount) {
+  // Check if we're being scanned.
+  if (static_cast<u8>(writeAddress) >= 0x10 && static_cast<u8>(writeAddress) < 0x34) {
+    u32 regOffset = (static_cast<u8>(writeAddress) - 0x10) >> 2;
+    if (pciDevSizes[regOffset] != 0) {
+        if (data == 0xFFFFFFFF) { // PCI BAR Size discovery.
+          u32 x = 2;
+          for (int idx = 2; idx < 31; idx++) {
+            data &= ~x;
+            x <<= 1;
+            if (x >= pciDevSizes[regOffset]) {
+              break;
+            }
+          }
+          data &= ~0x3;
+        }
+    }
+    if (static_cast<u8>(writeAddress) == 0x30) { // Expansion ROM Base Address.
+      data = 0; // Register not implemented.
+    }
+  }
+
   memcpy(&pciConfigSpace.data[static_cast<u8>(writeAddress)], &data, byteCount);
 }

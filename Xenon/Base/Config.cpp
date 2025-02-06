@@ -178,8 +178,10 @@ void saveConfig(const std::filesystem::path &path) {
   data["Paths"]["ISO"] = oddDiscImagePath;
 
   // HighlyExperimental.
-  data["HighlyExperimental"].comments().push_back("# Do not touch these options unless you know what you're doing!");
-  data["HighlyExperimental"].comments().push_back("# It can break execution! User beware.");
+  if (data["HighlyExperimental"].comments().empty()) {
+    data["HighlyExperimental"].comments().push_back("# Do not touch these options unless you know what you're doing!");
+    data["HighlyExperimental"].comments().push_back("# It can break execution! User beware.");
+  }
   data["HighlyExperimental"]["TPI"] = ticksPerInstruction;
 
   std::ofstream file(path, std::ios::binary);
