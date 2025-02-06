@@ -194,7 +194,7 @@ add_executable(Xenon
 
 create_target_directory_groups(Xenon)
 
-target_include_directories(Xenon PRIVATE third_party/imgui ${CMAKE_CURRENT_SOURCE_DIR})
+target_include_directories(Xenon PRIVATE third_party/ImGui ${CMAKE_CURRENT_SOURCE_DIR})
 target_link_libraries(Xenon PRIVATE fmt::fmt SDL3::SDL3 OpenGL::GL toml11::toml11)
 
 add_definitions(-DNTDDI_VERSION=0x0A000006 -D_WIN32_WINNT=0x0A00 -DWINVER=0x0A00)
