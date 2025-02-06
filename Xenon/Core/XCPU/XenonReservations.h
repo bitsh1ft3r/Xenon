@@ -17,8 +17,7 @@ class XenonReservations {
 public:
   XenonReservations();
   virtual bool Register(PPU_RES *Res);
-  void Increment(void)
-  {
+  void Increment(void) {
     std::lock_guard lck(ReservationLock);
     nReservations++;
   }
