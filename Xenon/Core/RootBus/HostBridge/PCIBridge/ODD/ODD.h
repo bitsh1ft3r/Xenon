@@ -69,7 +69,7 @@ public:
   }
 
   bool IsFound(void) {
-    return file.is_open();
+    return file.is_open() && Size();
   }
 
   u32 Size(void) {
