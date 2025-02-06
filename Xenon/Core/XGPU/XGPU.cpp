@@ -635,8 +635,8 @@ void InitXenosGUILog() {
 #endif
 
 void Xe::Xenos::XGPU::XenosThread() {
-  xenosWidth = 640;
-  xenosHeight = 480;
+  xenosWidth = 1280;
+  xenosHeight = 720;
   resWidth = TILE(Config::windowWidth());
   resHeight = TILE(Config::windowHeight());
 

@@ -69,7 +69,7 @@ public:
   }
 
   bool IsFound(void) {
-    return file.is_open() && !std::filesystem::file_size(path);
+    return file.is_open();
   }
 
   u32 Size(void) {
