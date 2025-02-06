@@ -83,6 +83,9 @@ Xe::PCIDev::SMC::SMCCore::SMCCore(PCIBridge *parentPCIBridge,
     i++;
   }
 
+  // Set our PCI Dev Sizes.
+  pciDevSizes[0] = 0x100; // BAR0
+
   // Set UART Presence.
   smcCoreState->uartPresent = true;
 
@@ -163,6 +166,7 @@ void Xe::PCIDev::SMC::SMCCore::Read(u64 readAddress, u64 *data, u8 byteCount) {
 // PCI Config Read
 void Xe::PCIDev::SMC::SMCCore::ConfigRead(u64 readAddress, u64 *data,
                                           u8 byteCount) {
+  LOG_INFO(SMC, "ConfigRead: Address = {:#x}, ByteCount = {:#x}.",readAddress, byteCount);
   memcpy(data, &pciConfigSpace.data[static_cast<u8>(readAddress)], byteCount);
 }
 
@@ -235,6 +239,29 @@ void Xe::PCIDev::SMC::SMCCore::Write(u64 writeAddress, u64 data, u8 byteCount) {
 // PCI Config Write
 void Xe::PCIDev::SMC::SMCCore::ConfigWrite(u64 writeAddress, u64 data,
                                            u8 byteCount) {
+  LOG_INFO(SMC, "ConfigWrite: Address = {:#x}, Data = {:#x}, ByteCount = {:#x}.", writeAddress, data, byteCount);
+
+  // Check if we're being scanned.
+  if (static_cast<u8>(writeAddress) >= 0x10 && static_cast<u8>(writeAddress) < 0x34) {
+      u32 regOffset = (static_cast<u8>(writeAddress) - 0x10) >> 2;
+      if (pciDevSizes[regOffset] != 0) {
+          if (data == 0xFFFFFFFF) { // PCI BAR Size discovery.
+              u32 x = 2;
+              for (int idx = 2; idx < 31; idx++) {
+                  data &= ~x;
+                  x <<= 1;
+                  if (x >= pciDevSizes[regOffset]) {
+                      break;
+                  }
+              }
+              data &= ~0x3;
+          }
+      }
+      if (static_cast<u8>(writeAddress) == 0x30) { // Expansion ROM Base Address.
+          data = 0; // Register not implemented.
+      }
+  }
+
   memcpy(&pciConfigSpace.data[static_cast<u8>(writeAddress)], &data, byteCount);
 }
 

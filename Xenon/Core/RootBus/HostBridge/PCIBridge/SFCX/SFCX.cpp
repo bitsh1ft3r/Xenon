@@ -8,9 +8,14 @@ SFCX::SFCX(const std::string nandLoadPath, PCIBridge *parentPCIBridge) {
   // Asign parent PCI Bridge pointer.
   parentBus = parentPCIBridge;
 
-  // Dev & Vendor ID
-  pciConfigSpace.configSpaceHeader.reg0.vendorID = 0x1414;
-  pciConfigSpace.configSpaceHeader.reg0.deviceID = 0x580B;
+  // Set PCI Properties.
+  pciConfigSpace.configSpaceHeader.reg0.hexData = 0x580B1414;
+  pciConfigSpace.configSpaceHeader.reg1.hexData = 0x02000006;
+  pciConfigSpace.configSpaceHeader.reg2.hexData = 0x05010001;
+
+  // Set our PCI Dev Sizes.
+  pciDevSizes[0] = 0x400; // BAR0
+  pciDevSizes[1] = 0x1000000; // BAR1
 
   LOG_INFO(SFCX, "Xenon Secure Flash Controller for Xbox.");
 
@@ -206,6 +211,28 @@ void SFCX::Write(u64 writeAddress, u64 data, u8 byteCount) {
 
 void SFCX::ConfigWrite(u64 writeAddress, u64 data, u8 byteCount) {
   u8 offset = writeAddress & 0xFF;
+
+  // Check if we're being scanned.
+  if (static_cast<u8>(writeAddress) >= 0x10 && static_cast<u8>(writeAddress) < 0x34) {
+      u32 regOffset = (static_cast<u8>(writeAddress) - 0x10) >> 2;
+      if (pciDevSizes[regOffset] != 0) {
+          if (data == 0xFFFFFFFF) { // PCI BAR Size discovery.
+              u32 x = 2;
+              for (int idx = 2; idx < 31; idx++) {
+                  data &= ~x;
+                  x <<= 1;
+                  if (x >= pciDevSizes[regOffset]) {
+                      break;
+                  }
+              }
+              data &= ~0x3;
+          }
+      }
+      if (static_cast<u8>(writeAddress) == 0x30) { // Expansion ROM Base Address.
+          data = 0; // Register not implemented.
+      }
+  }
+
   memcpy(&pciConfigSpace.data[offset], &data, byteCount);
 }
 

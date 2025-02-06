@@ -280,7 +280,7 @@ void PCIBridge::ConfigRead(u64 readAddress, u64 *data, u8 byteCount) {
   for (auto &device : connectedPCIDevices) {
     if (device->GetDeviceName() == currentDevName) {
       // Hit!
-      LOG_INFO(PCIBridge, "Config read, device: {} addr = {:#x}", currentDevName, configAddr.regOffset);
+      LOG_TRACE(PCIBridge, "Config read, device: {} offset = {:#x}", currentDevName, configAddr.regOffset);
       device->ConfigRead(readAddress, data, byteCount);
       return;
     }
@@ -351,7 +351,7 @@ void PCIBridge::ConfigWrite(u64 writeAddress, u64 data, u8 byteCount) {
   for (auto &device : connectedPCIDevices) {
     if (device->GetDeviceName() == currentDevName) {
       // Hit!
-      LOG_INFO(PCIBridge, "Config write, device: {} addr = {:#x} data = {:#x}", currentDevName.c_str(), configAddr.regOffset, data);
+      LOG_TRACE(PCIBridge, "Config write, device: {}, offset = {:#x} data = {:#x}", currentDevName.c_str(), configAddr.regOffset, data);
       device->ConfigWrite(writeAddress, data, byteCount);
       return;
     }

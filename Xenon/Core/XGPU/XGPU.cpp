@@ -21,6 +21,8 @@ Xe::Xenos::XGPU::XGPU(RAM *ram) {
     memcpy(&xgpuConfigSpace.data[idx], &xgpuConfigMap[i], 4);
     i++;
   }
+  // Set our PCI Dev Sizes.
+  pciDevSizes[0] = 0x20000; // BAR0
 
   xenosState.Regs = new u8[0xFFFFF];
   memset(xenosState.Regs, 0, 0xFFFFF);
@@ -107,6 +109,26 @@ void Xe::Xenos::XGPU::ConfigRead(u64 readAddress, u64 *data, u8 byteCount) {
 }
 
 void Xe::Xenos::XGPU::ConfigWrite(u64 writeAddress, u64 data, u8 byteCount) {
+    // Check if we're being scanned.
+    if (static_cast<u8>(writeAddress) >= 0x10 && static_cast<u8>(writeAddress) < 0x34) {
+        u32 regOffset = (static_cast<u8>(writeAddress) - 0x10) >> 2;
+        if (pciDevSizes[regOffset] != 0) {
+            if (data == 0xFFFFFFFF) { // PCI BAR Size discovery.
+                u32 x = 2;
+                for (int idx = 2; idx < 31; idx++) {
+                    data &= ~x;
+                    x <<= 1;
+                    if (x >= pciDevSizes[regOffset]) {
+                        break;
+                    }
+                }
+                data &= ~0x3;
+            }
+        }
+        if (static_cast<u8>(writeAddress) == 0x30) { // Expansion ROM Base Address.
+            data = 0; // Register not implemented.
+        }
+    }
   memcpy(&xgpuConfigSpace.data[writeAddress & 0xFF], &data, byteCount);
   return;
 }
@@ -275,8 +297,8 @@ void Xe::Xenos::XGPU::XenosThreadShutdown() {
 
 void Xe::Xenos::XGPU::XenosThread() {
   // TODO(Vali0004): Pull internal width/height from ANA init
-  u32 internalWidth = 1280;
-  u32 internalHeight = 720;
+  u32 internalWidth = 640;
+  u32 internalHeight = 480;
   u32 resWidth = TILE(Config::windowWidth());
   u32 resHeight = TILE(Config::windowHeight());
 

@@ -56,7 +56,8 @@ public:
 
   // Configuration Space.
   GENRAL_PCI_DEVICE_CONFIG_SPACE pciConfigSpace = {};
-
+  // PCI Device Size, using when determining PCI device size of each BAR in Linux.
+  u32 pciDevSizes[6] = {};
 private:
   PCIDeviceInfo deviceInfo = {0};
 };

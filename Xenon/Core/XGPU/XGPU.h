@@ -108,6 +108,8 @@ public:
 private:
   // XGPU Config Space Data at address 0xD0010000.
   GENRAL_PCI_DEVICE_CONFIG_SPACE xgpuConfigSpace = {0};
+  // PCI Device Size, using when determining PCI device size of each BAR in Linux.
+  u32 pciDevSizes[6] = {};
 
   RAM *ramPtr = nullptr;
 
