@@ -3,6 +3,7 @@
 #pragma once
 
 #include <fstream>
+#include <filesystem>
 
 #include "Base/SystemDevice.h"
 
@@ -20,13 +21,16 @@ enum MetaType {
 
 class NAND : public SystemDevice {
 public:
+  NAND(const char* deviceName, const std::string filePath,
+    u64 startAddress, u64 endAddress,
+    bool isSOCDevice);
   bool Load(const std::string filePath);
 
   void Read(u64 readAddress, u64 *data, u8 byteCount) override;
   void Write(u64 writeAddress, u64 data, u8 byteCount) override;
 
 private:
-  FILE *inputFile;
+  std::ifstream inputFile;
 
   // 64 Mb NAND Data
   u8 *rawNANDData = new (u8[0x4000000]);

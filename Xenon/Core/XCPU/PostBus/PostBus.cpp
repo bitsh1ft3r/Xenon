@@ -2,9 +2,7 @@
 
 #include "PostBus.h"
 #include "Base/Logging/Log.h"
-
-// Text colored output (for now)
-HANDLE hConsole;
+#include "Core/XCPU/Interpreter/PPCInterpreter.h"
 
 void Xe::XCPU::POSTBUS::POST(u64 postCode) {
   /* 1BL */
@@ -15,6 +13,9 @@ void Xe::XCPU::POSTBUS::POST(u64 postCode) {
       break;
     case 0x11:
       LOG_XBOX(Xenon_PostBus, "FSB_CONFIG_PHY_CONTROL - Execute FSB function1.");
+#ifdef CORE_DUMP 
+      PPCInterpreter::startCoredump = true;
+#endif
       break;
     case 0x12:
        LOG_XBOX(Xenon_PostBus, "FSB_CONFIG_RX_STATE - Execute FSB function2");
@@ -137,7 +138,7 @@ void Xe::XCPU::POSTBUS::POST(u64 postCode) {
       break;
     }
     // Pause the system.
-    system("PAUSE");
+    printf("Press Enter to continue..."); (void)getchar();
   }
   /* CB */
   else if (postCode >= 0x20 && postCode <= 0x3b) {
@@ -298,7 +299,7 @@ void Xe::XCPU::POSTBUS::POST(u64 postCode) {
         LOG_ERROR(Xenon_PostBus, "CB > Unrecognized PANIC code {:#x}", postCode);
       break;
     }
-    system("PAUSE");
+    printf("Press Enter to continue..."); (void)getchar();
   }
   /* CB_A */
   else if (postCode >= 0xD0 && postCode <= 0xDB) {
@@ -361,7 +362,7 @@ void Xe::XCPU::POSTBUS::POST(u64 postCode) {
                    "(must be less than 0xC000).");
       break;
     }
-    system("PAUSE");
+    printf("Press Enter to continue..."); (void)getchar();
   }
   /* CD */
   else if (postCode >= 0x40 && postCode <= 0x53) {
@@ -460,7 +461,7 @@ void Xe::XCPU::POSTBUS::POST(u64 postCode) {
        LOG_ERROR(Xenon_PostBus, "PANIC - CF_HASH_AUTH - CF hash auth failed.");
       break;
     }
-    system("PAUSE");
+    printf("Press Enter to continue..."); (void)getchar();
   }
   /* CE/CF PANICS */
   else if (postCode >= 0xC1 && postCode <= 0xC8) {
@@ -490,7 +491,7 @@ void Xe::XCPU::POSTBUS::POST(u64 postCode) {
        LOG_ERROR(Xenon_PostBus, "PANIC - SHA_VERIFY - 7BL Signature Verify.");
       break;
     }
-    system("PAUSE");
+    printf("Press Enter to continue..."); (void)getchar();
   }
   /* HYPERVISOR */
   else if (postCode >= 0x58 && postCode <= 0x5E) {

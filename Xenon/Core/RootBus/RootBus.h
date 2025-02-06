@@ -13,7 +13,7 @@
 
 class RootBus {
 public:
-  void Init();
+  RootBus();
 
   void AddHostBridge(HostBridge *newHostBridge);
 

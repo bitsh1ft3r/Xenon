@@ -6,6 +6,7 @@
 #include "HANA_State.h"
 #include "SMC_Config.h"
 
+
 //
 // Registers Offsets
 //
@@ -58,8 +59,8 @@
 #define CLCK_INT_TAKEN 0x3
 
 // Class Constructor.
-Xe::PCIDev::SMC::SMCCore::SMCCore(PCIBridge *parentPCIBridge,
-                                  SMC_CORE_STATE *newSMCCoreState) {
+Xe::PCIDev::SMC::SMCCore::SMCCore(const char *deviceName, u64 size,
+  PCIBridge *parentPCIBridge, SMC_CORE_STATE *newSMCCoreState) : PCIDevice(deviceName, size) {
   LOG_INFO(SMC, "Core: Initializing.");
 
   // Assign our parent PCI Bus Ptr.
@@ -88,11 +89,15 @@ Xe::PCIDev::SMC::SMCCore::SMCCore(PCIBridge *parentPCIBridge,
 
   // Enter main execution thread.
   smcThread = std::thread(&SMCCore::smcMainThread, this);
+  smcThread.detach();
 }
 
 // Class Destructor.
 Xe::PCIDev::SMC::SMCCore::~SMCCore() {
-    LOG_INFO(SMC, "Core: Exiting.");
+#if !defined(COM_UART_ENABLED) && defined(UART_THREAD)
+  smcCoreState->uartThreadRunning = false;
+#endif
+  LOG_INFO(SMC, "Core: Exiting.");
 }
 
 // PCI Read
@@ -104,12 +109,28 @@ void Xe::PCIDev::SMC::SMCCore::Read(u64 readAddress, u64 *data, u8 byteCount) {
     memcpy(data, &smcPCIState->uartConfigReg, byteCount);
     break;
   case UART_BYTE_OUT_REG: // UART Data Out Register
+#if defined(_WIN32) && defined(COM_UART_ENABLED)
     smcCoreState->retVal =
         ReadFile(smcCoreState->comPortHandle, &smcPCIState->uartOutReg, 1,
                  &smcCoreState->currentBytesReadCount, nullptr);
-    memcpy(data, &smcPCIState->uartOutReg, byteCount);
+#else
+    smcCoreState->retVal = false;
+    {
+      // We love mutexes
+      std::lock_guard<std::mutex> lock(smcCoreState->uartMutex);
+      if (!smcCoreState->uartRxBuffer.empty()) {
+        smcPCIState->uartOutReg = smcCoreState->uartRxBuffer.front();
+        smcCoreState->uartRxBuffer.pop();
+        smcCoreState->retVal = true;
+      }
+    }
+#endif
+    if (smcCoreState->retVal) {
+      memcpy(data, &smcPCIState->uartOutReg, byteCount);
+    }
     break;
   case UART_STATUS_REG: // UART Status Register
+#if defined(_WIN32) && defined(COM_UART_ENABLED)
     // First lets check if the UART has already been setup, if so, proceed to do
     // the TX/RX.
     if (smcCoreState->uartInitialized) {
@@ -131,6 +152,18 @@ void Xe::PCIDev::SMC::SMCCore::Read(u64 readAddress, u64 *data, u8 byteCount) {
       // it first then.
       setupUART(0x1e6); // 115200,8,N,1.
     }
+#else
+    // First lets check if the UART has already been setup, if so, proceed to do
+    // the TX/RX.                                        
+    if (smcCoreState->uartInitialized) {
+      smcPCIState->uartStatusReg = smcCoreState->uartRxBuffer.empty() ? UART_STATUS_EMPTY : UART_STATUS_DATA_PRES;
+    } else if (smcCoreState->uartPresent) // Init UART if this is our first try.
+    {
+      // XeLL doesn't initialize UART before sending data trough it. Initialize
+      // it first then.
+      setupUART(0x1e6); // 115200,8,N,1.
+    }
+#endif
     memcpy(data, &smcPCIState->uartStatusReg, byteCount);
     break;
   case SMI_INT_STATUS_REG: // SMI INT Status Register
@@ -182,9 +215,19 @@ void Xe::PCIDev::SMC::SMCCore::Write(u64 writeAddress, u64 data, u8 byteCount) {
   case UART_BYTE_IN_REG: // UART Data In Register
     memcpy(&smcPCIState->uartInReg, &data, byteCount);
     // Write the data out.
+#if defined(_WIN32) && defined(COM_UART_ENABLED)
     smcCoreState->retVal =
         WriteFile(smcCoreState->comPortHandle, &data, 1,
                   &smcCoreState->currentBytesWrittenCount, nullptr);
+#else
+    {
+      // We love mutexes
+      std::lock_guard<std::mutex> lock(smcCoreState->uartMutex);
+      smcCoreState->uartTxBuffer.push(data);
+      smcCoreState->uartConditionVar.notify_one();
+    }
+    smcCoreState->retVal = true;
+#endif
     break;
   case SMI_INT_STATUS_REG: // SMI INT Status Register
     memcpy(&smcPCIState->smiIntPendingReg, &data, byteCount);
@@ -240,7 +283,7 @@ void Xe::PCIDev::SMC::SMCCore::ConfigWrite(u64 writeAddress, u64 data,
 
 // Setups the UART Communication at a given configuration.
 void Xe::PCIDev::SMC::SMCCore::setupUART(u32 uartConfig) {
-#ifdef _WIN32
+#if defined(_WIN32) && defined(COM_UART_ENABLED)
   // Windows Init Code.
   LOG_INFO(SMC, "Initializing UART:");
 
@@ -300,10 +343,35 @@ void Xe::PCIDev::SMC::SMCCore::setupUART(u32 uartConfig) {
   // Everything OK.
   smcCoreState->uartInitialized = true;
 
-#elif
-    LOG_ERROR(SMC, "UART Initialization is not supported on this platform!");
+#else
+#ifdef UART_THREAD
+    smcCoreState->uartThreadRunning = true;
+    uartThread = std::thread(&SMCCore::uartMainThread, this);
+#endif
+    smcCoreState->uartPresent = true;
+    smcCoreState->uartInitialized = true;
+#ifdef UART_THREAD
+    uartThread.detach();
+#endif
+    LOG_ERROR(SMC, "UART Initialization is not supported on this platform! Using emulator");
 #endif // _WIN32
 }
+
+#if !defined(COM_UART_ENABLED) && defined(UART_THREAD)
+// UART Thread
+void Xe::PCIDev::SMC::SMCCore::uartMainThread() {
+    smcCoreState->uartInitialized = true;
+    while (smcCoreState->uartThreadRunning) {
+      std::unique_lock<std::mutex> lock(smcCoreState->uartMutex);
+      if (!smcCoreState->uartTxBuffer.empty()) {
+        printf("%c", smcCoreState->uartTxBuffer.front());
+        smcCoreState->uartTxBuffer.pop();
+      }
+      // We need to do *something* for rx
+      lock.unlock();
+    }
+}
+#endif
 
 // SMC Main Thread
 void Xe::PCIDev::SMC::SMCCore::smcMainThread() {

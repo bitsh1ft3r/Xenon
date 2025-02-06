@@ -4,7 +4,8 @@
 
 #include "SFCX.h"
 
-SFCX::SFCX(const std::string nandLoadPath, PCIBridge *parentPCIBridge) {
+SFCX::SFCX(const char* deviceName, const std::string nandLoadPath, u64 size,
+  PCIBridge *parentPCIBridge) : PCIDevice(deviceName, size) {
   // Asign parent PCI Bridge pointer.
   parentBus = parentPCIBridge;
 
@@ -36,86 +37,83 @@ SFCX::SFCX(const std::string nandLoadPath, PCIBridge *parentPCIBridge) {
   // Load the NAND dump.
   LOG_INFO(SFCX, "Loading NAND from path: {}", nandLoadPath);
 
-  fopen_s(&nandFile, nandLoadPath.c_str(), "rb");
+  nandFile.open(nandLoadPath, std::ios_base::in | std::ios_base::binary);
 
-  if (!nandFile) {
+  if (!nandFile.is_open()) {
     LOG_CRITICAL(SFCX, "Fatal error, check your nand dump path.");
-    system("PAUSE");
+    printf("Press Enter to continue..."); (void)getchar();
   }
 
   // Check file magic.
   if (!checkMagic()) {
-    LOG_CRITICAL(SFCX, "Fatal error, loaded faile magic does'nt correspond to Xbox 360 NAND.");
-    system("PAUSE");
+    LOG_CRITICAL(SFCX, "Fatal error, loaded file magic doesn't correspond to Xbox 360 NAND.");
+    printf("Press Enter to continue..."); (void)getchar();
   }
 
   // Load NAND header and display info about it.
-  fseek(nandFile, 0, SEEK_SET);
-  fread_s(&sfcxState.nandHeader, sizeof(NAND_HEADER), sizeof(NAND_HEADER), 1,
-          nandFile);
+  nandFile.seekg(0, std::ios::beg);
+  nandFile.read(reinterpret_cast<char*>(&sfcxState.nandHeader), sizeof(sfcxState.nandHeader));
   // Fix Endiannes
   sfcxState.nandHeader.nandMagic =
-      _byteswap_ushort(sfcxState.nandHeader.nandMagic);
+      std::byteswap(sfcxState.nandHeader.nandMagic);
   LOG_INFO(SFCX, " * NAND Magic: ", sfcxState.nandHeader.nandMagic);
 
-  sfcxState.nandHeader.build = _byteswap_ushort(sfcxState.nandHeader.build);
+  sfcxState.nandHeader.build = std::byteswap(sfcxState.nandHeader.build);
   LOG_INFO(SFCX, " * Build: ", sfcxState.nandHeader.build);
 
-  sfcxState.nandHeader.qfe = _byteswap_ushort(sfcxState.nandHeader.qfe);
-  sfcxState.nandHeader.flags = _byteswap_ushort(sfcxState.nandHeader.flags);
+  sfcxState.nandHeader.qfe = std::byteswap(sfcxState.nandHeader.qfe);
+  sfcxState.nandHeader.flags = std::byteswap(sfcxState.nandHeader.flags);
 
-  sfcxState.nandHeader.entry = _byteswap_ulong(sfcxState.nandHeader.entry);
+  sfcxState.nandHeader.entry = std::byteswap(sfcxState.nandHeader.entry);
   LOG_INFO(SFCX, " * Entry: ", sfcxState.nandHeader.entry);
 
-  sfcxState.nandHeader.size = _byteswap_ulong(sfcxState.nandHeader.size);
+  sfcxState.nandHeader.size = std::byteswap(sfcxState.nandHeader.size);
   LOG_INFO(SFCX, " * Size: ", sfcxState.nandHeader.size);
 
   sfcxState.nandHeader.keyvaultSize =
-      _byteswap_ulong(sfcxState.nandHeader.keyvaultSize);
+      std::byteswap(sfcxState.nandHeader.keyvaultSize);
   LOG_INFO(SFCX, " * Keyvault Size: ", sfcxState.nandHeader.keyvaultSize);
 
   sfcxState.nandHeader.sysUpdateAddr =
-      _byteswap_ulong(sfcxState.nandHeader.sysUpdateAddr);
+      std::byteswap(sfcxState.nandHeader.sysUpdateAddr);
   LOG_INFO(SFCX, " * System Update Addr: ", sfcxState.nandHeader.sysUpdateAddr);
 
   sfcxState.nandHeader.sysUpdateCount =
-      _byteswap_ushort(sfcxState.nandHeader.sysUpdateCount);
+      std::byteswap(sfcxState.nandHeader.sysUpdateCount);
   LOG_INFO(SFCX, " * System Update Count: ", sfcxState.nandHeader.sysUpdateCount);
 
   sfcxState.nandHeader.keyvaultVer =
-      _byteswap_ushort(sfcxState.nandHeader.keyvaultVer);
+      std::byteswap(sfcxState.nandHeader.keyvaultVer);
   LOG_INFO(SFCX, " * Keyvault Ver: ", sfcxState.nandHeader.keyvaultVer);
 
   sfcxState.nandHeader.keyvaultAddr =
-      _byteswap_ulong(sfcxState.nandHeader.keyvaultAddr);
+      std::byteswap(sfcxState.nandHeader.keyvaultAddr);
   LOG_INFO(SFCX, " * Keyvault Addr: ", sfcxState.nandHeader.keyvaultAddr);
 
   sfcxState.nandHeader.sysUpdateSize =
-      _byteswap_ulong(sfcxState.nandHeader.sysUpdateSize);
+      std::byteswap(sfcxState.nandHeader.sysUpdateSize);
   LOG_INFO(SFCX, " * System Update Size: ", sfcxState.nandHeader.sysUpdateSize);
 
   sfcxState.nandHeader.smcConfigAddr =
-      _byteswap_ulong(sfcxState.nandHeader.smcConfigAddr);  
+      std::byteswap(sfcxState.nandHeader.smcConfigAddr);  
   LOG_INFO(SFCX, " * SMC Config Addr: ", sfcxState.nandHeader.smcConfigAddr);
 
   sfcxState.nandHeader.smcBootSize =
-      _byteswap_ulong(sfcxState.nandHeader.smcBootSize);
+      std::byteswap(sfcxState.nandHeader.smcBootSize);
   LOG_INFO(SFCX, " * SMC Boot Size: ", sfcxState.nandHeader.smcBootSize);
 
   sfcxState.nandHeader.smcBootAddr =
-      _byteswap_ulong(sfcxState.nandHeader.smcBootAddr);
+      std::byteswap(sfcxState.nandHeader.smcBootAddr);
   LOG_INFO(SFCX, " * SMC Boot Addr: ", sfcxState.nandHeader.smcBootAddr);
 
   // Check Image size and Meta type.
-  size_t imageSize = 0;
-  fseek(nandFile, 0, SEEK_END);
-  imageSize = ftell(nandFile);
-  fseek(nandFile, 0, SEEK_SET);
+  size_t imageSize = std::filesystem::file_size(nandLoadPath);
 
   // There are two SFCX Versions, original (Pre Jasper) and Jasper+.
 
   // Enter SFCX Thread.
   sfcxThread = std::thread(&SFCX::sfcxMainLoop, this);
+  sfcxThread.detach();
 }
 
 void SFCX::Read(u64 readAddress, u64 *data, u8 byteCount) {
@@ -234,8 +232,8 @@ void SFCX::sfcxMainLoop() {
         // Read Phyisical page into page buffer.
         // Physical pages are 0x210 bytes long, logical page (0x200) + meta data
         // (0x10).
-        fseek(nandFile, sfcxState.addressReg, SEEK_SET);
-        fread_s(&sfcxState.pageBuffer, 0x210, 1, 0x210, nandFile);
+        nandFile.seekg(sfcxState.addressReg);
+        nandFile.read(reinterpret_cast<char*>(sfcxState.pageBuffer), sizeof(sfcxState.pageBuffer));
         // Issue Interrupt.
         if (sfcxState.configReg & CONFIG_INT_EN) {
           // Set a delay for our interrupt?
@@ -277,7 +275,8 @@ void SFCX::sfcxMainLoop() {
 bool SFCX::checkMagic() {
   char magic[2];
 
-  fread(&magic, 1, 2, nandFile);
+  nandFile.read(reinterpret_cast<char*>(magic), sizeof(magic));
+  LOG_DEBUG(SFCX, "Nand magic: 0x{:X} && 0x{:X}", (uint32_t)magic[0], (uint32_t)magic[1]);
 
   // Retail Nand Magic is 0xFF4F.
   // Devkit Nand Magic is 0x0F4F.

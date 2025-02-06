@@ -1,0 +1,28 @@
+[PowerPC]
+HW_INIT_SKIP1 = 0x0000000003003dc0
+HW_INIT_SKIP2 = 0x0000000003003e54
+
+[General]
+GPURenderThreadEnabled = true
+QuitOnWindowClosure = true
+Fullscreen = false
+Loglevel = 0
+
+[SMC]
+COMPort = 2
+SMCPowerOnType = 18
+
+[GPU]
+screenWidth = 1280
+screenHeight = 720
+
+[Paths]
+OneBL = "C:/Xbox/1bl.bin"
+Fuses = "C:/Xbox/fuses.txt"
+Nand = "C:/Xbox/updflash.bin"
+ODDImage = "C:/Xbox/360-gentoo-livecd-small.iso"
+
+# Do not touch these options unless you know what you're doing!
+# It can break execution! User beware.
+[HighlyExperimental]
+TPI = 0

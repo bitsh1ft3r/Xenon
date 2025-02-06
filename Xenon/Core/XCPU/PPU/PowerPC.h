@@ -14,18 +14,18 @@
 Condition Register
 
 The CR fields can be set in one of the following ways:
-• Specified fields of the CR can be set from a GPR by using the mtcrf and mtocrf
-instruction. • The contents of the XER[0–3] can be moved to another CR field by
-using the mcrf instruction. • A specified field of the XER can be copied to a
-specified field of the CR by using the mcrxr instruction. • A specified field of
+- Specified fields of the CR can be set from a GPR by using the mtcrf and mtocrf
+instruction. - The contents of the XER[0-3] can be moved to another CR field by
+using the mcrf instruction. - A specified field of the XER can be copied to a
+specified field of the CR by using the mcrxr instruction. - A specified field of
 the FPSCR can be copied to a specified field of the CR by using the mcrfs
-instruction. • Logical instructions of the condition register can be used to
-perform logical operations on specified bits in the condition register. • CR0
-can be the implicit result of an integer instruction. • CR1 can be the implicit
-result of a floating-point instruction. • A specified CR field can indicate the
+instruction. - Logical instructions of the condition register can be used to
+perform logical operations on specified bits in the condition register. - CR0
+can be the implicit result of an integer instruction. - CR1 can be the implicit
+result of a floating-point instruction. - A specified CR field can indicate the
 result of either an integer or floating-point compare instruction
 */
-union CR {
+union CRegister {
   u32 CR_Hex;
   struct {
     u32 CR7 : 4;
@@ -42,7 +42,7 @@ union CR {
 /*
 Floating-Point Status and Control Register (FPSCR)
 */
-union FPSCR {
+union FloatingPointSCR {
   u32 FPSCR_Hex;
   struct {
     u32 RN : 2;
@@ -78,7 +78,7 @@ union FPSCR {
 /*
  XER Register (XER)
 */
-union XER {
+union XERRegister {
   u32 XER_Hex;
   struct {
     u32 ByteCount : 7;
@@ -103,7 +103,7 @@ union TB {
 /*
 Machine State Register (MSR)
 */
-union MSR {
+union MSRegister {
   u64 MSR_Hex;
   struct {
     u64 LE : 1;
@@ -135,7 +135,7 @@ union MSR {
 /*
 Processor Version Register (PVR)
 */
-union PVR {
+union PVRegister {
   u32 PVR_Hex;
   struct {
     u32 Revision : 16;
@@ -177,7 +177,7 @@ struct TLB_Reg {
 // This SPR's are duplicated for every thread.
 struct PPU_THREAD_SPRS {
   // Fixed Point Exception Register (XER)
-  XER XER;
+  XERRegister XER;
   // Link Register
   u64 LR;
   // Count Register
@@ -223,7 +223,7 @@ struct PPU_THREAD_SPRS {
   // Data Address Breakpoint Extension
   u64 DABRX;
   // Machine-State Register
-  MSR MSR;
+  MSRegister MSR;
   // Processor Identification Register
   u32 PIR;
 };
@@ -236,7 +236,7 @@ struct PPU_STATE_SPRS {
   // Time Base
   u64 TB;
   // Processor Version Register
-  PVR PVR;
+  PVRegister PVR;
   // Hypervisor Decrementer
   u32 HDEC;
   // Real Mode Offset Register
@@ -383,7 +383,7 @@ union SFPR // Single Precision
   u32 valueAsU32;
 };
 
-union FPR // Double Precision
+union FPRegisters // Double Precision
 {
   double valueAsDouble;
   u64 valueAsU64;
@@ -407,11 +407,11 @@ struct PPU_THREAD_REGISTERS {
   // General-Purpose Registers (32)
   u64 GPR[32] = {0};
   // Floating-Point Registers (32)
-  FPR FPR[32] = {0};
+  FPRegisters FPR[32] = {0};
   // Condition Register
-  CR CR;
+  CRegister CR;
   // Floating-Point Status Control Register
-  FPSCR FPSCR;
+  FloatingPointSCR FPSCR;
   // Segment Lookaside Buffer
   SLBEntry SLB[64] = {0};
 

@@ -3,9 +3,20 @@
 #include <iostream>
 
 #include "RAM.h"
+#include "Base/Logging/Log.h"
 
 /***Sets the destination, value (205) and size (RAMData)***/
-RAM::RAM() { memset(RAMData, 0xcd, RAM_SIZE); }
+RAM::RAM(const char* deviceName, u64 startAddress, u64 endAddress,
+    bool isSOCDevice) : SystemDevice(deviceName, startAddress, endAddress, isSOCDevice),
+    RAMData(RAM_SIZE, 0xCD) {
+  if (RAMData.empty()) {
+    LOG_CRITICAL(System, "RAM failed to allocate! This is really bad!");
+    printf("Press Enter to continue..."); (void)getchar();
+  }
+}
+RAM::~RAM() {
+  RAMData.clear();
+}
 
 /*****************Responsible for RAM reading*****************/
 void RAM::Read(u64 readAddress, u64 *data, u8 byteCount) {
@@ -21,5 +32,5 @@ void RAM::Write(u64 writeAddress, u64 data, u8 byteCount) {
 
 u8 *RAM::getPointerToAddress(u32 address) {
   const u64 offset = (u32)(address - RAM_START_ADDR);
-  return RAMData + offset;
+  return RAMData.data() + offset;
 }

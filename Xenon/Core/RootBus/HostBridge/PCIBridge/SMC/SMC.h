@@ -2,9 +2,22 @@
 
 #pragma once
 
+#ifdef _WIN32
 #include <Windows.h>
+#endif
 #include <thread>
+#include <mutex>
+#include <queue>
 #include <vector>
+#include <condition_variable>
+
+#ifdef _WIN32
+//#define COM_UART_ENABLED
+#endif
+
+#ifndef COM_UART_ENABLED
+//#define UART_THREAD
+#endif
 
 #include "Core/RootBus/HostBridge/PCIBridge/PCIBridge.h"
 #include "Core/RootBus/HostBridge/PCIBridge/PCIDevice.h"
@@ -215,6 +228,54 @@ struct SMC_PCI_STATE {
   u32 regF8;
   u32 regFC;
 };
+ 
+class UARTEmulator {
+public:
+  UARTEmulator() : running(true) {
+    std::thread(&UARTEmulator::uartThread, this).detach();
+  }
+  
+  ~UARTEmulator() {
+    running = false;
+  }
+  
+  void writeData(u8 data) {
+    std::lock_guard<std::mutex> lock(mutex);
+    txBuffer.push(data);
+    conditionVar.notify_one();
+  }
+  
+  bool readData(void* data) {
+    std::lock_guard<std::mutex> lock(mutex);
+    if (!rxBuffer.empty()) {
+        *(u8*)data = rxBuffer.front();
+        rxBuffer.pop();
+        return true;
+    }
+    return false;
+  }
+
+  bool hasDataAvaliable() {
+    return !rxBuffer.empty();
+  }
+private:
+  void uartThread() {
+    while (running) {
+      std::unique_lock<std::mutex> lock(mutex);
+      if (!txBuffer.empty()) {
+        printf("%c", txBuffer.front());
+        txBuffer.pop();
+      }
+      lock.unlock();
+    }
+  }
+
+  std::queue<u8> txBuffer;
+  std::queue<u8> rxBuffer;
+  std::mutex mutex;
+  std::condition_variable conditionVar;
+  bool running;
+};
 
 // SMC Core State, tracks current state of the system as per view from the SMC.
 struct SMC_CORE_STATE {
@@ -227,12 +288,13 @@ struct SMC_CORE_STATE {
   u8 fifoBufferPos = 0;
 
   // Default COM Port for opening.
-  LPCSTR currentCOMPort;
+  const char* currentCOMPort;
   // UART Initialized.
   bool uartInitialized;
   // UART Present. Used to do a one time check on UART COM Port on the host
   // system.
   bool uartPresent;
+#if defined(_WIN32) && defined(COM_UART_ENABLED)
   // Current COM Port Device Control Block.
   // See
   // https://learn.microsoft.com/en-us/windows/win32/api/winbase/ns-winbase-dcb
@@ -247,6 +309,16 @@ struct SMC_CORE_STATE {
   DWORD currentBytesWrittenCount = 0;
   // Bytes Read from the COM Port.
   DWORD currentBytesReadCount = 0;
+#else
+  // Do some fucked shit to get UART on Linux
+  std::queue<u8> uartTxBuffer;
+  std::queue<u8> uartRxBuffer;
+  std::mutex uartMutex;
+  std::condition_variable uartConditionVar;
+#ifdef UART_THREAD
+  bool uartThreadRunning;
+#endif
+#endif
   // Read/Write Return Status Values
   bool retVal = false;
 };
@@ -254,7 +326,7 @@ struct SMC_CORE_STATE {
 // SMC Core Object.
 class SMCCore : public PCIDevice {
 public:
-  SMCCore(PCIBridge *parentPCIBridge, SMC_CORE_STATE *newSMCCoreState);
+  SMCCore(const char *deviceName, u64 size, PCIBridge* parentPCIBridge, SMC_CORE_STATE* newSMCCoreState);
   ~SMCCore();
 
   // Read/Write functions.
@@ -263,6 +335,31 @@ public:
   void Write(u64 writeAddress, u64 data, u8 byteCount) override;
   void ConfigWrite(u64 writeAddress, u64 data, u8 byteCount) override;
 
+#if !defined(COM_UART_ENABLED)
+  void WriteUART(const std::string& buffer) {
+    for (auto& c : buffer) {
+      UARTReceiveBuffer().push(c);
+    }
+  }
+  char ReadUART() {
+    char c = '\0';
+    std::unique_lock<std::mutex> lock(smcCoreState->uartMutex);
+    if (!smcCoreState->uartTxBuffer.empty()) {
+      c = smcCoreState->uartTxBuffer.front();
+      smcCoreState->uartTxBuffer.pop();
+    }
+    // We need to do *something* for rx
+    lock.unlock();
+    return c;
+  }
+  std::queue<u8>& UARTTransferBuffer() { return smcCoreState->uartTxBuffer; }
+  std::queue<u8>& UARTReceiveBuffer() { return smcCoreState->uartRxBuffer; }
+  std::mutex& UARTMutex() { return smcCoreState->uartMutex; }
+  std::condition_variable& UARTConditionVariable() { return smcCoreState->uartConditionVar; }
+#ifdef UART_THREAD
+  bool& UARTThreadRunning() { return smcCoreState->uartThreadRunning; }
+#endif
+#endif
 private:
   // Parent PCI Bridge (Used for interrupts/communication):
   PCIBridge *pciBridge;
@@ -276,8 +373,18 @@ private:
   // SMC Thread object
   std::thread smcThread;
 
+#if !defined(COM_UART_ENABLED) && defined(UART_THREAD)
+  // UART Thread object
+  std::thread uartThread;
+#endif
+
   // SMC Main Thread
   void smcMainThread();
+
+#if !defined(COM_UART_ENABLED) && defined(UART_THREAD)
+  // UART Thread
+  void uartMainThread();
+#endif
 
   // UART/COM Port Setup
   void setupUART(u32 uartConfig);

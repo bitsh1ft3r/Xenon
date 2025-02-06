@@ -5,6 +5,9 @@
 #include <thread>
 #include <vector>
 #include <fstream>
+#include <vector> 
+#include <format>
+#include <functional>
 
 #include <SDL3/SDL.h>
 #define GL_GLEXT_PROTOTYPES
@@ -18,6 +21,9 @@
 /*
  *	XGPU.h Basic Xenos implementation.
  */
+
+// Forward decls for ImGui
+struct ImFont;
 
 namespace Xe {
 namespace Xenos {
@@ -89,12 +95,16 @@ struct XenosState {
   u8 *Regs;
 };
 
+#define IMGUI
+
 // ARGB (Console is BGRA)
 #define COLOR(r, g, b, a) ((a) << 24 | (r) << 16 | (g) << 8  | (b) << 0)
 #define TILE(x) ((x + 31) >> 5) << 5
 class XGPU {
 public:
   XGPU(RAM *ram);
+
+  void StartThread();
 
   // Memory Read/Write methods.
   bool Read(u64 readAddress, u64 *data, u8 byteCount);
@@ -115,10 +125,23 @@ private:
 
   std::thread renderThread;
 
+#ifdef IMGUI
+  void XenosGUIInit();
+  bool styleEditor = false;
+  bool demoWindow = false;
+  ImFont* defaultFont13;
+  ImFont* robotRegular19;
+#endif
+
   void XenosResize(int x, int y);
   void XenosThreadShutdown();
   void XenosThread();
 
+  // Window size & state
+  int resWidth, xenosWidth;
+  int resHeight, xenosHeight;
+  bool useVsync;
+  bool isFullscreen;
   // Pixel buffer
   int pitch = 0;
   std::vector<uint32_t> pixels{};

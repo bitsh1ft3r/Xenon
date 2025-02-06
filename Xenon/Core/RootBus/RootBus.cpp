@@ -9,7 +9,7 @@
 #define PCI_BRIDGE_START_ADDR 0xEA000000
 #define PCI_BRIDGE_END_ADDR 0xEA010000
 
-void RootBus::Init() {
+RootBus::RootBus() {
   deviceCount = 0;
   conectedDevices.resize(deviceCount);
 }
@@ -74,7 +74,7 @@ void RootBus::Write(u64 writeAddress, u64 data, u8 byteCount) {
   if (hostBridge->Write(writeAddress, data, byteCount)) {
     return;
   }
-
+  
   // Device or address not found.
   LOG_ERROR(RootBus, "Write failed at address: {:#x} data: {:#x}", writeAddress, data);
 }

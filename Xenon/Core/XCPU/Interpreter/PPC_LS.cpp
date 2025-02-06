@@ -87,7 +87,7 @@ void PPCInterpreter::PPCInterpreter_sthbrx(PPU_STATE *hCore) {
            hCore->ppuThread[hCore->currentThread].GPR[rB];
   MMUWrite16(
       hCore, EA,
-      _byteswap_ushort((u16)hCore->ppuThread[hCore->currentThread].GPR[rS]));
+      std::byteswap((u16)hCore->ppuThread[hCore->currentThread].GPR[rS]));
 }
 
 void PPCInterpreter::PPCInterpreter_sthu(PPU_STATE *hCore) {
@@ -174,7 +174,7 @@ void PPCInterpreter::PPCInterpreter_stwbrx(PPU_STATE *hCore) {
   u64 EA = (rA ? hCore->ppuThread[hCore->currentThread].GPR[rA] : 0) +
            hCore->ppuThread[hCore->currentThread].GPR[rB];
   MMUWrite32(hCore, EA,
-             _byteswap_ulong(static_cast<u32>(
+             std::byteswap(static_cast<u32>(
                  hCore->ppuThread[hCore->currentThread].GPR[rS])));
 }
 
@@ -204,7 +204,7 @@ void PPCInterpreter::PPCInterpreter_stwcx(PPU_STATE *hCore) {
         // std::cout << " * Res OK, storing data 0x" <<
         // (u32)hCore->ppuThread[hCore->currentThread].GPR[rS] << std::endl;
         bool soc = false;
-        u32 data = _byteswap_ulong(
+        u32 data = std::byteswap(
             (u32)hCore->ppuThread[hCore->currentThread].GPR[rS]);
         RA = mmuContructEndAddressFromSecEngAddr(RA, &soc);
         sysBus->Write(RA, data, 4);
@@ -285,7 +285,7 @@ void PPCInterpreter::PPCInterpreter_stdcx(PPU_STATE *hCore) {
     if (hCore->ppuThread[hCore->currentThread].ppuRes->V) {
       if (hCore->ppuThread[hCore->currentThread].ppuRes->resAddr == (RA & ~7)) {
         u64 data =
-            _byteswap_uint64(hCore->ppuThread[hCore->currentThread].GPR[rS]);
+            std::byteswap(hCore->ppuThread[hCore->currentThread].GPR[rS]);
         bool soc = false;
         RA = mmuContructEndAddressFromSecEngAddr(RA, &soc);
         sysBus->Write(RA, data, 8);
@@ -465,7 +465,7 @@ void PPCInterpreter::PPCInterpreter_lhbrx(PPU_STATE *hCore) {
     return;
 
   DBG_LOAD("lhbrx: Addr 0x" << EA << " data = 0x" << data << std::endl;)
-  hCore->ppuThread[hCore->currentThread].GPR[rD] = _byteswap_ushort(data);
+  hCore->ppuThread[hCore->currentThread].GPR[rD] = std::byteswap(data);
 }
 
 void PPCInterpreter::PPCInterpreter_lhz(PPU_STATE *hCore) {
@@ -632,7 +632,7 @@ void PPCInterpreter::PPCInterpreter_lwbrx(PPU_STATE *hCore) {
       hCore->ppuThread[hCore->currentThread].exceptReg & PPU_EX_DATASTOR)
     return;
 
-  hCore->ppuThread[hCore->currentThread].GPR[rD] = _byteswap_ulong(data);
+  hCore->ppuThread[hCore->currentThread].GPR[rD] = std::byteswap(data);
 }
 
 void PPCInterpreter::PPCInterpreter_lwz(PPU_STATE *hCore) {

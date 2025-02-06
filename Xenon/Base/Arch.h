@@ -6,4 +6,8 @@
 #define ARCH_X86_64 1
 #elif defined(__aarch64__) || defined(_M_ARM64)
 #define ARCH_ARM64 1
+#else
+#if !defined(__aarch64__) && !defined(_M_ARM64)
+#define ARCH_X86_64 1
+#endif
 #endif

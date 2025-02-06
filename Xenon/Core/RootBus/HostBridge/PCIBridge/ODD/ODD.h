@@ -2,7 +2,8 @@
 
 #pragma once
 
-#include <Windows.h>
+#include <fstream>
+#include <filesystem>
 #include <vector>
 
 #include "Core/RAM/RAM.h"
@@ -58,38 +59,34 @@ private:
 //
 class Storage {
 public:
-  Storage(std::string Filename) {
-    hFile = CreateFileA(Filename.data(), GENERIC_READ, FILE_SHARE_READ, nullptr,
-                        OPEN_EXISTING, FILE_ATTRIBUTE_NORMAL, nullptr);
+  Storage(const std::filesystem::path& filepath) : path(filepath) {
+    file.open(path, std::ios_base::in | std::ifstream::ate | std::ifstream::binary);
   }
 
   ~Storage(void) {
-    if (hFile != INVALID_HANDLE_VALUE)
-      CloseHandle(hFile);
-    hFile = INVALID_HANDLE_VALUE;
+    if (file.is_open())
+      file.close();
+  }
+
+  bool IsFound(void) {
+    return file.is_open() && !std::filesystem::file_size(path);
   }
 
   u32 Size(void) {
-    u32 cb;
-    cb = GetFileSize(hFile, nullptr);
-    return (cb == INVALID_FILE_SIZE) ? 0 : cb;
+    return std::filesystem::file_size(path);
   }
 
-  bool Read(u64 Offset, u8 *Destination, u32 cu8s) {
-    DWORD cbRead;
-    OVERLAPPED Over;
-
-#define HIDW(qw) ((u32)(((u64)(qw)) >> 32))
-#define LODW(qw) ((u32)(qw))
-    memset(&Over, 0, sizeof Over);
-    Over.Offset = LODW(Offset);
-    Over.OffsetHigh = HIDW(Offset);
-    return (ReadFile(hFile, Destination, cu8s, &cbRead, &Over) &&
-            (cbRead == cu8s));
+  bool Read(u64 Offset, u8* Destination, u32 cu8s) {
+    file.seekg(static_cast<std::streamoff>(Offset), std::ios::beg);
+    if (!file) {
+        return false;
+    }
+    return file.read(reinterpret_cast<char*>(Destination), cu8s) && file.gcount() == static_cast<std::streamsize>(cu8s);
   }
 
 private:
-  HANDLE hFile;
+  std::filesystem::path path;
+  std::ifstream file;
 };
 
 //
@@ -333,7 +330,8 @@ struct XE_ATAPI_DEV_STATE {
 
 class ODD : public PCIDevice {
 public:
-  ODD(PCIBridge *parentPCIBridge, RAM *ram);
+  ODD(const char* deviceName, u64 size,
+    PCIBridge *parentPCIBridge, RAM *ram);
   void Read(u64 readAddress, u64 *data, u8 u8Count) override;
   void ConfigRead(u64 readAddress, u64 *data, u8 u8Count) override;
   void Write(u64 writeAddress, u64 data, u8 u8Count) override;

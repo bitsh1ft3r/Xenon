@@ -162,18 +162,39 @@ set(Core
     ${RootBus}
     ${XCPU}
     ${XGPU}
+    Xenon/Core/Xe_Main.cpp
+    Xenon/Core/Xe_Main.h
+)
+
+set(ImGui
+    third_party/ImGui/backends/imgui_impl_opengl3.cpp
+    third_party/ImGui/backends/imgui_impl_opengl3.h
+    third_party/ImGui/backends/imgui_impl_sdl3.cpp
+    third_party/ImGui/backends/imgui_impl_sdl3.h
+    third_party/ImGui/imconfig.h
+    third_party/ImGui/imgui.cpp
+    third_party/ImGui/imgui.h
+    third_party/ImGui/imgui_demo.cpp
+    third_party/ImGui/imgui_internal.h
+    third_party/ImGui/imgui_draw.cpp
+    third_party/ImGui/imgui_tables.cpp
+    third_party/ImGui/imgui_widgets.cpp
+    third_party/ImGui/imstb_rectpack.h
+    third_party/ImGui/imstb_textedit.h
+    third_party/ImGui/imstb_truetype.h
 )
 
 add_executable(Xenon
     ${Base}
     ${Core}
-    Xenon/Xe_Main.cpp
+    ${ImGui}
+    Xenon/Main.cpp
     third_party/glad/src/glad.c
 )
 
 create_target_directory_groups(Xenon)
 
-target_include_directories(Xenon PRIVATE ${CMAKE_CURRENT_SOURCE_DIR})
+target_include_directories(Xenon PRIVATE third_party/ImGui ${CMAKE_CURRENT_SOURCE_DIR})
 target_link_libraries(Xenon PRIVATE fmt::fmt SDL3::SDL3 OpenGL::GL toml11::toml11)
 
 add_definitions(-DNTDDI_VERSION=0x0A000006 -D_WIN32_WINNT=0x0A00 -DWINVER=0x0A00)

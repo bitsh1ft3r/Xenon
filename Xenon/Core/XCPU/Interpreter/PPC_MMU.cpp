@@ -627,7 +627,7 @@ bool PPCInterpreter::MMUTranslateAddress(u64 *EA, PPU_STATE *hCoreState,
   //
 
   // Machine State Register.
-  MSR _msr = hCoreState->ppuThread[hCoreState->currentThread].SPR.MSR;
+  MSRegister _msr = hCoreState->ppuThread[hCoreState->currentThread].SPR.MSR;
   // Logical Partition Control Register.
   u64 LPCR = hCoreState->SPR.LPCR;
   // Hypervisor Real Mode Offset Register.
@@ -686,7 +686,7 @@ bool PPCInterpreter::MMUTranslateAddress(u64 *EA, PPU_STATE *hCoreState,
       } else {
         // Mode Fault. LPAR Interrupt.
         LOG_CRITICAL(Xenon_MMU, "LPAR Interrupt unimplemented.");
-        system("PAUSE");
+        printf("Press Enter to continue..."); (void)getchar();
       }
     }
   }
@@ -875,7 +875,7 @@ bool PPCInterpreter::MMUTranslateAddress(u64 *EA, PPU_STATE *hCoreState,
 
             /*
                 The PPE also requires that PTE[LP] = SLBE[LP] whenever PTE[L] =
-               ‘1’. In other words, the PTE page size must match the SLBE page
+               -1-. In other words, the PTE page size must match the SLBE page
                size exactly for a page-table match to occur.
             */
 
@@ -961,7 +961,7 @@ bool PPCInterpreter::MMUTranslateAddress(u64 *EA, PPU_STATE *hCoreState,
 
             /*
                 The PPE also requires that PTE[LP] = SLBE[LP] whenever PTE[L] =
-               ‘1’. In other words, the PTE page size must match the SLBE page
+               -1-. In other words, the PTE page size must match the SLBE page
                size exactly for a page-table match to occur.
             */
 
@@ -1195,7 +1195,7 @@ u64 PPCInterpreter::MMURead(XENON_CONTEXT *cpuContext, PPU_STATE *ppuState,
       break;
     }
 
-    return _byteswap_uint64(data);
+    return std::byteswap(data);
   }
 
   // Integrated Interrupt Controller in real mode, used when the HV wants to
@@ -1220,7 +1220,7 @@ u64 PPCInterpreter::MMURead(XENON_CONTEXT *cpuContext, PPU_STATE *ppuState,
   // CPU VID Register
   if (socRead && EA == 0x61188) {
     data = 0x382c00000000b001;
-    return _byteswap_uint64(data);
+    return std::byteswap(data);
   }
 
   bool nand = false;
@@ -1378,19 +1378,19 @@ u8 PPCInterpreter::MMURead8(PPU_STATE *ppuState, u64 EA) {
 u16 PPCInterpreter::MMURead16(PPU_STATE *ppuState, u64 EA) {
   u16 data = 0;
   data = static_cast<u16>(MMURead(intXCPUContext, ppuState, EA, 2));
-  return _byteswap_ushort(data);
+  return std::byteswap(data);
 }
 // Reads 4 Bytes of memory.
 u32 PPCInterpreter::MMURead32(PPU_STATE *ppuState, u64 EA) {
   u32 data = 0;
   data = static_cast<u32>(MMURead(intXCPUContext, ppuState, EA, 4));
-  return _byteswap_ulong(data);
+  return std::byteswap(data);
 }
 // Reads 8 Bytes of memory.
 u64 PPCInterpreter::MMURead64(PPU_STATE *ppuState, u64 EA) {
   u64 data = 0;
   data = MMURead(intXCPUContext, ppuState, EA, 8);
-  return _byteswap_uint64(data);
+  return std::byteswap(data);
 }
 // Writes 1 Byte to memory.
 void PPCInterpreter::MMUWrite8(PPU_STATE *ppuState, u64 EA, u8 data) {
@@ -1398,16 +1398,16 @@ void PPCInterpreter::MMUWrite8(PPU_STATE *ppuState, u64 EA, u8 data) {
 }
 // Writes 2 Bytes to memory.
 void PPCInterpreter::MMUWrite16(PPU_STATE *ppuState, u64 EA, u16 data) {
-  u16 dataBS = _byteswap_ushort(data);
+  u16 dataBS = std::byteswap(data);
   MMUWrite(intXCPUContext, ppuState, dataBS, EA, 2);
 }
 // Writes 4 Bytes to memory.
 void PPCInterpreter::MMUWrite32(PPU_STATE *ppuState, u64 EA, u32 data) {
-  u32 dataBS = _byteswap_ulong(data);
+  u32 dataBS = std::byteswap(data);
   MMUWrite(intXCPUContext, ppuState, dataBS, EA, 4);
 }
 // Writes 8 Bytes to memory.
 void PPCInterpreter::MMUWrite64(PPU_STATE *ppuState, u64 EA, u64 data) {
-  u64 dataBS = _byteswap_uint64(data);
+  u64 dataBS = std::byteswap(data);
   MMUWrite(intXCPUContext, ppuState, dataBS, EA, 8);
 }
