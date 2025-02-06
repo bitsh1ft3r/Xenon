@@ -27,6 +27,8 @@ Xe::Xenos::XGPU::XGPU(RAM *ram) {
     memcpy(&xgpuConfigSpace.data[idx], &xgpuConfigMap[i], 4);
     i++;
   }
+  // Set our PCI Dev Sizes.
+  pciDevSizes[0] = 0x20000; // BAR0
 
   xenosState.Regs = new u8[0xFFFFF];
   memset(xenosState.Regs, 0, 0xFFFFF);
