@@ -613,7 +613,7 @@ void PPCInterpreter::ppcExecuteSingleInstruction(PPU_STATE *hCore) {
     memcpy(&cachedXER, &thread.SPR.XER, sizeof(cachedXER));
   if (regionOfImportance)
   {
-    LOG_TRACE(Xenon, "Ins: {} | CIA: {:#x} | NIA: {:#x} | GPR: 0|{:#x} 1|{:#x} 2|{:#x} 3|{:#x} 4|{:#x} 5|{:#x} 6|{:#x} 7|{:#x} 8|{:#x} 9|{:#x} 29|{:#x} 30|{:#x} 31|{:#x}",
+    LOG_INFO(Xenon, "Ins: {} | CIA: {:#x} | NIA: {:#x} | GPR: 0|{:#x} 1|{:#x} 2|{:#x} 3|{:#x} 4|{:#x} 5|{:#x} 6|{:#x} 7|{:#x} 8|{:#x} 9|{:#x} 29|{:#x} 30|{:#x} 31|{:#x}",
       getOpcodeName(thread.CI),
       thread.CIA,
       thread.NIA,
@@ -1314,14 +1314,14 @@ case PPCInstruction::td:
   if (regionOfImportance) {
     for (u32 i{}; i != 32; ++i) {
       if (thread.GPR[i] != cachedGPRs[i]) {
-        LOG_TRACE(Xenon, "GPR {} was modified ({:#x} to {:#x})", i, thread.GPR[i], cachedGPRs[i]);
+        LOG_INFO(Xenon, "GPR {} was modified ({:#x} to {:#x})", i, thread.GPR[i], cachedGPRs[i]);
       }
     }
     if (thread.CR.CR_Hex != cachedCR.CR_Hex) {
-      LOG_TRACE(Xenon, "CR was modified ({:#x} to {:#x})", thread.CR.CR_Hex, cachedCR.CR_Hex);
+      LOG_INFO(Xenon, "CR was modified ({:#x} to {:#x})", thread.CR.CR_Hex, cachedCR.CR_Hex);
     }
     if (thread.SPR.XER.XER_Hex != cachedXER.XER_Hex) {
-      LOG_TRACE(Xenon, "XER was modified ({:#x} to {:#x})", thread.SPR.XER.XER_Hex, cachedCR.CR_Hex);
+      LOG_INFO(Xenon, "XER was modified ({:#x} to {:#x})", thread.SPR.XER.XER_Hex, cachedCR.CR_Hex);
     }
   }
 }
