@@ -5,7 +5,8 @@
 #include <thread>
 #include <vector>
 #include <fstream>
-#include <vector>
+#include <vector> 
+#include <functional>
 
 #include <SDL3/SDL.h>
 #define GL_GLEXT_PROTOTYPES
@@ -102,6 +103,8 @@ class XGPU {
 public:
   XGPU(RAM *ram);
 
+  void StartThread();
+
   // Memory Read/Write methods.
   bool Read(u64 readAddress, u64 *data, u8 byteCount);
   bool Write(u64 writeAddress, u64 data, u8 byteCount);
@@ -123,8 +126,8 @@ private:
 
 #ifdef IMGUI
   void XenosGUIInit();
-  bool styleEditor;
-  bool demoWindow;
+  bool styleEditor = false;
+  bool demoWindow = false;
   ImFont* defaultFont13;
   ImFont* robotRegular19;
 #endif

@@ -113,6 +113,7 @@ SFCX::SFCX(const char* deviceName, const std::string nandLoadPath, u64 size,
 
   // Enter SFCX Thread.
   sfcxThread = std::thread(&SFCX::sfcxMainLoop, this);
+  sfcxThread.detach();
 }
 
 void SFCX::Read(u64 readAddress, u64 *data, u8 byteCount) {

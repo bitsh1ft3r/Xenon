@@ -40,9 +40,24 @@ public:
   void createSMCState();
 
   void getFuses();
+
+  bool isRunning() {
+    return running;
+  }
+
+  void setRunning() {
+    running = true;
+  }
+  void shutdown() {
+    running = false;
+  }
 private:
   // Main objects
+  //  Thread state
+  bool running = true;
+  //  Base path
   std::filesystem::path userDirectory;
+  //  Log level
   std::unique_ptr<Base::Log::Filter> logFilter;
 
   // Main Emulator objects

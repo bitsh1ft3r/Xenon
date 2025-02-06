@@ -2,8 +2,8 @@
 
 #include "Core/Xe_Main.h"
 
-XeMain::XeMain()
-{
+XeMain::XeMain() {
+  running = true;
   userDirectory = Base::FS::GetUserPath(Base::FS::PathType::UserDir);
   Config::loadConfig(userDirectory / "xenon_config.toml");
   Base::Log::Initialize();
@@ -17,12 +17,17 @@ XeMain::XeMain()
   xenos = std::make_unique<STRIP_UNIQUE(xenos)>(ram.get());
   createHostBridge();
   createRootBus();
+  // Rendering needs to start a bit later as the console isn't fully init'd and RAM will be corrupt
+  xenos->StartThread();
   xenonCPU = std::make_unique<STRIP_UNIQUE(xenonCPU)>(rootBus.get(), Config::oneBlPath(), cpuFuses);
   pciBridge->RegisterIIC(xenonCPU->GetIICPointer());
 }
 XeMain::~XeMain() {
   // Save config incase it was modified
   Config::saveConfig(userDirectory / "xenon_config.toml");
+
+  // Delete the GPU first, as we likely would have exited from it.
+  xenos.reset();
 
   // Delete all objects
   logFilter.reset();
@@ -47,8 +52,8 @@ XeMain::~XeMain() {
   odd.reset();
   hdd.reset();
 
+  // CPU last as we will need to shutdown the threads.
   xenonCPU.reset();
-  xenos.reset();
 }
 
 void XeMain::start() {
@@ -98,7 +103,7 @@ void XeMain::createPCIDevices() {
   sfcx = std::make_unique<STRIP_UNIQUE(sfcx)>("SFCX", Config::nandPath(), SFCX_DEV_SIZE, pciBridge.get());
   xma = std::make_unique<STRIP_UNIQUE(xma)>("XMA", XMA_DEV_SIZE);
   odd = std::make_unique<STRIP_UNIQUE(odd)>("CDROM", ODD_DEV_SIZE, pciBridge.get(), ram.get());
-  hdd = std::make_unique<STRIP_UNIQUE(hdd)>("XMA", HDD_DEV_SIZE, pciBridge.get());
+  hdd = std::make_unique<STRIP_UNIQUE(hdd)>("HDD", HDD_DEV_SIZE, pciBridge.get());
   smcCore = std::make_unique<STRIP_UNIQUE(smcCore)>("SMC", SMC_DEV_SIZE, pciBridge.get(), smcCoreState.get());
   nandDevice = std::make_unique<STRIP_UNIQUE(nandDevice)>("NAND", Config::nandPath(), NAND_START_ADDR, NAND_END_ADDR, true);
 }

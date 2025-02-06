@@ -89,14 +89,15 @@ Xe::PCIDev::SMC::SMCCore::SMCCore(const char *deviceName, u64 size,
 
   // Enter main execution thread.
   smcThread = std::thread(&SMCCore::smcMainThread, this);
+  smcThread.detach();
 }
 
 // Class Destructor.
 Xe::PCIDev::SMC::SMCCore::~SMCCore() {
 #if !defined(COM_UART_ENABLED) && defined(UART_THREAD)
-    smcCoreState->uartThreadRunning = false;
+  smcCoreState->uartThreadRunning = false;
 #endif
-    LOG_INFO(SMC, "Core: Exiting.");
+  LOG_INFO(SMC, "Core: Exiting.");
 }
 
 // PCI Read

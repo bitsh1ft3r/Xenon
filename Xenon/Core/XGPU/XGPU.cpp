@@ -40,12 +40,15 @@ Xe::Xenos::XGPU::XGPU(RAM *ram) {
   memcpy(&xenosState.Regs[REG_FSB_CLK], &reg, 4);
   reg = 0x19100000;
   memcpy(&xenosState.Regs[REG_MEM_CLK], &reg, 4);
+}
 
+void Xe::Xenos::XGPU::StartThread() {
   if (Config::gpuThreadEnabled()) {
     renderThread = std::thread(&XGPU::XenosThread, this);
+    renderThread.detach();
   }
-  else{
-      LOG_WARNING(Xenos, "Xenos Render thread disbaled in config.");
+  else {
+    LOG_WARNING(Xenos, "Xenos Render thread disbaled in config.");
   }
 }
 
@@ -366,7 +369,9 @@ void XenosGUIStyle() {
   style.DisplaySafeAreaPadding = { 3.f, 22.f };
   style.MouseCursorScale = 0.7f;
 }
-std::string InputText(const std::string& title, std::string initValue = {}, size_t maxCharacters = 256, const std::string& textHint = {}, ImGuiInputTextFlags flags = 0) {
+#define INPUT_TEXT_MULTILINE "##multiline##"
+std::string InputText(const std::string& title, std::string initValue = {}, size_t maxCharacters = 256,
+  const std::string& textHint = {}, ImGuiInputTextFlags flags = ImGuiInputTextFlags_None, ImVec2 size = {}) {
   std::vector<char> buf(maxCharacters, '\0');
   if (buf[0] == '\0' && !initValue.empty()) {
     memcpy(buf.data(), initValue.data(), initValue.size());
@@ -376,7 +381,12 @@ std::string InputText(const std::string& title, std::string initValue = {}, size
     ImGui::InputText(title.c_str(), buf.data(), maxCharacters, flags);
   }
   else {
-    ImGui::InputTextWithHint(title.c_str(), textHint.c_str(), buf.data(), maxCharacters, flags);
+    if (textHint.compare(INPUT_TEXT_MULTILINE)) {
+      ImGui::InputTextWithHint(title.c_str(), textHint.c_str(), buf.data(), maxCharacters, flags);
+    }
+    else {
+      ImGui::InputTextMultiline(title.c_str(), buf.data(), maxCharacters, size, flags);
+    }
   }
 
   return buf.data();
@@ -443,7 +453,8 @@ void Xe::Xenos::XGPU::XenosGUIInit() {
 
 #ifdef IMGUI
 struct ImGuiLog {
-  ImGuiLog() {
+  ImGuiLog(std::function<void()> loop, std::function<void(const std::string&)> input = {}) :
+    onLoop(loop), onInput(input) {
     clear();
   }
 
@@ -476,9 +487,23 @@ struct ImGuiLog {
     buffer.resize(size + data.size());
     memcpy(&buffer[size], data.data(), data.size());
   }
-  void draw() {
+  void draw(const std::string& title = {}) {
+    onLoop();
+    if (detached) {
+      ImGui::SetNextWindowSize({ 1020.f, 520.f }, ImGuiCond_Once);
+      ImGui::SetNextWindowPos({ 1470.f, 10.f }, ImGuiCond_Once);
+      if (!ImGui::Begin(title.c_str(), &detached)) {
+        ImGui::End();
+        return;
+      }
+    }
     if (ImGui::BeginPopup("Options")) {
       ImGui::Checkbox("Auto-scroll", &autoScroll);
+      if (ImGui::Button("Detach")) {
+        detached = true;
+      }
+      if (ImGui::IsItemHovered(ImGuiHoveredFlags_DelayNone))
+        ImGui::SetTooltip("Detaches into its own window");
       ImGui::EndPopup();
     }
     if (ImGui::Button("Options"))
@@ -490,7 +515,12 @@ struct ImGuiLog {
     ImGui::SameLine();
     filter.Draw("Filter", -100.0f);
     ImGui::Separator();
-    if (ImGui::BeginChild("scrolling", ImVec2(0, 0), ImGuiChildFlags_None, ImGuiWindowFlags_HorizontalScrollbar)) {
+
+    float offset = 0.f;
+    if (onInput)
+      offset = ImGui::GetWindowSize().y - 250.f;
+
+    if (ImGui::BeginChild("scrolling", ImVec2(0, offset), ImGuiChildFlags_None, ImGuiWindowFlags_HorizontalScrollbar)) {
       if (clearLog)
         clear();
       if (copyLog)
@@ -525,21 +555,65 @@ struct ImGuiLog {
         ImGui::SetScrollHereY(1.0f);
     }
     ImGui::EndChild();
+    if (onInput) {
+      ImVec2 size = { ImGui::GetWindowSize().x - 20.f, ImGui::GetWindowSize().y - 370.f };
+      if (ImGui::BeginChild("Input", size, ImGuiChildFlags_None)) {
+        inputData = InputText("##" + title, {}, 2048, INPUT_TEXT_MULTILINE, ImGuiInputTextFlags_None, size);
+        bool shiftPressed = ImGui::IsKeyDown(ImGuiKey_LeftShift) || ImGui::IsKeyDown(ImGuiKey_RightShift);
+        if (!inputData.empty()) {
+          if (!shiftPressed && ImGui::IsKeyPressed(ImGuiKey_Enter)) {
+            if (onInput) {
+              onInput(inputData);
+            }
+            send(inputData);
+            inputData.clear();
+          }
+        }
+      }
+      ImGui::EndChild();
+    }
+    if (detached) {
+      ImGui::End();
+    }
+  }
+  bool isDetached() {
+    return detached;
   }
 private:
+  std::function<void()> onLoop;
+  std::function<void(const std::string&)> onInput;
   std::vector<char> buffer;
+  std::string inputData;
   size_t lastSize;
   ImGuiTextFilter filter;
   std::vector<int> lineOffsets;
   bool autoScroll = true;
+  bool detached = false;
 };
+
+std::unique_ptr<ImGuiLog> console_guilog;
+std::unique_ptr<ImGuiLog> uart_guilog;
+void InitXenosGUILog() {
+  console_guilog = std::make_unique<STRIP_UNIQUE(console_guilog)>([]() {
+    console_guilog->pullFromFile(Base::FS::GetUserPath(Base::FS::PathType::LogDir) / Base::FS::LOG_FILE);
+  });
+  uart_guilog = std::make_unique<STRIP_UNIQUE(uart_guilog)>([]() {
+    if (Xe_Main && Xe_Main->smcCore) {
+      for (char c = Xe_Main->smcCore->ReadUART(); c != '\0'; c = Xe_Main->smcCore->ReadUART()) {
+        uart_guilog->send(c);
+      }
+    }
+  }, [](const std::string& input) {
+    if (Xe_Main && Xe_Main->smcCore) {
+      Xe_Main->smcCore->WriteUART(input);
+    }
+  });
+}
 #endif
 
 void Xe::Xenos::XGPU::XenosThread() {
-  if (!xenosWidth || !xenosHeight) {
-    xenosWidth = 1280;
-    xenosHeight = 720;
-  }
+  xenosWidth = 1280;
+  xenosHeight = 720;
   resWidth = TILE(Config::windowWidth());
   resHeight = TILE(Config::windowHeight());
 
@@ -601,6 +675,7 @@ void Xe::Xenos::XGPU::XenosThread() {
 
 #ifdef IMGUI
   XenosGUIInit();
+  InitXenosGUILog();
 #endif
 
   // Init shader handles
@@ -662,7 +737,8 @@ void Xe::Xenos::XGPU::XenosThread() {
       case SDL_EVENT_QUIT:
         XenosThreadShutdown();
         if (Config::quitOnWindowClosure()) {
-          exit(0);
+          // Tell XeMain to gracefully shutdown
+          Xe_Main->shutdown();
         }
         rendering = false;
         break;
@@ -710,6 +786,12 @@ void Xe::Xenos::XGPU::XenosThread() {
     ImGui_ImplOpenGL3_NewFrame();
     ImGui_ImplSDL3_NewFrame();
     ImGui::NewFrame(); {
+      if (console_guilog->isDetached()) {
+        console_guilog->draw("Log");
+      }
+      if (uart_guilog->isDetached()) {
+        uart_guilog->draw("UART");
+      }
       if (styleEditor) {
         ImGui::SetNextWindowPos({ 600.f, 60.f }, ImGuiCond_Once);
         ImGui::SetNextWindowSize({ 1000.f, 900.f }, ImGuiCond_Once);
@@ -720,23 +802,16 @@ void Xe::Xenos::XGPU::XenosThread() {
       if (demoWindow) {
         ImGui::ShowDemoWindow(&demoWindow);
       }
-      ImGui::SetNextWindowSize({ 500.f, 300.f }, ImGuiCond_Once);
+      ImGui::SetNextWindowPos({ 1750.f, 10.f }, ImGuiCond_Once);
+      ImGui::SetNextWindowSize({ 800.f, 500.f }, ImGuiCond_Once);
       ImGui::Begin("Debug", nullptr, ImGuiWindowFlags_NoCollapse); {
         if (ImGui::BeginTabBar("#main_bar")) {
-          if (ImGui::BeginTabItem("Log")) {
-            static ImGuiLog log{};
-            log.pullFromFile(Base::FS::GetUserPath(Base::FS::PathType::LogDir) / Base::FS::LOG_FILE);
-            log.draw();
+          if (!console_guilog->isDetached() && ImGui::BeginTabItem("Log")) {
+            console_guilog->draw("Log");
             ImGui::EndTabItem();
           }
-          if (ImGui::BeginTabItem("UART")) {
-            static ImGuiLog uart{};
-            if (Xe_Main && Xe_Main->smcCore) {
-              for (char c = Xe_Main->smcCore->ReadUART(); c != '\0'; c = Xe_Main->smcCore->ReadUART()) {
-                uart.send(c);
-              }
-            }
-            uart.draw();
+          if (!uart_guilog->isDetached() && ImGui::BeginTabItem("UART")) {
+            uart_guilog->draw();
             ImGui::EndTabItem();
           }
           if (ImGui::BeginTabItem("Settings")) {

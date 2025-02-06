@@ -3,6 +3,7 @@
 #include "Base/Logging/Log.h"
 
 #include "Xenon.h"
+#include <Core/Xe_Main.h>
 
 Xenon::Xenon(RootBus *inBus, const std::string blPath, eFuses inFuseSet) {
   // First, Initialize system bus.
@@ -45,12 +46,11 @@ Xenon::~Xenon() {}
 void Xenon::Start(u64 resetVector) {
   // Start execution on every thread.
   ppu0Thread = std::thread(&PPU::StartExecution, PPU(ppu0));
+  ppu0Thread.detach();
 
   ppu1Thread = std::thread(&PPU::StartExecution, PPU(ppu1));
+  ppu1Thread.detach();
 
   ppu2Thread = std::thread(&PPU::StartExecution, PPU(ppu2));
-
-  while (true) {
-    std::this_thread::sleep_for(std::chrono::seconds(60));
-  }
+  ppu2Thread.detach();
 }
