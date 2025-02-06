@@ -343,7 +343,7 @@ void XenosGUIStyle() {
   style.WindowPadding = { 10.f, 10.f };
   style.WindowRounding = 0.f;
   style.WindowBorderSize = 1.f;
-  style.WindowMinSize = { 0.f, 0.f };
+  style.WindowMinSize = { 1.f, 1.f };
   style.WindowTitleAlign = { 0.f, 0.5f };
   style.WindowMenuButtonPosition = ImGuiDir_Left;
   style.ChildRounding = 6.f;
