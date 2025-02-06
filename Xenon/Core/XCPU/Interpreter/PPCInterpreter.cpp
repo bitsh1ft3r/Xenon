@@ -54,7 +54,6 @@ void PPCInterpreter::ppcExecuteSingleInstruction(PPU_STATE *hCore) {
     u8 a = 0;
   }
 
-
 #ifdef CORE_DUMP
   if (PPCInterpreter::startCoredump) {
     auto thread = hCore->ppuThread[hCore->currentThread];
@@ -301,6 +300,44 @@ void PPCInterpreter::ppcExecuteSingleInstruction(PPU_STATE *hCore) {
   if (hCore->ppuThread[hCore->currentThread].SPR.PIR == 0) {
     hCore->ppuThread[hCore->currentThread].lastRegValue =
         hCore->ppuThread[hCore->currentThread].GPR[11];
+  }
+
+  // 0x800000001C000B70 - 0x800000001C000B98
+  /*
+    .text.start:800000001C000B70                 addis     r9, r2, (other_threads_startup_end - 0x800000001C00A500)@ha
+    .text.start:800000001C000B74                 lis       r3, -0x8000
+    .text.start:800000001C000B78                 mr        r4, r29
+    .text.start:800000001C000B7C                 ori       r3, r3, 0x200 # 0xFFFFFFFF80000200
+    .text.start:800000001C000B80                 addi      r31, r9, (other_threads_startup_end - 0x800000001C00A500)@l
+    .text.start:800000001C000B84                 sldi      r3, r3, 32
+    .text.start:800000001C000B88                 subf      r31, r29, r31
+    .text.start:800000001C000B8C                 oris      r3, r3, 1
+    .text.start:800000001C000B90                 mr        r5, r31
+    .text.start:800000001C000B94                 ori       r3, r3, 0x1000
+    .text.start:800000001C000B98                 bl        .memcpy
+    .text.start:800000001C000B9C                 nop
+  */
+  if (hCore->ppuThread[hCore->currentThread].CIA >= 0x800000001C000B70 &&
+      hCore->ppuThread[hCore->currentThread].CIA <= 0x800000001C000B9C)
+  {
+    LOG_TRACE(Xenon, "Ins: {} | CIA: {:#x} | NIA: {:#x} | GPR: 0|{:#x} 1|{:#x} 2|{:#x} 3|{:#x} 4|{:#x} 5|{:#x} 6|{:#x} 7|{:#x} 8|{:#x} 9|{:#x} 29|{:#x} 30|{:#x} 31|{:#x}",
+      getOpcodeName(hCore->ppuThread[hCore->currentThread].CI),
+      hCore->ppuThread[hCore->currentThread].CIA,
+      hCore->ppuThread[hCore->currentThread].NIA,
+      hCore->ppuThread[hCore->currentThread].GPR[0],
+      hCore->ppuThread[hCore->currentThread].GPR[1],
+      hCore->ppuThread[hCore->currentThread].GPR[2],
+      hCore->ppuThread[hCore->currentThread].GPR[3],
+      hCore->ppuThread[hCore->currentThread].GPR[4],
+      hCore->ppuThread[hCore->currentThread].GPR[5],
+      hCore->ppuThread[hCore->currentThread].GPR[6],
+      hCore->ppuThread[hCore->currentThread].GPR[7],
+      hCore->ppuThread[hCore->currentThread].GPR[8],
+      hCore->ppuThread[hCore->currentThread].GPR[9],
+      hCore->ppuThread[hCore->currentThread].GPR[29],
+      hCore->ppuThread[hCore->currentThread].GPR[30],
+      hCore->ppuThread[hCore->currentThread].GPR[31]  
+    );
   }
 
   switch (currentInstr) {
