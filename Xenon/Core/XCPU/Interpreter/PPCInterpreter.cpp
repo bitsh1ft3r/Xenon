@@ -1,4 +1,4 @@
-﻿// Copyright 2025 Xenon Emulator Project
+// Copyright 2025 Xenon Emulator Project
 
 #include "Base/Logging/Log.h"
 #include "PPCInterpreter.h"
@@ -613,8 +613,7 @@ void PPCInterpreter::ppcExecuteSingleInstruction(PPU_STATE *hCore) {
   XERRegister cachedXER;
   if (regionOfImportance)
     memcpy(&cachedXER, &thread.SPR.XER, sizeof(cachedXER));
-  if (regionOfImportance)
-  {
+  if (regionOfImportance) {
     LOG_INFO(Xenon, "Ins: {} | CIA: {:#x} | NIA: {:#x} | GPR: 0|{:#x} 1|{:#x} 2|{:#x} 3|{:#x} 4|{:#x} 5|{:#x} 6|{:#x} 7|{:#x} 8|{:#x} 9|{:#x} 29|{:#x} 30|{:#x} 31|{:#x}",
       getOpcodeName(thread.CI),
       thread.CIA,
@@ -631,7 +630,7 @@ void PPCInterpreter::ppcExecuteSingleInstruction(PPU_STATE *hCore) {
       thread.GPR[9],
       thread.GPR[29],
       thread.GPR[30],
-      thread.GPR[31]  
+      thread.GPR[31]
     );
   }
 
@@ -933,10 +932,9 @@ case PPCInstruction::lhaux:
   case PPCInstruction::lhzx:
     PPCInterpreter_lhzx(hCore);
     break;
-    /*
 case PPCInstruction::lmw:
+    PPCInterpreter_lmw(hCore);
     break;
-    */
   case PPCInstruction::lswi:
     PPCInterpreter_lswi(hCore);
     break;
@@ -984,10 +982,9 @@ case PPCInstruction::mcrxr:
   case PPCInstruction::mfcr:
     PPCInterpreter_mfcr(hCore);
     break;
-    /*
 case PPCInstruction::mffsx:
+    PPCInterpreter_mffsx(hCore);
     break;
-    */
   case PPCInstruction::mfmsr:
     PPCInterpreter_mfmsr(hCore);
     break;
@@ -1017,9 +1014,10 @@ case PPCInstruction::mtfsb1x:
     break;
 case PPCInstruction::mtfsfix:
     break;
+        */
 case PPCInstruction::mtfsfx:
+    PPCInterpreter_mtfsfx(hCore);
     break;
-    */
   case PPCInstruction::mtmsr:
     PPCInterpreter_mtmsr(hCore);
     break;
@@ -1221,10 +1219,9 @@ case PPCInstruction::stfsx:
   case PPCInstruction::sthx:
     PPCInterpreter_sthx(hCore);
     break;
-    /*
 case PPCInstruction::stmw:
+    PPCInterpreter_stmw(hCore);
     break;
-    */
   case PPCInstruction::stswi:
     PPCInterpreter_stswi(hCore);
     break;

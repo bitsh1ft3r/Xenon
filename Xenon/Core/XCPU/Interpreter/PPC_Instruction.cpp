@@ -559,6 +559,9 @@ PPCInstruction PPCInterpreter::getOpcode(u32 instrData) {
   case 45: // sthu
     return PPCInstruction::sthu;
     break;
+  case 46: // lmw
+    return PPCInstruction::lmw;
+    break;
   case 47: // stmw
     return PPCInstruction::stmw;
     break;
@@ -613,6 +616,9 @@ PPCInstruction PPCInterpreter::getOpcode(u32 instrData) {
     switch (XO_21to30) {
     case 583: // mffsx
       return PPCInstruction::mffsx;
+      break;
+    case 711: // mtfsfx
+      return PPCInstruction::mtfsfx;
       break;
     default:
         LOG_ERROR(Xenon, "PPC Decoder: Unimplemented instruction found, SUBGROUP 63!");
