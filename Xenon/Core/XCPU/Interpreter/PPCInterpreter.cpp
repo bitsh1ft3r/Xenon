@@ -245,8 +245,7 @@ void PPCInterpreter::ppcExecuteSingleInstruction(PPU_STATE* hCore) {
 /* Exception name(Reset Vector) */
 
 // System reset Exception (0x100)
-void PPCInterpreter::ppcResetException(PPU_STATE* hCore)
-{
+void PPCInterpreter::ppcResetException(PPU_STATE* hCore) {
   LOG_INFO(Xenon, "[{}](Thrd{:#d}): Reset exception.", hCore->ppuName, (s8)hCore->currentThread);
   hCore->ppuThread[hCore->currentThread].SPR.SRR0 =
     hCore->ppuThread[hCore->currentThread].NIA;
