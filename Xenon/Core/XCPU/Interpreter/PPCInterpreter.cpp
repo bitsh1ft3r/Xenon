@@ -601,19 +601,22 @@ void PPCInterpreter::ppcExecuteSingleInstruction(PPU_STATE *hCore) {
     .text.start:800000001C000F2C # ---------------------------------------------------------------------------
   */
   PPU_THREAD_REGISTERS& thread = hCore->ppuThread[hCore->currentThread];
-  bool regionOfImportance = thread.CIA >= 0x800000001C000AC4 && thread.CIA <= 0x800000001C000F2C; //||
+  bool regionOfImportance = thread.CIA >= 0x800000001C000AC4 && thread.CIA <= 0x800000001C000F2C;
     //thread.CIA >= 0x800000001C000F74 && thread.CIA <= 0x800000001C000F90 ||
     //thread.CIA >= 0x800000001C000FA0 && thread.CIA <= 0x800000001C000FC0;
-  u64 cachedGPRs[32];
-  if (regionOfImportance)
+  static bool hardDump = false;
+  if (thread.CIA == 0x800000001C000E00 || thread.NIA == 0x800000001C000E00)
+    hardDump = true;
+  u64 cachedGPRs[32]{};
+  if (regionOfImportance || hardDump)
     memcpy(cachedGPRs, thread.GPR, sizeof(cachedGPRs));
-  CRegister cachedCR;
-  if (regionOfImportance)
+  CRegister cachedCR{};
+  if (regionOfImportance || hardDump)
     memcpy(&cachedCR, &thread.CR, sizeof(cachedCR));
-  XERRegister cachedXER;
-  if (regionOfImportance)
+  XERRegister cachedXER{};
+  if (regionOfImportance || hardDump)
     memcpy(&cachedXER, &thread.SPR.XER, sizeof(cachedXER));
-  if (regionOfImportance) {
+  if (regionOfImportance || hardDump) {
     LOG_INFO(Xenon, "Ins: {} | CIA: {:#x} | NIA: {:#x} | GPR: 0|{:#x} 1|{:#x} 2|{:#x} 3|{:#x} 4|{:#x} 5|{:#x} 6|{:#x} 7|{:#x} 8|{:#x} 9|{:#x} 29|{:#x} 30|{:#x} 31|{:#x}",
       getOpcodeName(thread.CI),
       thread.CIA,
@@ -1310,7 +1313,7 @@ case PPCInstruction::td:
     break;
   }
 
-  if (regionOfImportance) {
+  if (regionOfImportance || hardDump) {
     for (u32 i{}; i != 32; ++i) {
       if (thread.GPR[i] != cachedGPRs[i]) {
         LOG_INFO(Xenon, "GPR {} was modified ({:#x} to {:#x})", i, cachedGPRs[i], thread.GPR[i]);

@@ -3,18 +3,6 @@
 #include "Base/Logging/Log.h"
 #include "PPCInterpreter.h"
 
-#ifndef _WIN32
-// God forbid GCC has rotl64
-static inline uint64_t rotl64_impl(uint64_t x, int8_t r) {
-  return (x << r) | (x >> (64 - r));
-}
-static inline uint32_t rotl_impl(uint32_t x, int8_t r) {
-  return (x << r) | (x >> (32 - r));
-}
-#define _rotl64 rotl64_impl
-#define _rotl rotl_impl
-#endif
-
 #define GPR(x) hCore->ppuThread[hCore->currentThread].GPR[x]
 #define XER_SET_CA(v) hCore->ppuThread[hCore->currentThread].SPR.XER.CA = v
 
@@ -668,7 +656,7 @@ void PPCInterpreter::PPCInterpreter_orx(PPU_STATE *hCore) {
 void PPCInterpreter::PPCInterpreter_rldicx(PPU_STATE *hCore) {
   MD_FORM_rS_rA_sh_mb_RC;
 
-  u64 r = _rotl64(GPR(rS), sh);
+  u64 r = std::rotl<u64>(GPR(rS), sh);
   u32 e = 63 - sh;
   u64 m = QMASK(mb, e);
 
@@ -685,7 +673,7 @@ void PPCInterpreter::PPCInterpreter_rldcrx(PPU_STATE *hCore) {
 
   u64 qwRb = GPR(rB);
   u32 n = (u32)QGET(qwRb, 58, 63);
-  u64 r = _rotl64(GPR(rS), n);
+  u64 r = std::rotl<u64>(GPR(rS), n);
   u64 m = QMASK(0, me);
 
   GPR(rA) = r & m;
@@ -699,7 +687,7 @@ void PPCInterpreter::PPCInterpreter_rldcrx(PPU_STATE *hCore) {
 void PPCInterpreter::PPCInterpreter_rldiclx(PPU_STATE *hCore) {
   MD_FORM_rS_rA_sh_mb_RC;
 
-  u64 r = _rotl64(GPR(rS), sh);
+  u64 r = std::rotl<u64>(GPR(rS), sh);
   u64 m = QMASK(mb, 63);
 
   GPR(rA) = r & m;
@@ -713,7 +701,7 @@ void PPCInterpreter::PPCInterpreter_rldiclx(PPU_STATE *hCore) {
 void PPCInterpreter::PPCInterpreter_rldicrx(PPU_STATE *hCore) {
   MD_FORM_rS_rA_sh_me_RC;
 
-  u64 r = _rotl64(GPR(rS), sh);
+  u64 r = std::rotl<u64>(GPR(rS), sh);
   u64 m = QMASK(0, me);
   GPR(rA) = r & m;
 
@@ -726,7 +714,7 @@ void PPCInterpreter::PPCInterpreter_rldicrx(PPU_STATE *hCore) {
 void PPCInterpreter::PPCInterpreter_rldimix(PPU_STATE *hCore) {
   MD_FORM_rS_rA_sh_mb_RC;
 
-  u64 r = _rotl64(GPR(rS), sh);
+  u64 r = std::rotl<u64>(GPR(rS), sh);
   u32 e = 63 - sh;
   u64 m = QMASK(mb, e);
 
@@ -741,7 +729,7 @@ void PPCInterpreter::PPCInterpreter_rldimix(PPU_STATE *hCore) {
 void PPCInterpreter::PPCInterpreter_rlwimix(PPU_STATE *hCore) {
   M_FORM_rS_rA_SH_MB_ME_RC;
 
-  u32 r = _rotl((u32)GPR(rS), SH);
+  u32 r = std::rotl<u32>((u32)GPR(rS), SH);
   u32 m = (MB <= ME) ? DMASK(MB, ME) : (DMASK(0, ME) | DMASK(MB, 31));
 
   GPR(rA) = (r & m) | ((u32)GPR(rA) & ~m);
@@ -757,7 +745,7 @@ void PPCInterpreter::PPCInterpreter_rlwnmx(PPU_STATE *hCore) {
 
   u32 m = (MB <= ME) ? DMASK(MB, ME) : (DMASK(0, ME) | DMASK(MB, 31));
 
-  GPR(rA) = _rotl((u32)GPR(rS), ((u32)GPR(rB)) & 31) & m;
+  GPR(rA) = std::rotl<u32>((u32)GPR(rS), ((u32)GPR(rB)) & 31) & m;
 
   if (RC) {
     u32 CR = CRCompS(hCore, GPR(rA), 0);
@@ -770,7 +758,7 @@ void PPCInterpreter::PPCInterpreter_rlwinmx(PPU_STATE *hCore) {
 
   u32 m = (MB <= ME) ? DMASK(MB, ME) : (DMASK(0, ME) | DMASK(MB, 31));
 
-  GPR(rA) = _rotl((u32)GPR(rS), SH) & m;
+  GPR(rA) = std::rotl<u32>((u32)GPR(rS), SH) & m;
 
   if (RC) {
     u32 CR = CRCompS(hCore, GPR(rA), 0);
@@ -783,7 +771,7 @@ void PPCInterpreter::PPCInterpreter_sldx(PPU_STATE *hCore) {
 
   u64 regB = GPR(rB);
   u32 n = (u32)QGET(regB, 58, 63);
-  u64 r = _rotl64(GPR(rS), n);
+  u64 r = std::rotl<u64>(GPR(rS), n);
   u64 m = QGET(regB, 57, 57) ? 0 : QMASK(0, 63 - n);
 
   GPR(rA) = r & m;
@@ -813,7 +801,7 @@ void PPCInterpreter::PPCInterpreter_sradx(PPU_STATE *hCore) {
 
   u64 regRS = GPR(rS);
   u32 n = (u32)GPR(rB) & 127;
-  u64 r = _rotl64(regRS, 64 - (n & 63));
+  u64 r = std::rotl<u64>(regRS, 64 - (n & 63));
   u64 m = (n & 0x40) ? 0 : QMASK(n, 63);
   u64 s = BGET(regRS, 64, 0) ? QMASK(0, 63) : 0;
 
@@ -839,7 +827,7 @@ void PPCInterpreter::PPCInterpreter_sradix(PPU_STATE *hCore) {
     GPR(rA) = GPR(rS);
     hCore->ppuThread[hCore->currentThread].SPR.XER.CA = 0;
   } else {
-    u64 r = _rotl64(GPR(rS), 64 - SH);
+    u64 r = std::rotl<u64>(GPR(rS), 64 - SH);
     u64 m = QMASK(SH, 63);
     u64 s = BGET(GPR(rS), 64, 0);
 
@@ -863,7 +851,7 @@ void PPCInterpreter::PPCInterpreter_srawx(PPU_STATE *hCore) {
 
   u64 regRs = GPR(rS);
   u64 n = (u32)GPR(rB) & 63;
-  u64 r = _rotl(static_cast<u32>(regRs), 64 - (n & 31));
+  u64 r = std::rotl<u32>(static_cast<u32>(regRs), 64 - (n & 31));
   u64 m = (n & 0x20) ? 0 : QMASK(n + 32, 63);
   u64 s = BGET(regRs, 32, 0) ? QMASK(0, 63) : 0;
   GPR(rA) = (r & m) | (s & ~m);
@@ -884,7 +872,7 @@ void PPCInterpreter::PPCInterpreter_srawix(PPU_STATE *hCore) {
   X_FORM_rS_rA_SH_RC;
 
   u64 rSReg = GPR(rS);
-  u64 r = _rotl(static_cast<u32>(rSReg), 64 - SH);
+  u64 r = std::rotl<u32>(static_cast<u32>(rSReg), 64 - SH);
   u64 m = QMASK(SH + 32, 63);
   u64 s = BGET(rSReg, 32, 0) ? QMASK(0, 63) : 0;
 
@@ -906,7 +894,7 @@ void PPCInterpreter::PPCInterpreter_srdx(PPU_STATE *hCore) {
 
   u64 regS = GPR(rS);
   u32 n = (u32)GPR(rB) & 127;
-  u64 r = _rotl64(regS, 64 - (n & 63));
+  u64 r = std::rotl<u64>(regS, 64 - (n & 63));
   u64 m = (n & 0x40) ? 0 : QMASK(n, 63);
 
   GPR(rA) = r & m;
