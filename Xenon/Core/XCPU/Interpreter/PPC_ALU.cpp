@@ -136,22 +136,6 @@ void PPCInterpreter::PPCInterpreter_cmp(PPU_STATE *hCore) {
 }
 
 void PPCInterpreter::PPCInterpreter_cmpi(PPU_STATE *hCore) {
-  if (hCore->ppuThread[hCore->currentThread].CIA == 0x800000001c000e04) {
-    D_FORM_BF_L_rA_SI;
-    SI = EXTS(SI, 16);
-
-    u32 CR;
-
-    if (L) {
-      CR = CRCompS64(hCore, GPR(rA), SI);
-    } else {
-      CR = CRCompS32(hCore, (s32)GPR(rA), (s32)SI);
-    }
-
-    ppcUpdateCR(hCore, BF, CR);
-    LOG_INFO(Xenon, "What kind of fucked shit is happening? BF{:#x} | L{:#x} | rA{:#x} | SI{:#x} | CR{:#x}", BF, L, rA, SI, CR);
-    return;
-  }
   D_FORM_BF_L_rA_SI;
   SI = EXTS(SI, 16);
 

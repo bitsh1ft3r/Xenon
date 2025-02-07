@@ -48,11 +48,11 @@ void Xenon::Start(u64 resetVector) {
   ppu0Thread = std::thread(&PPU::StartExecution, PPU(ppu0));
   ppu0Thread.detach();
 
-  //ppu1Thread = std::thread(&PPU::StartExecution, PPU(ppu1));
-  //ppu1Thread.detach();
+  ppu1Thread = std::thread(&PPU::StartExecution, PPU(ppu1));
+  ppu1Thread.detach();
 
-  //ppu2Thread = std::thread(&PPU::StartExecution, PPU(ppu2));
-  //ppu2Thread.detach();
+  ppu2Thread = std::thread(&PPU::StartExecution, PPU(ppu2));
+  ppu2Thread.detach();
 
   while (Xe_Main->isRunning()) {
     std::this_thread::sleep_for(std::chrono::milliseconds(1));
