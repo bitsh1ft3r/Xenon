@@ -245,7 +245,8 @@ void PPCInterpreter::ppcExecuteSingleInstruction(PPU_STATE* hCore) {
 /* Exception name(Reset Vector) */
 
 // System reset Exception (0x100)
-void PPCInterpreter::ppcResetException(PPU_STATE* hCore) {
+void PPCInterpreter::ppcResetException(PPU_STATE* hCore)
+{
   LOG_INFO(Xenon, "[{}](Thrd{:#d}): Reset exception.", hCore->ppuName, (s8)hCore->currentThread);
   hCore->ppuThread[hCore->currentThread].SPR.SRR0 =
     hCore->ppuThread[hCore->currentThread].NIA;
@@ -261,7 +262,7 @@ void PPCInterpreter::ppcResetException(PPU_STATE* hCore) {
   hCore->ppuThread[hCore->currentThread].NIA = hCore->SPR.HRMOR + 0x100;
   hCore->ppuThread[hCore->currentThread].SPR.MSR.DR = 0;
   hCore->ppuThread[hCore->currentThread].SPR.MSR.IR = 0;
-
+}
 // Data Storage Exception (0x300)
 void PPCInterpreter::ppcDataStorageException(PPU_STATE* hCore) {
   LOG_TRACE(Xenon, "[{}](Thrd{:#d}): Data Storage exception.", hCore->ppuName, (s8)hCore->currentThread);
@@ -279,7 +280,7 @@ void PPCInterpreter::ppcDataStorageException(PPU_STATE* hCore) {
   hCore->ppuThread[hCore->currentThread].NIA = hCore->SPR.HRMOR + 0x300;
   hCore->ppuThread[hCore->currentThread].SPR.MSR.DR = 0;
   hCore->ppuThread[hCore->currentThread].SPR.MSR.IR = 0;
-
+}
 // Data Segment Exception (0x380)
 void PPCInterpreter::ppcDataSegmentException(PPU_STATE* hCore) {
   LOG_TRACE(Xenon, "[{}](Thrd{:#d}): Data Segment exception.", hCore->ppuName, (s8)hCore->currentThread);
