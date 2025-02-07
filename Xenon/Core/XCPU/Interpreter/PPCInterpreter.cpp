@@ -231,7 +231,7 @@ void PPCInterpreter::ppcExecuteSingleInstruction(PPU_STATE* hCore) {
     it->second(hCore);
   }
   else {
-    LOG_CRITICAL(Xenon, "PPC Interpreter: Unknown or unimplemented instruction found: data: {:#x }, address: {:#x }, OpCode: {}.",
+    LOG_CRITICAL(Xenon, "PPC Interpreter: Unknown or unimplemented instruction found: data: {:#x}, address: {:#x}, OpCode: {}.",
         hCore->ppuThread[hCore->currentThread].CI,
         hCore->ppuThread[hCore->currentThread].CIA,
         getOpcodeName(hCore->ppuThread[hCore->currentThread].CI));
