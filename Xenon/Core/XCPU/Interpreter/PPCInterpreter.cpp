@@ -601,7 +601,9 @@ void PPCInterpreter::ppcExecuteSingleInstruction(PPU_STATE *hCore) {
     .text.start:800000001C000F2C # ---------------------------------------------------------------------------
   */
   PPU_THREAD_REGISTERS& thread = hCore->ppuThread[hCore->currentThread];
-  bool regionOfImportance = thread.CIA >= 0x800000001C000AC4 && thread.CIA <= 0x800000001C000F2C;
+  bool regionOfImportance = thread.CIA >= 0x800000001C000AC4 && thread.CIA <= 0x800000001C000F2C; //||
+    //thread.CIA >= 0x800000001C000F74 && thread.CIA <= 0x800000001C000F90 ||
+    //thread.CIA >= 0x800000001C000FA0 && thread.CIA <= 0x800000001C000FC0;
   u64 cachedGPRs[32];
   if (regionOfImportance)
     memcpy(cachedGPRs, thread.GPR, sizeof(cachedGPRs));
@@ -1314,14 +1316,14 @@ case PPCInstruction::td:
   if (regionOfImportance) {
     for (u32 i{}; i != 32; ++i) {
       if (thread.GPR[i] != cachedGPRs[i]) {
-        LOG_INFO(Xenon, "GPR {} was modified ({:#x} to {:#x})", i, thread.GPR[i], cachedGPRs[i]);
+        LOG_INFO(Xenon, "GPR {} was modified ({:#x} to {:#x})", i, cachedGPRs[i], thread.GPR[i]);
       }
     }
     if (thread.CR.CR_Hex != cachedCR.CR_Hex) {
-      LOG_INFO(Xenon, "CR was modified ({:#x} to {:#x})", thread.CR.CR_Hex, cachedCR.CR_Hex);
+      LOG_INFO(Xenon, "CR was modified ({:#x} to {:#x})", cachedCR.CR_Hex, thread.CR.CR_Hex);
     }
     if (thread.SPR.XER.XER_Hex != cachedXER.XER_Hex) {
-      LOG_INFO(Xenon, "XER was modified ({:#x} to {:#x})", thread.SPR.XER.XER_Hex, cachedCR.CR_Hex);
+      LOG_INFO(Xenon, "XER was modified ({:#x} to {:#x})", cachedCR.CR_Hex, thread.SPR.XER.XER_Hex);
     }
   }
 }
