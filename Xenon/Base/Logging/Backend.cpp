@@ -7,7 +7,7 @@
 #include <fmt/format.h>
 
 #ifdef _WIN32
-#include <Windows.h> // For OutputDebugStringW
+#include <windows.h> // For OutputDebugStringW
 #endif
 
 #include "Backend.h"

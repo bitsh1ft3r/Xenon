@@ -12,7 +12,7 @@
 #include <mach/mach_time.h>
 #include <pthread.h>
 #elif defined(_WIN32)
-#include <Windows.h>
+#include <windows.h>
 #include <processthreadsapi.h>
 #include "String_util.h"
 #else

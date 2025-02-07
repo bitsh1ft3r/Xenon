@@ -88,7 +88,7 @@ bool ParseFilterRule(Filter& instance, Iterator begin, Iterator end) {
     CLS(SMC)                                                                                       \
     CLS(UART)  
 
-// GetClassName is a macro defined by Windows.h, grrr...
+// GetClassName is a macro defined by windows.h, grrr...
 const char* GetLogClassName(Class log_class) {
     switch (log_class) {
 #define CLS(x)                                                                                     \
