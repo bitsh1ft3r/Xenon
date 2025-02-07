@@ -11,172 +11,219 @@ using namespace PPCInterpreter;
 XENON_CONTEXT* PPCInterpreter::intXCPUContext = nullptr;
 RootBus* PPCInterpreter::sysBus = nullptr;
 
-// Define a type alias for function pointers
-using instructionHandler = void(*)(PPU_STATE*);
-
-// Define a lookup table for instruction handlers.
-std::unordered_map<PPCInstruction, instructionHandler> instructionHandlers = {
-  { PPCInstruction::addex, PPCInterpreter_addex },
-  { PPCInstruction::addi, PPCInterpreter_addi },
-  { PPCInstruction::addic, PPCInterpreter_addic },
-  { PPCInstruction::addicx, PPCInterpreter_addic_rc },
-  { PPCInstruction::addis, PPCInterpreter_addis },
-  { PPCInstruction::addx, PPCInterpreter_addx },
-  { PPCInstruction::addzex, PPCInterpreter_addzex },
-  { PPCInstruction::andcx, PPCInterpreter_andc },
-  { PPCInstruction::andix, PPCInterpreter_andi },
-  { PPCInstruction::andisx, PPCInterpreter_andis },
-  { PPCInstruction::andx, PPCInterpreter_and },
-  { PPCInstruction::bcctrx, PPCInterpreter_bcctr },
-  { PPCInstruction::bclrx, PPCInterpreter_bclr },
-  { PPCInstruction::bcx, PPCInterpreter_bc },
-  { PPCInstruction::bx, PPCInterpreter_b },
-  { PPCInstruction::cmp, PPCInterpreter_cmp },
-  { PPCInstruction::cmpi, PPCInterpreter_cmpi },
-  { PPCInstruction::cmpl, PPCInterpreter_cmpl },
-  { PPCInstruction::cmpli, PPCInterpreter_cmpli },
-  { PPCInstruction::cntlzdx, PPCInterpreter_cntlzd },
-  { PPCInstruction::cntlzwx, PPCInterpreter_cntlzw },
-  { PPCInstruction::crand, PPCInterpreter_crand },
-  { PPCInstruction::crandc, PPCInterpreter_crandc },
-  { PPCInstruction::creqv, PPCInterpreter_creqv },
-  { PPCInstruction::crnand, PPCInterpreter_crnand },
-  { PPCInstruction::crnor, PPCInterpreter_crnor },
-  { PPCInstruction::cror, PPCInterpreter_cror },
-  { PPCInstruction::crorc, PPCInterpreter_crorc },
-  { PPCInstruction::crxor, PPCInterpreter_crxor },
-  { PPCInstruction::dcbf, PPCInterpreter_dcbf },
-  { PPCInstruction::dcbi, PPCInterpreter_dcbi },
-  { PPCInstruction::dcbst, PPCInterpreter_dcbst },
-  { PPCInstruction::dcbt, PPCInterpreter_dcbt },
-  { PPCInstruction::dcbtst, PPCInterpreter_dcbtst },
-  { PPCInstruction::dcbz, PPCInterpreter_dcbz },
-  { PPCInstruction::divdux, PPCInterpreter_divdu },
-  { PPCInstruction::divdx, PPCInterpreter_divd },
-  { PPCInstruction::divwux, PPCInterpreter_divwux },
-  { PPCInstruction::divwx, PPCInterpreter_divwx },
-  { PPCInstruction::eieio, PPCInterpreter_eieio },
-  { PPCInstruction::extsbx, PPCInterpreter_extsbx },
-  { PPCInstruction::extshx, PPCInterpreter_extshx },
-  { PPCInstruction::extswx, PPCInterpreter_extswx },
-  { PPCInstruction::icbi, PPCInterpreter_icbi },
-  { PPCInstruction::isync, PPCInterpreter_isync },
-  { PPCInstruction::lbz, PPCInterpreter_lbz },
-  { PPCInstruction::lbzu, PPCInterpreter_lbzu },
-  { PPCInstruction::lbzux, PPCInterpreter_lbzux },
-  { PPCInstruction::lbzx, PPCInterpreter_lbzx },
-  { PPCInstruction::ld, PPCInterpreter_ld },
-  { PPCInstruction::ldarx, PPCInterpreter_ldarx },
-  { PPCInstruction::ldu, PPCInterpreter_ldu },
-  { PPCInstruction::ldux, PPCInterpreter_ldux },
-  { PPCInstruction::ldx, PPCInterpreter_ldx },
-  { PPCInstruction::lfd, PPCInterpreter_lfd },
-  { PPCInstruction::lfs, PPCInterpreter_lfs },
-  { PPCInstruction::lha, PPCInterpreter_lha },
-  { PPCInstruction::lhau, PPCInterpreter_lhau },
-  { PPCInstruction::lhax, PPCInterpreter_lhax },
-  { PPCInstruction::lhbrx, PPCInterpreter_lhbrx },
-  { PPCInstruction::lhz, PPCInterpreter_lhz },
-  { PPCInstruction::lhzu, PPCInterpreter_lhzu },
-  { PPCInstruction::lhzux, PPCInterpreter_lhzux },
-  { PPCInstruction::lhzx, PPCInterpreter_lhzx },
-  { PPCInstruction::lmw, PPCInterpreter_lmw },
-  { PPCInstruction::lswi, PPCInterpreter_lswi },
-  { PPCInstruction::lwa, PPCInterpreter_lwa },
-  { PPCInstruction::lwarx, PPCInterpreter_lwarx },
-  { PPCInstruction::lwax, PPCInterpreter_lwax },
-  { PPCInstruction::lwbrx, PPCInterpreter_lwbrx },
-  { PPCInstruction::lwz, PPCInterpreter_lwz },
-  { PPCInstruction::lwzu, PPCInterpreter_lwzu },
-  { PPCInstruction::lwzux, PPCInterpreter_lwzux },
-  { PPCInstruction::lwzx, PPCInterpreter_lwzx },
-  { PPCInstruction::mcrf, PPCInterpreter_mcrf },
-  { PPCInstruction::mfcr, PPCInterpreter_mfcr },
-  { PPCInstruction::mffsx, PPCInterpreter_mffsx },
-  { PPCInstruction::mfmsr, PPCInterpreter_mfmsr },
-  { PPCInstruction::mfspr, PPCInterpreter_mfspr },
-  { PPCInstruction::mftb, PPCInterpreter_mftb },
-  { PPCInstruction::mtcrf, PPCInterpreter_mtcrf },
-  { PPCInstruction::mtfsfx, PPCInterpreter_mtfsfx },
-  { PPCInstruction::mtmsr, PPCInterpreter_mtmsr },
-  { PPCInstruction::mtmsrd, PPCInterpreter_mtmsrd },
-  { PPCInstruction::mtspr, PPCInterpreter_mtspr },
-  { PPCInstruction::mulhdux, PPCInterpreter_mulhdux },
-  { PPCInstruction::mulhwux, PPCInterpreter_mulhwux },
-  { PPCInstruction::mulldx, PPCInterpreter_mulldx },
-  { PPCInstruction::mulli, PPCInterpreter_mulli },
-  { PPCInstruction::mullwx, PPCInterpreter_mullw },
-  { PPCInstruction::nandx, PPCInterpreter_nandx },
-  { PPCInstruction::negx, PPCInterpreter_negx },
-  { PPCInstruction::norx, PPCInterpreter_norx },
-  { PPCInstruction::orcx, PPCInterpreter_orcx },
-  { PPCInstruction::ori, PPCInterpreter_ori },
-  { PPCInstruction::oris, PPCInterpreter_oris },
-  { PPCInstruction::orx, PPCInterpreter_orx },
-  { PPCInstruction::rfid, PPCInterpreter_rfid },
-  { PPCInstruction::rldcrx, PPCInterpreter_rldcrx },
-  { PPCInstruction::rldiclx, PPCInterpreter_rldiclx },
-  { PPCInstruction::rldicrx, PPCInterpreter_rldicrx },
-  { PPCInstruction::rldicx, PPCInterpreter_rldicx },
-  { PPCInstruction::rldimix, PPCInterpreter_rldimix },
-  { PPCInstruction::rlwimix, PPCInterpreter_rlwimix },
-  { PPCInstruction::rlwinmx, PPCInterpreter_rlwinmx },
-  { PPCInstruction::rlwnmx, PPCInterpreter_rlwnmx },
-  { PPCInstruction::sc, PPCInterpreter_sc },
-  { PPCInstruction::slbia, PPCInterpreter_slbia },
-  { PPCInstruction::slbie, PPCInterpreter_slbie },
-  { PPCInstruction::slbmte, PPCInterpreter_slbmte },
-  { PPCInstruction::sldx, PPCInterpreter_sldx },
-  { PPCInstruction::slwx, PPCInterpreter_slwx },
-  { PPCInstruction::sradix, PPCInterpreter_sradix },
-  { PPCInstruction::sradx, PPCInterpreter_sradx },
-  { PPCInstruction::srawix, PPCInterpreter_srawix },
-  { PPCInstruction::srawx, PPCInterpreter_srawx },
-  { PPCInstruction::srdx, PPCInterpreter_srdx },
-  { PPCInstruction::srwx, PPCInterpreter_srwx },
-  { PPCInstruction::stb, PPCInterpreter_stb },
-  { PPCInstruction::stbu, PPCInterpreter_stbu },
-  { PPCInstruction::stbux, PPCInterpreter_stbux },
-  { PPCInstruction::stbx, PPCInterpreter_stbx },
-  { PPCInstruction::std, PPCInterpreter_std },
-  { PPCInstruction::stdcx, PPCInterpreter_stdcx },
-  { PPCInstruction::stdu, PPCInterpreter_stdu },
-  { PPCInstruction::stdux, PPCInterpreter_stdux },
-  { PPCInstruction::stdx, PPCInterpreter_stdx },
-  { PPCInstruction::stfd, PPCInterpreter_stfd },
-  { PPCInstruction::sth, PPCInterpreter_sth },
-  { PPCInstruction::sthbrx, PPCInterpreter_sthbrx },
-  { PPCInstruction::sthu, PPCInterpreter_sthu },
-  { PPCInstruction::sthux, PPCInterpreter_sthux },
-  { PPCInstruction::sthx, PPCInterpreter_sthx },
-  { PPCInstruction::stmw, PPCInterpreter_stmw },
-  { PPCInstruction::stswi, PPCInterpreter_stswi },
-  { PPCInstruction::stw, PPCInterpreter_stw },
-  { PPCInstruction::stwbrx, PPCInterpreter_stwbrx },
-  { PPCInstruction::stwcx, PPCInterpreter_stwcx },
-  { PPCInstruction::stwu, PPCInterpreter_stwu },
-  { PPCInstruction::stwux, PPCInterpreter_stwux },
-  { PPCInstruction::stwx, PPCInterpreter_stwx },
-  { PPCInstruction::subfcx, PPCInterpreter_subfcx },
-  { PPCInstruction::subfex, PPCInterpreter_subfex },
-  { PPCInstruction::subfic, PPCInterpreter_subfic },
-  { PPCInstruction::subfx, PPCInterpreter_subfx },
-  { PPCInstruction::sync, PPCInterpreter_sync },
-  { PPCInstruction::tdi, PPCInterpreter_tdi },
-  { PPCInstruction::tlbie, PPCInterpreter_tlbie },
-  { PPCInstruction::tlbiel, PPCInterpreter_tlbiel },
-  { PPCInstruction::tlbsync, PPCInterpreter_tlbsync },
-  { PPCInstruction::tw, PPCInterpreter_tw },
-  { PPCInstruction::twi, PPCInterpreter_twi },
-  { PPCInstruction::xori, PPCInterpreter_xori },
-  { PPCInstruction::xoris, PPCInterpreter_xoris },
-  { PPCInstruction::xorx, PPCInterpreter_xorx}
+const std::unordered_map<u32, PPCInstruction> PPCInterpreter::opcodeMap{
+  { 2, { "tdi", PPCInterpreter_tdi } },
+  { 3, { "twi", PPCInterpreter_twi } },
+  { 7, { "mulli", PPCInterpreter_mulli } },
+  { 8, { "subfic", PPCInterpreter_subfic } },
+  { 10, { "cmpli", PPCInterpreter_cmpli } },
+  { 11, { "cmpi", PPCInterpreter_cmpi } },
+  { 12, { "addic", PPCInterpreter_addic } },
+  { 13, { "addic_rc", PPCInterpreter_addic_rc } },
+  { 14, { "addi", PPCInterpreter_addi } },
+  { 15, { "addis", PPCInterpreter_addis } },
+  { 16, { "bc", PPCInterpreter_bc } },
+  { 17, { "sc", PPCInterpreter_sc } },
+  { 18, { "b", PPCInterpreter_b } },
+  { 20, { "rlwimix", PPCInterpreter_rlwimix } },
+  { 21, { "rlwinmx", PPCInterpreter_rlwinmx } },
+  { 23, { "rlwnmx", PPCInterpreter_rlwnmx } },
+  { 24, { "ori", PPCInterpreter_ori } },
+  { 25, { "oris", PPCInterpreter_oris } },
+  { 26, { "xori", PPCInterpreter_xori } },
+  { 27, { "xoris", PPCInterpreter_xoris } },
+  { 28, { "andi", PPCInterpreter_andi } },
+  { 29, { "andis", PPCInterpreter_andis } },
+  { 32, { "lwz", PPCInterpreter_lwz } },
+  { 33, { "lwzu", PPCInterpreter_lwzu } },
+  { 34, { "lbz", PPCInterpreter_lbz } },
+  { 35, { "lbzu", PPCInterpreter_lbzu } },
+  { 36, { "stw", PPCInterpreter_stw } },
+  { 37, { "stwu", PPCInterpreter_stwu } },
+  { 38, { "stb", PPCInterpreter_stb } },
+  { 39, { "stbu", PPCInterpreter_stbu } },
+  { 40, { "lhz", PPCInterpreter_lhz } },
+  { 41, { "lhzu", PPCInterpreter_lhzu } },
+  { 42, { "lha", PPCInterpreter_lha } },
+  { 43, { "lhau", PPCInterpreter_lhau } },
+  { 44, { "sth", PPCInterpreter_sth } },
+  { 45, { "sthu", PPCInterpreter_sthu } },
+  { 46, { "lmw", PPCInterpreter_lmw } },
+  { 47, { "stmw", PPCInterpreter_stmw } },
+  { 48, { "lfs", PPCInterpreter_lfs } },
+  { 50, { "lfd", PPCInterpreter_lfd } },
+  { 52, { "stfs", PPCInterpreter_invalid } }, // stfs
+  { 53, { "stfsu", PPCInterpreter_invalid } }, // stfsu
+  { 54, { "stfd", PPCInterpreter_stfd } },
 };
+const std::unordered_map<u32, PPCInstruction> PPCInterpreter::subgroup19Map{
+  { 0, { "mcrf", PPCInterpreter_mcrf } },
+  { 16, { "bclr", PPCInterpreter_bclr } },
+  { 18, { "rfid", PPCInterpreter_rfid } },
+  { 33, { "crnor", PPCInterpreter_crnor } },
+  { 129, { "crandc", PPCInterpreter_crandc } },
+  { 150, { "isync", PPCInterpreter_isync } },
+  { 193, { "crxor", PPCInterpreter_crxor } },
+  { 225, { "crnand", PPCInterpreter_crnand } },
+  { 257, { "crand", PPCInterpreter_crand } },
+  { 289, { "creqv", PPCInterpreter_creqv } },
+  { 417, { "crorc", PPCInterpreter_crorc } },
+  { 449, { "cror", PPCInterpreter_cror } },
+  { 528, { "bcctr", PPCInterpreter_bcctr } }
+};
+const std::unordered_map<u32, PPCInstruction> PPCInterpreter::subgroup30Map{
+  { 0, { "rldiclx", PPCInterpreter_rldiclx } },
+  { 1, { "rldicrx", PPCInterpreter_rldicrx } },
+  { 2, { "rldicx", PPCInterpreter_rldicx } },
+  { 3, { "rldimix", PPCInterpreter_rldimix } },
+  { 8, { "rldclx", PPCInterpreter_invalid } }, // rldclx
+  { 9, { "rldcrx", PPCInterpreter_rldcrx } }
+};
+const std::unordered_map<u32, PPCInstruction> PPCInterpreter::subgroup31Map{
+  { 0, { "cmp", PPCInterpreter_cmp } },
+  { 4, { "tw", PPCInterpreter_tw } },
+  { 19, { "mfcr", PPCInterpreter_mfcr } },
+  { 20, { "lwarx", PPCInterpreter_lwarx } },
+  { 21, { "ldx", PPCInterpreter_ldx } },
+  { 23, { "lwzx", PPCInterpreter_lwzx } },
+  { 24, { "slwx", PPCInterpreter_slwx } },
+  { 26, { "cntlzw", PPCInterpreter_cntlzw } },
+  { 27, { "sldx", PPCInterpreter_sldx } },
+  { 28, { "and", PPCInterpreter_and } },
+  { 32, { "cmpl", PPCInterpreter_cmpl } },
+  { 53, { "ldux", PPCInterpreter_ldux } },
+  { 54, { "dcbst", PPCInterpreter_dcbst } },
+  { 55, { "lwzux", PPCInterpreter_lwzux } },
+  { 58, { "cntlzd", PPCInterpreter_cntlzd } },
+  { 60, { "andc", PPCInterpreter_andc } },
+  { 68, { "td", PPCInterpreter_invalid } }, // td
+  { 83, { "mfmsr", PPCInterpreter_mfmsr } },
+  { 84, { "ldarx", PPCInterpreter_ldarx } },
+  { 86, { "dcbf", PPCInterpreter_dcbf } },
+  { 87, { "lbzx", PPCInterpreter_lbzx } },
+  { 119, { "lbzux", PPCInterpreter_lbzux } },
+  { 124, { "norx", PPCInterpreter_norx } },
+  { 144, { "mtcrf", PPCInterpreter_mtcrf } },
+  { 146, { "mtmsr", PPCInterpreter_mtmsr } },
+  { 149, { "stdx", PPCInterpreter_stdx } },
+  { 150, { "stwcx", PPCInterpreter_stwcx } },
+  { 151, { "stwx", PPCInterpreter_stwx } },
+  { 178, { "mtmsrd", PPCInterpreter_mtmsrd } },
+  { 181, { "stdux", PPCInterpreter_stdux } },
+  { 183, { "stwux", PPCInterpreter_stwux } },
+  { 210, { "mtsr", PPCInterpreter_invalid } }, // mtsr
+  { 214, { "stdcx", PPCInterpreter_stdcx } },
+  { 215, { "stbx", PPCInterpreter_stbx } },
+  { 242, { "mtsrin", PPCInterpreter_invalid } }, // mtsrin
+  { 247, { "stbux", PPCInterpreter_stbux } },
+  { 246, { "dcbt", PPCInterpreter_dcbt } },
+  { 278, { "dcbt", PPCInterpreter_dcbt } },
+  { 279, { "lhzx", PPCInterpreter_lhzx } },
+  { 284, { "eqvx", PPCInterpreter_invalid } }, // eqvx
+  { 274, { "tlbiel", PPCInterpreter_tlbiel } },
+  { 306, { "tlbie", PPCInterpreter_tlbie } },
+  { 310, { "eciwx", PPCInterpreter_invalid } }, // eciwx
+  { 311, { "lhzux", PPCInterpreter_lhzux } },
+  { 316, { "xorx", PPCInterpreter_xorx } },
+  { 339, { "mfspr", PPCInterpreter_mfspr } },
+  { 341, { "lwax", PPCInterpreter_lwax } },
+  { 343, { "lhax", PPCInterpreter_lhax } },
+  { 370, { "tlbia", PPCInterpreter_invalid } }, // tlbia
+  { 371, { "mftb", PPCInterpreter_mftb } },
+  { 373, { "lwaux", PPCInterpreter_invalid } }, // lwaux
+  { 375, { "lhaux", PPCInterpreter_invalid } }, // lhaux
+  { 407, { "sthx", PPCInterpreter_sthx } },
+  { 412, { "orcx", PPCInterpreter_orcx } },
+  { 434, { "slbie", PPCInterpreter_slbie } },
+  { 438, { "ecowx", PPCInterpreter_invalid } }, // ecowx
+  { 439, { "sthux", PPCInterpreter_sthux } },
+  { 444, { "orx", PPCInterpreter_orx } },
+  { 467, { "mtspr", PPCInterpreter_mtspr } },
+  { 476, { "nandx", PPCInterpreter_nandx } },
+  { 498, { "slbia", PPCInterpreter_slbia } },
+  { 533, { "lswx", PPCInterpreter_invalid } }, // lswx
+  { 534, { "lwbrx", PPCInterpreter_lwbrx } },
+  { 535, { "lfsx", PPCInterpreter_invalid } }, // lfsx
+  { 536, { "srwx", PPCInterpreter_srwx } },
+  { 539, { "srdx", PPCInterpreter_srdx } },
+  { 566, { "tlbsync", PPCInterpreter_tlbsync } },
+  { 567, { "lfsux", PPCInterpreter_invalid } }, // lfsux
+  { 595, { "mfsr", PPCInterpreter_invalid } }, // mfsr
+  { 597, { "lswi", PPCInterpreter_lswi } },
+  { 598, { "sync", PPCInterpreter_sync } },
+  { 599, { "lfdx", PPCInterpreter_invalid } }, // lfdx
+  { 631, { "lfdux", PPCInterpreter_invalid } }, // lfdux
+  { 569, { "mfsrin", PPCInterpreter_invalid } }, // mfsrin
+  { 915, { "slbmfee", PPCInterpreter_invalid } }, // slbmfee
+  { 851, { "slbmfev", PPCInterpreter_invalid } }, // slbmfev
+  { 402, { "slbmte", PPCInterpreter_slbmte } },
+  { 661, { "stswx", PPCInterpreter_invalid } }, // stswx
+  { 662, { "stwbrx", PPCInterpreter_stwbrx } },
+  { 663, { "stfsx", PPCInterpreter_invalid } }, // stfsx
+  { 695, { "stfsux", PPCInterpreter_invalid } }, // stfsux
+  { 725, { "stswi", PPCInterpreter_stswi } },
+  { 727, { "stfdx", PPCInterpreter_invalid } }, // stfdx
+  { 759, { "stfdux", PPCInterpreter_invalid } }, // stfdux
+  { 790, { "lhbrx", PPCInterpreter_lhbrx } },
+  { 792, { "srawx", PPCInterpreter_srawx } },
+  { 794, { "sradx", PPCInterpreter_sradx } },
+  { 824, { "srawix", PPCInterpreter_srawix } },
+  { 854, { "eieio", PPCInterpreter_eieio } },
+  { 918, { "sthbrx", PPCInterpreter_sthbrx } },
+  { 922, { "extshx", PPCInterpreter_extshx } },
+  { 954, { "extsbx", PPCInterpreter_extsbx } },
+  { 982, { "icbi", PPCInterpreter_icbi } },
+  { 983, { "stfiwx", PPCInterpreter_invalid } }, // stfiwx
+  { 986, { "extswx", PPCInterpreter_extswx } },
+  { 1014, { "dcbz", PPCInterpreter_dcbz } },
+  { 8, { "subfcx", PPCInterpreter_subfcx } },
+  { 9, { "addcx", PPCInterpreter_mulhdux } },
+  { 10, { "addcx", PPCInterpreter_invalid } }, // addcx
+  { 11, { "mulhwux", PPCInterpreter_mulhwux } },
+  { 40, { "subfx", PPCInterpreter_subfx } },
+  { 73, { "mulhdx", PPCInterpreter_invalid } }, // mulhdx
+  { 75, { "mulhwx", PPCInterpreter_invalid } }, // mulhwx
+  { 104, { "negx", PPCInterpreter_negx } },
+  { 136, { "subfex", PPCInterpreter_subfex } },
+  { 138, { "addex", PPCInterpreter_addex } },
+  { 200, { "subfzex", PPCInterpreter_invalid } }, // subfzex
+  { 202, { "addzex", PPCInterpreter_addzex } },
+  { 232, { "subfmex", PPCInterpreter_invalid } }, // subfmex
+  { 233, { "mulldx", PPCInterpreter_mulldx } },
+  { 234, { "addmex", PPCInterpreter_invalid } }, // addmex
+  { 235, { "mullw", PPCInterpreter_mullw } },
+  { 266, { "addx", PPCInterpreter_addx } },
+  { 457, { "divdu", PPCInterpreter_divdu } },
+  { 459, { "divwux", PPCInterpreter_divwux } },
+  { 489, { "divd", PPCInterpreter_divd } },
+  { 491, { "divwx", PPCInterpreter_divwx } },
+  { 413, { "sradix", PPCInterpreter_sradix } }
+};
+const std::unordered_map<u32, PPCInstruction> PPCInterpreter::subgroup58Map{
+  { 0, { "ld", PPCInterpreter_ld } },
+  { 1, { "ldu", PPCInterpreter_ldu } },
+  { 2, { "lwa", PPCInterpreter_lwa } }
+};
+const std::unordered_map<u32, PPCInstruction> PPCInterpreter::subgroup62Map{
+  { 0, { "std", PPCInterpreter_std } },
+  { 1, { "stdu", PPCInterpreter_stdu } }
+};
+const std::unordered_map<u32, PPCInstruction> PPCInterpreter::subgroup63Map{
+  { 583, { "mffsx", PPCInterpreter_mffsx } },
+  { 711, { "mtfsfx", PPCInterpreter_mtfsfx } }
+};
+
+void PPCInterpreter_invalid(PPU_STATE* hCore) {
+  LOG_CRITICAL(Xenon, "PPC Interpreter: Unknown or unimplemented instruction found: data: {:#x}, address: {:#x}, OpCode: {}.",
+    hCore->ppuThread[hCore->currentThread].CI,
+    hCore->ppuThread[hCore->currentThread].CIA,
+    getInstruction({ hCore->ppuThread[hCore->currentThread].CI }).name);
+}
 
 // Interpreter Single Instruction Processing.
 void PPCInterpreter::ppcExecuteSingleInstruction(PPU_STATE* hCore) {
   PPCInstruction currentInstr =
-    getOpcode(hCore->ppuThread[hCore->currentThread].CI);
+    getInstruction({ hCore->ppuThread[hCore->currentThread].CI });
 
   // RGH 2 for CB_A 9188 in a JRunner XDKBuild.
   if (hCore->ppuThread[hCore->currentThread].CIA == 0x000000000200c870) {
@@ -225,16 +272,55 @@ void PPCInterpreter::ppcExecuteSingleInstruction(PPU_STATE* hCore) {
         hCore->ppuThread[hCore->currentThread].GPR[11];
   }
 
-  // Execute the instruction using the lookup table.
-  auto it = instructionHandlers.find(currentInstr);
-  if (it != instructionHandlers.end()) {
-    it->second(hCore);
+  PPU_THREAD_REGISTERS& thread = hCore->ppuThread[hCore->currentThread];
+  bool regionOfImportance = thread.CIA >= 0x800000001C000AC4 && thread.CIA <= 0x800000001C000F2C;
+  static bool hardDump = false;
+  if (thread.CIA == 0x800000001C000E00 || thread.NIA == 0x800000001C000E00)
+    hardDump = true;
+  u64 cachedGPRs[32]{};
+  if (regionOfImportance || hardDump)
+    memcpy(cachedGPRs, thread.GPR, sizeof(cachedGPRs));
+  CRegister cachedCR{};
+  if (regionOfImportance || hardDump)
+    memcpy(&cachedCR, &thread.CR, sizeof(cachedCR));
+  XERRegister cachedXER{};
+  if (regionOfImportance || hardDump)
+    memcpy(&cachedXER, &thread.SPR.XER, sizeof(cachedXER));
+  if (regionOfImportance || hardDump) {
+    LOG_INFO(Xenon, "Ins: {} | CIA: {:#x} | NIA: {:#x} | GPR: 0|{:#x} 1|{:#x} 2|{:#x} 3|{:#x} 4|{:#x} 5|{:#x} 6|{:#x} 7|{:#x} 8|{:#x} 9|{:#x} 29|{:#x} 30|{:#x} 31|{:#x}",
+      currentInstr.name,
+      thread.CIA,
+      thread.NIA,
+      thread.GPR[0],
+      thread.GPR[1],
+      thread.GPR[2],
+      thread.GPR[3],
+      thread.GPR[4],
+      thread.GPR[5],
+      thread.GPR[6],
+      thread.GPR[7],
+      thread.GPR[8],
+      thread.GPR[9],
+      thread.GPR[29],
+      thread.GPR[30],
+      thread.GPR[31]
+    );
   }
-  else {
-    LOG_CRITICAL(Xenon, "PPC Interpreter: Unknown or unimplemented instruction found: data: {:#x}, address: {:#x}, OpCode: {}.",
-        hCore->ppuThread[hCore->currentThread].CI,
-        hCore->ppuThread[hCore->currentThread].CIA,
-        getOpcodeName(hCore->ppuThread[hCore->currentThread].CI));
+
+  currentInstr.handler(hCore);
+
+  if (regionOfImportance || hardDump) {
+    for (u32 i{}; i != 32; ++i) {
+      if (thread.GPR[i] != cachedGPRs[i]) {
+        LOG_INFO(Xenon, "GPR {} was modified ({:#x} to {:#x})", i, cachedGPRs[i], thread.GPR[i]);
+      }
+    }
+    if (thread.CR.CR_Hex != cachedCR.CR_Hex) {
+      LOG_INFO(Xenon, "CR was modified ({:#x} to {:#x})", cachedCR.CR_Hex, thread.CR.CR_Hex);
+    }
+    if (thread.SPR.XER.XER_Hex != cachedXER.XER_Hex) {
+      LOG_INFO(Xenon, "XER was modified ({:#x} to {:#x})", cachedCR.CR_Hex, thread.SPR.XER.XER_Hex);
+    }
   }
 }
 

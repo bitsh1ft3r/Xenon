@@ -2,6 +2,7 @@
 
 #pragma once
 
+#include <mutex>
 #include <queue>
 #include <vector>
 
@@ -90,6 +91,7 @@ public:
 
 private:
   IIC_State iicState;
+  std::recursive_mutex mutex;
 };
 } // namespace IIC
 } // namespace XCPU
