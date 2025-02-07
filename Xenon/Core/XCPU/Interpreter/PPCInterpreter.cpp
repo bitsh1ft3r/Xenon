@@ -605,8 +605,19 @@ void PPCInterpreter::ppcExecuteSingleInstruction(PPU_STATE *hCore) {
     //thread.CIA >= 0x800000001C000F74 && thread.CIA <= 0x800000001C000F90 ||
     //thread.CIA >= 0x800000001C000FA0 && thread.CIA <= 0x800000001C000FC0;
   static bool hardDump = false;
+
+  static int hitCount = 0;
+
   if (thread.CIA == 0x800000001C000E00 || thread.NIA == 0x800000001C000E00)
     hardDump = true;
+
+  if (thread.CIA == 0x800000001c000e08)
+  {
+    hitCount++;
+    if (hitCount == 2)
+      exit(0);
+  }
+
   u64 cachedGPRs[32]{};
   if (regionOfImportance || hardDump)
     memcpy(cachedGPRs, thread.GPR, sizeof(cachedGPRs));
