@@ -32,6 +32,11 @@ void PPCInterpreter::PPCInterpreter_dcbz(PPU_STATE *hCore) {
   // and also erasing them.
 }
 
+void PPCInterpreter::PPCInterpreter_icbi(PPU_STATE* hCore)
+{
+    // Do nothing.
+}
+
 void PPCInterpreter::PPCInterpreter_stb(PPU_STATE *hCore) {
   D_FORM_rS_rA_D;
   D = EXTS(D, 16);

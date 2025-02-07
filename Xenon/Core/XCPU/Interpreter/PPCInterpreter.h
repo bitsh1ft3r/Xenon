@@ -204,6 +204,7 @@ void PPCInterpreter_bcctr(PPU_STATE *hCore);
 void PPCInterpreter_bclr(PPU_STATE *hCore);
 
 // System instructions
+void PPCInterpreter_eieio(PPU_STATE *hCore);
 void PPCInterpreter_sc(PPU_STATE *hCore);
 void PPCInterpreter_slbia(PPU_STATE *hCore);
 void PPCInterpreter_slbie(PPU_STATE *hCore);
@@ -212,16 +213,24 @@ void PPCInterpreter_rfid(PPU_STATE *hCore);
 void PPCInterpreter_tw(PPU_STATE *hCore);
 void PPCInterpreter_twi(PPU_STATE *hCore);
 void PPCInterpreter_tdi(PPU_STATE *hCore);
+void PPCInterpreter_tlbie(PPU_STATE *hCore);
 void PPCInterpreter_tlbiel(PPU_STATE *hCore);
+void PPCInterpreter_tlbsync(PPU_STATE *hCore);
 void PPCInterpreter_mfspr(PPU_STATE *hCore);
 void PPCInterpreter_mtspr(PPU_STATE *hCore);
 void PPCInterpreter_mfmsr(PPU_STATE *hCore);
 void PPCInterpreter_mtmsr(PPU_STATE *hCore);
 void PPCInterpreter_mtmsrd(PPU_STATE *hCore);
+void PPCInterpreter_sync(PPU_STATE *hCore);
 
 // Cache Management
+void PPCInterpreter_dcbf(PPU_STATE *hCore);
+void PPCInterpreter_dcbi(PPU_STATE* hCore);
+void PPCInterpreter_dcbt(PPU_STATE* hCore);
+void PPCInterpreter_dcbtst(PPU_STATE* hCore);
 void PPCInterpreter_dcbst(PPU_STATE *hCore);
 void PPCInterpreter_dcbz(PPU_STATE *hCore);
+void PPCInterpreter_icbi(PPU_STATE *hCore);
 
 //
 // FPU

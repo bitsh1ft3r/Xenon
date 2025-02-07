@@ -178,6 +178,18 @@ void PPCInterpreter::PPCInterpreter_tlbiel(PPU_STATE *hCore) {
   }
 }
 
+void PPCInterpreter::PPCInterpreter_tlbie(PPU_STATE* hCore)
+{
+    // Do nothing.
+    LOG_INFO(Xenon, "tlbie");
+}
+
+void PPCInterpreter::PPCInterpreter_tlbsync(PPU_STATE* hCore)
+{
+    // Do nothing.
+    LOG_INFO(Xenon, "tlbsync");
+}
+
 // Helper function for getting Page Size (p bit).
 u8 PPCInterpreter::mmuGetPageSize(PPU_STATE *hCore, bool L, u8 LP) {
 
