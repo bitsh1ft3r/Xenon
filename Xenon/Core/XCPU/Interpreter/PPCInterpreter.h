@@ -208,6 +208,12 @@ void PPCInterpreter_dcbst(PPU_STATE *hCore);
 void PPCInterpreter_dcbz(PPU_STATE *hCore);
 
 //
+// FPU
+//
+void PPCInterpreter_mffsx(PPU_STATE* hCore);
+void PPCInterpreter_mtfsfx(PPU_STATE* hCore);
+
+//
 // Load/Store
 //
 
@@ -226,6 +232,9 @@ void PPCInterpreter_sthx(PPU_STATE *hCore);
 
 // Store String Word
 void PPCInterpreter_stswi(PPU_STATE *hCore);
+
+// Store Multiple Word
+void PPCInterpreter_stmw(PPU_STATE* hCore);
 
 // Store Word
 void PPCInterpreter_stw(PPU_STATE *hCore);
@@ -263,6 +272,9 @@ void PPCInterpreter_lhzx(PPU_STATE *hCore);
 
 // Load String Word
 void PPCInterpreter_lswi(PPU_STATE *hCore);
+
+// Load Multiple Word
+void PPCInterpreter_lmw(PPU_STATE* hCore);
 
 // Load Word
 void PPCInterpreter_lwa(PPU_STATE *hCore);

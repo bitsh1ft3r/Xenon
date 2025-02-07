@@ -358,10 +358,9 @@ case PPCInstruction::lhaux:
   case PPCInstruction::lhzx:
     PPCInterpreter_lhzx(hCore);
     break;
-    /*
 case PPCInstruction::lmw:
+    PPCInterpreter_lmw(hCore);
     break;
-    */
   case PPCInstruction::lswi:
     PPCInterpreter_lswi(hCore);
     break;
@@ -409,10 +408,9 @@ case PPCInstruction::mcrxr:
   case PPCInstruction::mfcr:
     PPCInterpreter_mfcr(hCore);
     break;
-    /*
 case PPCInstruction::mffsx:
+    PPCInterpreter_mffsx(hCore);
     break;
-    */
   case PPCInstruction::mfmsr:
     PPCInterpreter_mfmsr(hCore);
     break;
@@ -442,9 +440,10 @@ case PPCInstruction::mtfsb1x:
     break;
 case PPCInstruction::mtfsfix:
     break;
+        */
 case PPCInstruction::mtfsfx:
+    PPCInterpreter_mtfsfx(hCore);
     break;
-    */
   case PPCInstruction::mtmsr:
     PPCInterpreter_mtmsr(hCore);
     break;
@@ -646,10 +645,9 @@ case PPCInstruction::stfsx:
   case PPCInstruction::sthx:
     PPCInterpreter_sthx(hCore);
     break;
-    /*
 case PPCInstruction::stmw:
+    PPCInterpreter_stmw(hCore);
     break;
-    */
   case PPCInstruction::stswi:
     PPCInterpreter_stswi(hCore);
     break;

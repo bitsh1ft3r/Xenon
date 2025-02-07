@@ -132,6 +132,7 @@ set(XCPU
     Xenon/Core/XCPU/IIC/IIC.cpp
     Xenon/Core/XCPU/IIC/IIC.h
     Xenon/Core/XCPU/Interpreter/PPC_ALU.cpp
+    Xenon/Core/XCPU/Interpreter/PPC_FPU.cpp
     Xenon/Core/XCPU/Interpreter/Interpreter_Helpers.cpp
     Xenon/Core/XCPU/Interpreter/PPC_MMU.cpp
     Xenon/Core/XCPU/Interpreter/PPC_Instruction.cpp
