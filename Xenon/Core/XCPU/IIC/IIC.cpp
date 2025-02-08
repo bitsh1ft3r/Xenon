@@ -14,6 +14,8 @@ Xe::XCPU::IIC::XenonIIC::XenonIIC() {
 }
 
 void Xe::XCPU::IIC::XenonIIC::writeInterrupt(u64 intAddress, u64 intData) {
+  std::lock_guard lck(mutex);
+
   u32 mask = 0xF000;
   u8 ppeIntCtrlBlckID = static_cast<u8>((intAddress & mask) >> 12);
   u8 ppeIntCtrlBlckReg = intAddress & 0xFF;
@@ -71,6 +73,8 @@ void Xe::XCPU::IIC::XenonIIC::writeInterrupt(u64 intAddress, u64 intData) {
 }
 
 void Xe::XCPU::IIC::XenonIIC::readInterrupt(u64 intAddress, u64 *intData) {
+  std::lock_guard lck(mutex);
+
   u32 mask = 0xF000;
   u8 ppeIntCtrlBlckID = static_cast<u8>((intAddress & mask) >> 12);
   u8 ppeIntCtrlBlckReg = intAddress & 0xFF;
@@ -103,6 +107,7 @@ void Xe::XCPU::IIC::XenonIIC::readInterrupt(u64 intAddress, u64 *intData) {
 }
 
 bool Xe::XCPU::IIC::XenonIIC::checkExtInterrupt(u8 ppuID) {
+  std::lock_guard lck(mutex);
   // 1. Check if there's any interrupt already taken.
   if (iicState.ppeIntCtrlBlck[ppuID].intAck) {
     return false;
@@ -123,6 +128,7 @@ bool Xe::XCPU::IIC::XenonIIC::checkExtInterrupt(u8 ppuID) {
 
 void Xe::XCPU::IIC::XenonIIC::genInterrupt(u8 interruptType,
                                            u8 cpusToInterrupt) {
+  std::lock_guard lck(mutex);
   XE_INT newInt;
   newInt.ack = false;
   newInt.pendingInt = interruptType;
