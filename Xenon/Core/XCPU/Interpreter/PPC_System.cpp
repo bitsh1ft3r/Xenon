@@ -301,7 +301,7 @@ void PPCInterpreter::PPCInterpreter_mfspr(PPU_STATE *hCore) {
     value = hCore->SPR.CTRL;
     break;
   default:
-    LOG_ERROR(Xenon, "{}(Thrd{:#d}) mfspr: Unknown SPR: 0x{:#x}",hCore->ppuName, (u8)hCore->currentThread, sprNum);
+    LOG_ERROR(Xenon, "{}(Thrd{:#d}) mfspr: Unknown SPR: 0x{:#x}", hCore->ppuName, (u8)hCore->currentThread, sprNum);
     break;
   }
 

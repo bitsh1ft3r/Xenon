@@ -44,6 +44,6 @@ void Xe::PCIDev::AUDIOCTRLR::AUDIOCTRLR::ConfigWrite(u64 writeAddress, u64 data,
       data = 0; // Register not implemented.
     }
   }
-  
+
   memcpy(&pciConfigSpace.data[static_cast<u8>(writeAddress)], &data, byteCount);
 }

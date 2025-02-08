@@ -10,9 +10,12 @@
 #include <functional>
 
 #include <SDL3/SDL.h>
+
 #define GL_GLEXT_PROTOTYPES
+extern "C" {
 #include <KHR/khrplatform.h>
 #include <glad/glad.h>
+}
 
 #include "Base/Types.h"
 #include "Core/RAM/RAM.h"
@@ -146,7 +149,7 @@ private:
   bool isFullscreen;
   // Pixel buffer
   int pitch = 0;
-  std::vector<uint32_t> pixels{};
+  std::vector<u32> pixels{};
   // SDL Window data
   SDL_Window *mainWindow{};
   SDL_GLContext context;

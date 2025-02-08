@@ -4,6 +4,7 @@
 
 #include <mutex>
 #include <queue>
+#include <mutex>
 #include <vector>
 
 #include "Base/Types.h"

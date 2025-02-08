@@ -78,7 +78,7 @@ bool Xe::Xenos::XGPU::Read(u64 readAddress, u64 *data, u8 byteCount) {
     }
 
     *data = regData;
-    
+
     if (regIndex == 0x00000a07) { 
       *data = 0x2000000;
     }
@@ -106,6 +106,17 @@ bool Xe::Xenos::XGPU::Write(u64 writeAddress, u64 data, u8 byteCount) {
         std::byteswap(static_cast<u32>(data)));
 
     XeRegister reg = static_cast<XeRegister>(regIndex);
+
+    // Set our internal width.
+    if (reg == XeRegister::D1GRPH_X_END) {
+      xenosWidth = std::byteswap(static_cast<u32>(data));
+      LOG_INFO(Xenos, "Setting new Internal Width: {:#x}", xenosWidth);
+    }
+    // Set our internal height.
+    if (reg == XeRegister::D1GRPH_Y_END) {
+      xenosHeight = std::byteswap(static_cast<u32>(data));
+      LOG_INFO(Xenos, "Setting new Internal Height: {:#x}", xenosHeight);
+    }
 
     memcpy(&xenosState.Regs[regIndex * 4], &data, byteCount);
     return true;
@@ -140,7 +151,7 @@ void Xe::Xenos::XGPU::ConfigWrite(u64 writeAddress, u64 data, u8 byteCount) {
       data = 0; // Register not implemented.
     }
   }
-  
+
   memcpy(&xgpuConfigSpace.data[writeAddress & 0xFF], &data, byteCount);
   return;
 }
@@ -176,6 +187,7 @@ void main() {
   gl_Position = vec4(o_texture_coord * vec2(2.0f, -2.0f) + vec2(-1.0f, 1.0f), 0.0f, 1.0f);
 }
 )";
+
 constexpr const char* fragmentShaderSource = R"(
 #version 430 core
 
@@ -194,6 +206,7 @@ void main() {
   o_color = vec4(r, g, b, a);
 }
 )";
+
 constexpr const char* computeShaderSource = R"(
 #version 430 core
 
@@ -286,7 +299,7 @@ void Xe::Xenos::XGPU::XenosResize(int x, int y) {
   glTexStorage2D(GL_TEXTURE_2D, 1, GL_R32UI, resWidth, resHeight);
   glBindImageTexture(0, texture, 0, GL_FALSE, 0, GL_READ_WRITE, GL_R32UI);
   // Set our new pitch
-  pitch = resWidth * resHeight * sizeof(uint32_t);
+  pitch = resWidth * resHeight * sizeof(u32);
   // Resize our pixel buffer
   pixels.resize(pitch);
   // Recreate the buffer
@@ -649,18 +662,13 @@ void Xe::Xenos::XGPU::XenosThread() {
 
   // SDL3 window properties.
   SDL_PropertiesID props = SDL_CreateProperties();
-  SDL_SetStringProperty(props, SDL_PROP_WINDOW_CREATE_TITLE_STRING,
-                        std::string(TITLE).c_str());
-  SDL_SetNumberProperty(props, SDL_PROP_WINDOW_CREATE_X_NUMBER,
-                        SDL_WINDOWPOS_CENTERED);
-  SDL_SetNumberProperty(props, SDL_PROP_WINDOW_CREATE_Y_NUMBER,
-                        SDL_WINDOWPOS_CENTERED);
-  SDL_SetNumberProperty(props, SDL_PROP_WINDOW_CREATE_WIDTH_NUMBER,
-                        Config::windowWidth());
-  SDL_SetNumberProperty(props, SDL_PROP_WINDOW_CREATE_HEIGHT_NUMBER,
-                        Config::windowHeight());
-  // Only putting this back when a Vulkan implementation is done.
-  //SDL_SetNumberProperty(props, "flags", SDL_WINDOW_VULKAN);
+  SDL_SetStringProperty(props, SDL_PROP_WINDOW_CREATE_TITLE_STRING, std::string(TITLE).c_str());
+  SDL_SetNumberProperty(props, SDL_PROP_WINDOW_CREATE_X_NUMBER, SDL_WINDOWPOS_CENTERED);
+  SDL_SetNumberProperty(props, SDL_PROP_WINDOW_CREATE_Y_NUMBER, SDL_WINDOWPOS_CENTERED);
+  SDL_SetNumberProperty(props, SDL_PROP_WINDOW_CREATE_WIDTH_NUMBER, Config::windowWidth());
+  SDL_SetNumberProperty(props, SDL_PROP_WINDOW_CREATE_HEIGHT_NUMBER, Config::windowHeight());
+  // For a new Vulkan support, don't forget to change 'SDL_WINDOW_OPENGL' by 'SDL_WINDOW_VULKAN'.
+  SDL_SetNumberProperty(props, "flags", SDL_WINDOW_OPENGL);
   SDL_SetBooleanProperty(props, SDL_PROP_WINDOW_CREATE_RESIZABLE_BOOLEAN, true);
   SDL_SetBooleanProperty(props, SDL_PROP_WINDOW_CREATE_HIGH_PIXEL_DENSITY_BOOLEAN, true);
   SDL_SetBooleanProperty(props, SDL_PROP_WINDOW_CREATE_OPENGL_BOOLEAN, true);
@@ -717,7 +725,7 @@ void Xe::Xenos::XGPU::XenosThread() {
   glBindImageTexture(0, texture, 0, GL_FALSE, 0, GL_READ_WRITE, GL_R32UI);
 
   // Init pixel buffer
-  pitch = resWidth * resHeight * sizeof(uint32_t);
+  pitch = resWidth * resHeight * sizeof(u32);
   pixels.resize(pitch, COLOR(30, 30, 30, 255)); // Init with dark grey
   glGenBuffers(1, &pixelBuffer);
   glBindBufferBase(GL_SHADER_STORAGE_BUFFER, 1, pixelBuffer);
@@ -784,7 +792,7 @@ void Xe::Xenos::XGPU::XenosThread() {
     }
 
     // Upload buffer
-    u32* ui_fbPointer = reinterpret_cast<uint32_t*>(fbPointer);
+    const u32* ui_fbPointer = reinterpret_cast<u32*>(fbPointer);
     glBindBuffer(GL_SHADER_STORAGE_BUFFER, pixelBuffer);
     glBufferSubData(GL_SHADER_STORAGE_BUFFER, 0, pitch, ui_fbPointer);
 

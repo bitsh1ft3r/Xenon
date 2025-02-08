@@ -136,7 +136,7 @@ void Filter::ResetAll(Level level) {
 }
 
 void Filter::SetClassLevel(Class log_class, Level level) {
-    class_levels[static_cast<std::size_t>(log_class)] = level;
+    class_levels[static_cast<size_t>(log_class)] = level;
 }
 
 void Filter::ParseFilterString(std::string_view filter_view) {
@@ -159,7 +159,7 @@ void Filter::ParseFilterString(std::string_view filter_view) {
 
 bool Filter::CheckMessage(Class log_class, Level level) const {
     return static_cast<u8>(level) >=
-           static_cast<u8>(class_levels[static_cast<std::size_t>(log_class)]);
+           static_cast<u8>(class_levels[static_cast<size_t>(log_class)]);
 }
 
 bool Filter::IsDebug() const {

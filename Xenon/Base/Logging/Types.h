@@ -18,10 +18,10 @@ enum class Level : u8 {
     Critical,   ///< Major problems during execution that threaten the stability of the entire
                 ///< application.
     Guest,      ///< Output from the guest system.
-    Count,      ///< Total number of logging levels
+    Count       ///< Total number of logging levels
 };
 
-/**
+/*
  * Specifies the sub-system that generated the log message.
  *
  * @note If you add a new entry here, also add a corresponding one to `ALL_LOG_CLASSES` in

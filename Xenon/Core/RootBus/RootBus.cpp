@@ -20,7 +20,7 @@ void RootBus::AddHostBridge(HostBridge *newHostBridge) {
 
 void RootBus::AddDevice(SystemDevice *device) {
   deviceCount++;
-  LOG_INFO(RootBus, "Device attatched: {}", device->GetDeviceName());
+  LOG_INFO(RootBus, "Device attached: {}", device->GetDeviceName());
   conectedDevices.push_back(device);
 }
 
