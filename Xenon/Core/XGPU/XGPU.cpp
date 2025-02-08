@@ -95,6 +95,17 @@ bool Xe::Xenos::XGPU::Write(u64 writeAddress, u64 data, u8 byteCount) {
 
     XeRegister reg = static_cast<XeRegister>(regIndex);
 
+    // Set our internal width.
+    if (reg == XeRegister::D1GRPH_X_END) {
+        internalWidth = _byteswap_ulong(static_cast<u32>(data));
+        LOG_INFO(Xenos, "Setting new Internal Width: {:#x}", internalWidth);
+    }
+    // Set our internal height.
+    if (reg == XeRegister::D1GRPH_Y_END) {
+        internalHeight = _byteswap_ulong(static_cast<u32>(data));
+        LOG_INFO(Xenos, "Setting new Internal Height: {:#x}", internalHeight);
+    }
+
     memcpy(&xenosState.Regs[regIndex * 4], &data, byteCount);
     return true;
   }
@@ -297,9 +308,6 @@ void Xe::Xenos::XGPU::XenosThreadShutdown() {
 }
 
 void Xe::Xenos::XGPU::XenosThread() {
-  // TODO(Vali0004): Pull internal width/height from ANA init
-  const u32 internalWidth = 640;
-  const u32 internalHeight = 480;
   const u32 resWidth = TILE(Config::windowWidth());
   const u32 resHeight = TILE(Config::windowHeight());
 

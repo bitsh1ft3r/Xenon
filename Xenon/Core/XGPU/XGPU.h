@@ -120,6 +120,10 @@ private:
 
   std::thread renderThread;
 
+  // Initial Internal rendering width/height.
+  u32 internalWidth = 640;
+  u32 internalHeight = 480;
+
   void XenosResize(int x, int y);
   void XenosThreadShutdown();
   void XenosThread();
