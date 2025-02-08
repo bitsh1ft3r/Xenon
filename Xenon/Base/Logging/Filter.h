@@ -9,18 +9,18 @@
 
 namespace Base::Log {
 
-/**
+/*
  * Returns the name of the passed log class as a C-string. Subclasses are separated by periods
  * instead of underscores as in the enumeration.
  */
 const char* GetLogClassName(Class log_class);
 
-/**
+/*
  * Returns the name of the passed log level as a C-string.
  */
 const char* GetLevelName(Level log_level);
 
-/**
+/*
  * Implements a log message filter which allows different log classes to have different minimum
  * severity levels. The filter can be changed at runtime and can be parsed from a string to allow
  * editing via the interface or loading from a configuration file.
@@ -36,7 +36,7 @@ public:
     /// Sets the minimum level of `log_class` (and not of its subclasses) to `level`.
     void SetClassLevel(Class log_class, Level level);
 
-    /**
+    /*
      * Parses a filter string and applies it to this filter.
      *
      * A filter string consists of a space-separated list of filter rules, each of the format
@@ -59,7 +59,7 @@ public:
     bool IsDebug() const;
 
 private:
-    std::array<Level, static_cast<std::size_t>(Class::Count)> class_levels;
+    std::array<Level, static_cast<size_t>(Class::Count)> class_levels;
 };
 
 } // namespace Base::Log

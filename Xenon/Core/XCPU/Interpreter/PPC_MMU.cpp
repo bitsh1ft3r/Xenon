@@ -94,7 +94,7 @@ void PPCInterpreter::PPCInterpreter_slbia(PPU_STATE *hCore) {
 }
 
 void PPCInterpreter::PPCInterpreter_tlbiel(PPU_STATE *hCore) {
-  X_FORM_L_rB;
+  X_FORM_L_rB
 
   // The PPU adds two new fields to this instruction, them being LP abd IS.
 
@@ -887,7 +887,7 @@ bool PPCInterpreter::MMUTranslateAddress(u64 *EA, PPU_STATE *hCoreState,
 
             /*
                 The PPE also requires that PTE[LP] = SLBE[LP] whenever PTE[L] =
-               ‘1’. In other words, the PTE page size must match the SLBE page
+               '1'. In other words, the PTE page size must match the SLBE page
                size exactly for a page-table match to occur.
             */
 
@@ -973,7 +973,7 @@ bool PPCInterpreter::MMUTranslateAddress(u64 *EA, PPU_STATE *hCoreState,
 
             /*
                 The PPE also requires that PTE[LP] = SLBE[LP] whenever PTE[L] =
-               ‘1’. In other words, the PTE page size must match the SLBE page
+               '1'. In other words, the PTE page size must match the SLBE page
                size exactly for a page-table match to occur.
             */
 
@@ -1067,7 +1067,7 @@ bool PPCInterpreter::MMUTranslateAddress(u64 *EA, PPU_STATE *hCoreState,
   end:
     RA = (RPN | QGET(*EA, 64 - p, 63));
     // Real Address 0 - 21 bits are not implemented;
-    QSET(RA, 0, 21, 0);
+    QSET(RA, 0, 21, 0)
   }
 
   *EA = RA;

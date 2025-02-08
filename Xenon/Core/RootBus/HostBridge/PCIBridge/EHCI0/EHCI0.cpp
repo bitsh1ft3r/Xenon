@@ -25,7 +25,7 @@ void Xe::PCIDev::EHCI0::EHCI0::ConfigWrite(u64 writeAddress, u64 data,
                                            u8 byteCount) {
     // Check if we're being scanned.
     if (static_cast<u8>(writeAddress) >= 0x10 && static_cast<u8>(writeAddress) < 0x34) {
-        u32 regOffset = (static_cast<u8>(writeAddress) - 0x10) >> 2;
+        const u32 regOffset = (static_cast<u8>(writeAddress) - 0x10) >> 2;
         if (pciDevSizes[regOffset] != 0) {
             if (data == 0xFFFFFFFF) { // PCI BAR Size discovery.
                 u32 x = 2;

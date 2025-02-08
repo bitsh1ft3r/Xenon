@@ -8,7 +8,7 @@
 namespace Base {
 
 template <typename T>
-[[nodiscard]] constexpr T AlignUp(T value, std::size_t size) {
+[[nodiscard]] constexpr T AlignUp(T value, size_t size) {
     static_assert(std::is_unsigned_v<T>, "T must be an unsigned value.");
     auto mod{static_cast<T>(value % size)};
     value -= mod;
@@ -16,14 +16,14 @@ template <typename T>
 }
 
 template <typename T>
-[[nodiscard]] constexpr T AlignDown(T value, std::size_t size) {
+[[nodiscard]] constexpr T AlignDown(T value, size_t size) {
     static_assert(std::is_unsigned_v<T>, "T must be an unsigned value.");
     return static_cast<T>(value - value % size);
 }
 
 template <typename T>
     requires std::is_integral_v<T>
-[[nodiscard]] constexpr bool IsAligned(T value, std::size_t alignment) {
+[[nodiscard]] constexpr bool IsAligned(T value, size_t alignment) {
     return (value & (alignment - 1)) == 0;
 }
 

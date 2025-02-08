@@ -22,7 +22,7 @@ HDD::HDD(PCIBridge *parentPCIBridge) {
 }
 
 void HDD::Read(u64 readAddress, u64 *data, u8 byteCount) {
-  u32 regOffset = (readAddress & 0xFF) * 4;
+  const u32 regOffset = (readAddress & 0xFF) * 4;
 
   if (regOffset < sizeof(ATA_REG_STATE)) {
     switch (regOffset) {
@@ -52,14 +52,14 @@ void HDD::Read(u64 readAddress, u64 *data, u8 byteCount) {
 
     memcpy(data, (u8 *)&ataDeviceState.ataReadState + regOffset, byteCount);
   } else {
-    LOG_ERROR(HDD, "Unknown register being accesed: (Read) {:#x}", regOffset);
+    LOG_ERROR(HDD, "Unknown register being accessed: (Read) {:#x}", regOffset);
     memset(data, 0, byteCount);
   }
 }
 
 void HDD::Write(u64 writeAddress, u64 data, u8 byteCount) {
-  u32 regOffset = (writeAddress & 0xFF) * 4;
 
+  const u32 regOffset = (writeAddress & 0xFF) * 4;
   u32 value = 0;
 
   if (regOffset < sizeof(ATA_REG_STATE)) {
@@ -127,7 +127,7 @@ void HDD::Write(u64 writeAddress, u64 data, u8 byteCount) {
 
     memcpy((u8 *)&ataDeviceState.ataWriteState + regOffset, &data, byteCount);
   } else {
-    LOG_ERROR(HDD, "Unknown register being accesed: (Write) {:#x}", regOffset);
+    LOG_ERROR(HDD, "Unknown register being accessed: (Write) {:#x}", regOffset);
   }
 }
 
@@ -138,7 +138,7 @@ void HDD::ConfigRead(u64 readAddress, u64 *data, u8 byteCount) {
 void HDD::ConfigWrite(u64 writeAddress, u64 data, u8 byteCount) {
     // Check if we're being scanned.
     if (static_cast<u8>(writeAddress) >= 0x10 && static_cast<u8>(writeAddress) < 0x34) {
-        u32 regOffset = (static_cast<u8>(writeAddress) - 0x10) >> 2;
+        const u32 regOffset = (static_cast<u8>(writeAddress) - 0x10) >> 2;
         if (pciDevSizes[regOffset] != 0) {
             if (data == 0xFFFFFFFF) { // PCI BAR Size discovery.
                 u32 x = 2;

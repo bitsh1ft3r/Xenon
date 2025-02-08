@@ -6,10 +6,11 @@
 
 #include "Core/RootBus/HostBridge/PCIBridge/PCIDevice.h"
 
+#define AUDIO_CTRLR_DEV_SIZE 0x40
+
 namespace Xe {
 namespace PCIDev {
 namespace AUDIOCTRLR {
-#define AUDIO_CTRLR_DEV_SIZE 0x40
 
 class AUDIOCTRLR : public PCIDevice {
 public:

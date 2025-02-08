@@ -37,7 +37,7 @@ private:
   void CalculateECD(u8 *data, int offset, u8 ret[]);
   MetaType DetectSpareType(bool firstTry = true);
 
-  // void SeekPos(s32 addres);
+  // void SeekPos(s32 address);
 
   size_t rawFileSize = 0;
   bool hasSpare = false;

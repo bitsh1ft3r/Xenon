@@ -41,15 +41,13 @@ void Xe::XCPU::POSTBUS::POST(u64 postCode) {
        LOG_XBOX(Xenon_PostBus, "HMACSHA_COMPUTE - Generate CB HMAC key");
       break;
     case 0x1a:
-       LOG_XBOX(Xenon_PostBus, "RC4_INITIALIZE - Initialize CB RC4 decryption key"
-               );
+       LOG_XBOX(Xenon_PostBus, "RC4_INITIALIZE - Initialize CB RC4 decryption key");
       break;
     case 0x1b:
        LOG_XBOX(Xenon_PostBus, "RC4_DECRYPT - RC4 decrypt CB");
       break;
     case 0x1c:
-       LOG_XBOX(Xenon_PostBus, "SHA_COMPUTE - Generate hash of CB for verification"
-               );
+       LOG_XBOX(Xenon_PostBus, "SHA_COMPUTE - Generate hash of CB for verification");
       break;
     case 0x1d:
        LOG_XBOX(Xenon_PostBus, "SIG_VERIFY - RSA signature check of CB hash");
@@ -616,6 +614,6 @@ void Xe::XCPU::POSTBUS::POST(u64 postCode) {
     */
   } 
   else {
-      LOG_ERROR(Xenon_PostBus, "POST: Unrecognized post code: {:#x}", postCode );
+      LOG_ERROR(Xenon_PostBus, "POST: Unrecognized post code: {:#x}", postCode);
   }
 }

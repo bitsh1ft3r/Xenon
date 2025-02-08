@@ -3,7 +3,9 @@
 #include "Base/Config.h"
 #include "Base/Logging/Backend.h"
 #include "Base/Logging/Log.h"
+#include "Base/ntapi.h"
 #include "Base/Path_util.h"
+#include "Base/Version.h"
 
 #include "Core/NAND/NAND.h"
 #include "Core/RAM/RAM.h"
@@ -62,6 +64,15 @@ int main(int argc, char *argv[]) {
   // First initialize the logging backend.
   Base::Log::Initialize();
   Base::Log::Start();
+
+  // Initialize NT API functions and set above normal priority.
+  #ifdef _WIN32
+    Base::NtApi::Initialize();
+    SetPriorityClass(GetCurrentProcess(), ABOVE_NORMAL_PRIORITY_CLASS);
+  #endif
+
+  // Display Version on Boot.
+  LOG_INFO(System, "Starting Xenon emulator {}", std::string(Base::VERSION));
 
   // Load configuration.
   const auto user_dir = Base::FS::GetUserPath(Base::FS::PathType::UserDir);
@@ -167,7 +178,6 @@ int main(int argc, char *argv[]) {
   /**************Registers the IIC**************/
   pciBridge.RegisterIIC(xenonCPU.GetIICPointer());
 
-  LOG_INFO(System, "Starting Xenon.");
   // CPU Start routine and entry point.
   xenonCPU.Start(0x20000000100);
 

@@ -47,7 +47,7 @@ u32 PPCInterpreter::CRCompU(PPU_STATE *hCore, u64 num1, u64 num2) {
   if (hCore->ppuThread[hCore->currentThread].SPR.XER.SO)
     BSET(CR, 4, CR_BIT_SO);
 
-  return (CR);
+  return CR;
 }
 
 u32 PPCInterpreter::CRCompS32(PPU_STATE *hCore, u32 num1, u32 num2) {
@@ -63,7 +63,7 @@ u32 PPCInterpreter::CRCompS32(PPU_STATE *hCore, u32 num1, u32 num2) {
   if (hCore->ppuThread[hCore->currentThread].SPR.XER.SO)
     BSET(CR, 4, CR_BIT_SO);
 
-  return (CR);
+  return CR;
 }
 
 u32 PPCInterpreter::CRCompS64(PPU_STATE *hCore, u64 num1, u64 num2) {
@@ -79,7 +79,7 @@ u32 PPCInterpreter::CRCompS64(PPU_STATE *hCore, u64 num1, u64 num2) {
   if (hCore->ppuThread[hCore->currentThread].SPR.XER.SO)
     BSET(CR, 4, CR_BIT_SO);
 
-  return (CR);
+  return CR;
 }
 
 u32 PPCInterpreter::CRCompS(PPU_STATE *hCore, u64 num1, u64 num2) {

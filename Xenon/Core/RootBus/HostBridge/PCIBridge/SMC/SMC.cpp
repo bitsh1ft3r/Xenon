@@ -60,7 +60,7 @@
 // Class Constructor.
 Xe::PCIDev::SMC::SMCCore::SMCCore(PCIBridge *parentPCIBridge,
                                   SMC_CORE_STATE *newSMCCoreState) {
-  LOG_INFO(SMC, "Core: Initializing.");
+  LOG_INFO(SMC, "Core: Initializing...");
 
   // Assign our parent PCI Bus Ptr.
   pciBridge = parentPCIBridge;
@@ -100,7 +100,7 @@ Xe::PCIDev::SMC::SMCCore::~SMCCore() {
 
 // PCI Read
 void Xe::PCIDev::SMC::SMCCore::Read(u64 readAddress, u64 *data, u8 byteCount) {
-  u8 regOffset = static_cast<u8>(readAddress);
+  const u8 regOffset = static_cast<u8>(readAddress);
 
   switch (regOffset) {
   case UART_CONFIG_REG: // UART Config Register
@@ -166,13 +166,13 @@ void Xe::PCIDev::SMC::SMCCore::Read(u64 readAddress, u64 *data, u8 byteCount) {
 // PCI Config Read
 void Xe::PCIDev::SMC::SMCCore::ConfigRead(u64 readAddress, u64 *data,
                                           u8 byteCount) {
-  LOG_INFO(SMC, "ConfigRead: Address = {:#x}, ByteCount = {:#x}.",readAddress, byteCount);
+  LOG_INFO(SMC, "ConfigRead: Address = {:#x}, ByteCount = {:#x}.", readAddress, byteCount);
   memcpy(data, &pciConfigSpace.data[static_cast<u8>(readAddress)], byteCount);
 }
 
 // PCI Write
 void Xe::PCIDev::SMC::SMCCore::Write(u64 writeAddress, u64 data, u8 byteCount) {
-  u8 regOffset = static_cast<u8>(writeAddress);
+  const u8 regOffset = static_cast<u8>(writeAddress);
 
   switch (regOffset) {
   case UART_CONFIG_REG: // UART Config Register
@@ -243,7 +243,7 @@ void Xe::PCIDev::SMC::SMCCore::ConfigWrite(u64 writeAddress, u64 data,
 
   // Check if we're being scanned.
   if (static_cast<u8>(writeAddress) >= 0x10 && static_cast<u8>(writeAddress) < 0x34) {
-      u32 regOffset = (static_cast<u8>(writeAddress) - 0x10) >> 2;
+      const u32 regOffset = (static_cast<u8>(writeAddress) - 0x10) >> 2;
       if (pciDevSizes[regOffset] != 0) {
           if (data == 0xFFFFFFFF) { // PCI BAR Size discovery.
               u32 x = 2;
@@ -322,7 +322,7 @@ void Xe::PCIDev::SMC::SMCCore::setupUART(u32 uartConfig) {
     LOG_ERROR(SMC, "UART: SetCommState failed with error {:#x}.", GetLastError());
   }
 
-  LOG_INFO(SMC, "UART Initialized Successfully.");
+  LOG_INFO(SMC, "UART Initialized Successfully!");
 
   // Everything OK.
   smcCoreState->uartInitialized = true;

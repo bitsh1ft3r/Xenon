@@ -12,7 +12,7 @@ enum class ThreadPriority : u32 {
     Normal = 1,
     High = 2,
     VeryHigh = 3,
-    Critical = 4,
+    Critical = 4
 };
 
 void SetCurrentThreadRealtime(std::chrono::nanoseconds period_ns);

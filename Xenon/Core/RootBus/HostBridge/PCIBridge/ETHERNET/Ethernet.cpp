@@ -16,7 +16,7 @@ Xe::PCIDev::ETHERNET::ETHERNET::ETHERNET() {
 
 void Xe::PCIDev::ETHERNET::ETHERNET::Read(u64 readAddress, u64 *data,
                                           u8 byteCount) {
-  u8 offset = readAddress & 0xFF;
+  const u8 offset = readAddress & 0xFF;
 
   return; // For now.
 
@@ -89,7 +89,7 @@ void Xe::PCIDev::ETHERNET::ETHERNET::ConfigRead(u64 readAddress, u64 *data,
 
 void Xe::PCIDev::ETHERNET::ETHERNET::Write(u64 writeAddress, u64 data,
                                            u8 byteCount) {
-  u8 offset = writeAddress & 0xFF;
+  const u8 offset = writeAddress & 0xFF;
 
   switch (offset) {
   case Xe::PCIDev::ETHERNET::TX_CONFIG:
@@ -156,7 +156,7 @@ void Xe::PCIDev::ETHERNET::ETHERNET::ConfigWrite(u64 writeAddress, u64 data,
                                                  u8 byteCount) {
     // Check if we're being scanned.
     if (static_cast<u8>(writeAddress) >= 0x10 && static_cast<u8>(writeAddress) < 0x34) {
-        u32 regOffset = (static_cast<u8>(writeAddress) - 0x10) >> 2;
+        const u32 regOffset = (static_cast<u8>(writeAddress) - 0x10) >> 2;
         if (pciDevSizes[regOffset] != 0) {
             if (data == 0xFFFFFFFF) { // PCI BAR Size discovery.
                 u32 x = 2;

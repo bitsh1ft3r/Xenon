@@ -20,12 +20,12 @@ using f32 = float;
 using f64 = double;
 
 // UDLs for memory size values
-constexpr unsigned long long operator""_KB(unsigned long long x) {
+constexpr u64 operator""_KB(const u64 x) {
     return 1024ULL * x;
 }
-constexpr unsigned long long operator""_MB(unsigned long long x) {
+constexpr u64 operator""_MB(const u64 x) {
     return 1024_KB * x;
 }
-constexpr unsigned long long operator""_GB(unsigned long long x) {
+constexpr u64 operator""_GB(const u64 x) {
     return 1024_MB * x;
 }

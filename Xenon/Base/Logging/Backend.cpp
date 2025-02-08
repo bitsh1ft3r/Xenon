@@ -29,7 +29,7 @@ using namespace Base::FS;
 
 namespace {
 
-/**
+/*
  * Backend that writes to stderr and with color
  */
 class ColorConsoleBackend {
@@ -56,7 +56,7 @@ private:
     std::atomic_bool enabled{true};
 };
 
-/**
+/*
  * Backend that writes to a file passed into the constructor
  */
 class FileBackend {
@@ -93,10 +93,10 @@ public:
 private:
     Base::FS::IOFile file;
     bool enabled = true;
-    std::size_t bytes_written = 0;
+    size_t bytes_written = 0;
 };
 
-/**
+/*
  * Backend that writes to Visual Studio's output window
  */
 class DebuggerBackend {
@@ -118,7 +118,7 @@ public:
 
 bool initialization_in_progress_suppress_logging = true;
 
-/**
+/*
  * Static state as a singleton.
  */
 class Impl {

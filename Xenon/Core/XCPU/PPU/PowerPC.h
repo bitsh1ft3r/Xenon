@@ -14,15 +14,15 @@
 Condition Register
 
 The CR fields can be set in one of the following ways:
-• Specified fields of the CR can be set from a GPR by using the mtcrf and mtocrf
-instruction. • The contents of the XER[0–3] can be moved to another CR field by
-using the mcrf instruction. • A specified field of the XER can be copied to a
-specified field of the CR by using the mcrxr instruction. • A specified field of
+â€¢ Specified fields of the CR can be set from a GPR by using the mtcrf and mtocrf
+instruction. â€¢ The contents of the XER[0â€“3] can be moved to another CR field by
+using the mcrf instruction. â€¢ A specified field of the XER can be copied to a
+specified field of the CR by using the mcrxr instruction. â€¢ A specified field of
 the FPSCR can be copied to a specified field of the CR by using the mcrfs
-instruction. • Logical instructions of the condition register can be used to
-perform logical operations on specified bits in the condition register. • CR0
-can be the implicit result of an integer instruction. • CR1 can be the implicit
-result of a floating-point instruction. • A specified CR field can indicate the
+instruction. â€¢ Logical instructions of the condition register can be used to
+perform logical operations on specified bits in the condition register. â€¢ CR0
+can be the implicit result of an integer instruction. â€¢ CR1 can be the implicit
+result of a floating-point instruction. â€¢ A specified CR field can indicate the
 result of either an integer or floating-point compare instruction
 */
 union CR {

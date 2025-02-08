@@ -6,10 +6,11 @@
 
 #include "Core/RootBus/HostBridge/PCIBridge/PCIDevice.h"
 
+#define EHCI0_DEV_SIZE 0x1000
+
 namespace Xe {
 namespace PCIDev {
 namespace EHCI0 {
-#define EHCI0_DEV_SIZE 0x1000
 
 class EHCI0 : public PCIDevice {
 public:

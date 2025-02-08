@@ -27,7 +27,7 @@ public:
   u32 Space(void) { return Size - Pointer; }
   u32 Count(void) { return Pointer; }
   u8 *Ptr(void) { return Data + Pointer; }
-  void Increment(s32 Inc) { Pointer += Inc; }
+  void Increment(u32 Inc) { Pointer += Inc; }
   void ResetPtr(void) { Pointer = 0; }
   bool Initialize(u32 MaxLength, bool fClear) {
     if (Data && (MaxLength > Size)) {
@@ -79,7 +79,7 @@ public:
     DWORD cbRead;
     OVERLAPPED Over;
 
-#define HIDW(qw) ((u32)(((u64)(qw)) >> 32))
+#define HIDW(qw) (((u64)(qw)) >> 32)
 #define LODW(qw) ((u32)(qw))
     memset(&Over, 0, sizeof Over);
     Over.Offset = LODW(Offset);

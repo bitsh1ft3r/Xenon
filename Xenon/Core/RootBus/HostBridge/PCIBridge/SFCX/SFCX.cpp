@@ -44,7 +44,7 @@ SFCX::SFCX(const std::string nandLoadPath, PCIBridge *parentPCIBridge) {
   fopen_s(&nandFile, nandLoadPath.c_str(), "rb");
 
   if (!nandFile) {
-    LOG_CRITICAL(SFCX, "Fatal error, check your nand dump path.");
+    LOG_CRITICAL(SFCX, "Fatal error, check your nand dump path!");
     system("PAUSE");
   }
 
@@ -124,7 +124,7 @@ SFCX::SFCX(const std::string nandLoadPath, PCIBridge *parentPCIBridge) {
 }
 
 void SFCX::Read(u64 readAddress, u64 *data, u8 byteCount) {
-  u16 reg = readAddress & 0xFF;
+  const u16 reg = readAddress & 0xFF;
 
   switch (reg) {
   case SFCX_CONFIG_REG:
@@ -164,12 +164,12 @@ void SFCX::Read(u64 readAddress, u64 *data, u8 byteCount) {
 }
 
 void SFCX::ConfigRead(u64 readAddress, u64 *data, u8 byteCount) {
-  u8 offset = readAddress & 0xFF;
+  const u8 offset = readAddress & 0xFF;
   memcpy(data, &pciConfigSpace.data[offset], byteCount);
 }
 
 void SFCX::Write(u64 writeAddress, u64 data, u8 byteCount) {
-  u16 reg = writeAddress & 0xFF;
+  const u16 reg = writeAddress & 0xFF;
 
   switch (reg) {
   case SFCX_CONFIG_REG:
@@ -210,7 +210,7 @@ void SFCX::Write(u64 writeAddress, u64 data, u8 byteCount) {
 }
 
 void SFCX::ConfigWrite(u64 writeAddress, u64 data, u8 byteCount) {
-  u8 offset = writeAddress & 0xFF;
+  const u8 offset = writeAddress & 0xFF;
 
   // Check if we're being scanned.
   if (static_cast<u8>(writeAddress) >= 0x10 && static_cast<u8>(writeAddress) < 0x34) {

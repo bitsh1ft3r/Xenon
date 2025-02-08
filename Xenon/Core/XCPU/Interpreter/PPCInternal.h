@@ -98,7 +98,7 @@
   crB = ((hCore->CI) >> 11) & 0x1f
 
 static inline u64 GetBits64(u64 data, s8 begin, s8 end) {
-  u64 mask = (0xFFFFFFFFFFFFFFFF << (63 - end));
+  const u64 mask = (0xFFFFFFFFFFFFFFFF << (63 - end));
   return data & mask;
 }
 
