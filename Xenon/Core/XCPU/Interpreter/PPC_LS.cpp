@@ -781,7 +781,7 @@ void PPCInterpreter::PPCInterpreter_ldarx(PPU_STATE *hCore) {
   if (hCore->ppuThread[hCore->currentThread].exceptReg & PPU_EX_DATASEGM ||
       hCore->ppuThread[hCore->currentThread].exceptReg & PPU_EX_DATASTOR)
     return;
-  DBG_LOAD("Addr 0x" << std::hex << EA << " data = 0x" << std::hex << (int)data << std::endl;)
+  DBG_LOAD("ldarx:Addr 0x" << std::hex << EA << " data = 0x" << std::hex << (int)data << std::endl;)
   hCore->ppuThread[hCore->currentThread].GPR[rD] = data;
 }
 
