@@ -72,7 +72,7 @@ int main(int argc, char *argv[]) {
   #endif
 
   // Display Version on Boot.
-  LOG_INFO(System, "Starting Xenon emulator {}", std::string(Base::VERSION));
+  LOG_INFO(System, "Starting Xenon {}", std::string(Base::VERSION));
 
   // Load configuration.
   const auto user_dir = Base::FS::GetUserPath(Base::FS::PathType::UserDir);
