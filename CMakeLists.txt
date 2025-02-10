@@ -152,7 +152,12 @@ set(XCPU
     Xenon/Core/XCPU/PPU/PowerPC.h
 )
 
+set(OPENGL
+    third_party/glad/src/glad.c
+)
+
 set(XGPU
+    ${OPENGL}
     Xenon/Core/XGPU/XGPU.cpp
     Xenon/Core/XGPU/XenosRegisters.h
     Xenon/Core/XGPU/XGPU.h
@@ -197,7 +202,12 @@ add_executable(Xenon
 
 create_target_directory_groups(Xenon)
 
-target_include_directories(Xenon PRIVATE third_party/ImGui ${CMAKE_CURRENT_SOURCE_DIR})
+# Include GLAD
+include_directories(Xenon third_party/glad/include)
+# Include ImGui
+include_directories(Xenon third_party/ImGui)
+
+target_include_directories(Xenon PRIVATE ${CMAKE_CURRENT_SOURCE_DIR})
 target_link_libraries(Xenon PRIVATE fmt::fmt SDL3::SDL3 OpenGL::GL toml11::toml11)
 
 add_definitions(-DNTDDI_VERSION=0x0A000006 -D_WIN32_WINNT=0x0A00 -DWINVER=0x0A00)
