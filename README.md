@@ -1,6 +1,6 @@
 <h1 align="center">
   <br>
-  <a href="https://discord.gg/TDvbdXRRQ6"><img src="https://github.com/bitsh1ft3r/Xenon/blob/main/Xenon/images/Xenon.png" width="240"></a>
+  <a href="https://discord.gg/TDvbdXRRQ6"><img src="https://github.com/xenon-emu/Xenon/blob/main/Xenon/images/Xenon.png" width="240"></a>
   <br>
   <b>Xbox 360 Low Level Emulator</b>
   <br>
@@ -9,16 +9,16 @@
 <h1 align="center">
  <a href="https://discord.gg/TDvbdXRRQ6">
         <img src="https://img.shields.io/discord/1289565618957193217?color=5865F2&label=Xenon Discord&logo=Discord&logoColor=white" width="220">
- <a href="https://github.com/bitsh1ft3r/Xenon/actions/workflows/build.yml">
-        <img src="https://github.com/bitsh1ft3r/Xenon/actions/workflows/build.yml/badge.svg" width="140">
- <a href="https://github.com/bitsh1ft3r/Xenon/stargazers">
-        <img src="https://img.shields.io/github/stars/bitsh1ft3r/Xenon" width="110">
+ <a href="https://github.com/xenon-emu/Xenon/actions/workflows/build.yml">
+        <img src="https://github.com/xenon-emu/Xenon/actions/workflows/build.yml/badge.svg" width="140">
+ <a href="https://github.com/xenon-emu/Xenon/stargazers">
+        <img src="https://img.shields.io/github/stars/xenon-emu/Xenon" width="110">
 </h1>
 
 <p align="center">
   <a href="https://discord.gg/TDvbdXRRQ6">
-  <img src="https://github.com/bitsh1ft3r/Xenon/blob/main/Docs/screenshots/Xell_Reloaded.png" width="450">
-  <img src="https://github.com/bitsh1ft3r/Xenon/blob/main/Docs/screenshots/WinDBG.png" width="510">
+  <img src="https://github.com/xenon-emu/Xenon/blob/main/Docs/screenshots/Xell_Reloaded.png" width="450">
+  <img src="https://github.com/xenon-emu/Xenon/blob/main/Docs/screenshots/WinDBG.png" width="510">
 </p>
 
 # Xenon
@@ -35,12 +35,12 @@ For those who want to **support** the project, a [**Kofi page**](https://ko-fi.c
 We need talented developers more than ever to contribute to the project and move emulation forward!
 
 # Contributors
-<a href="https://github.com/bitsh1ft3r/Xenon/graphs/contributors">
-  <img src="https://contrib.rocks/image?repo=bitsh1ft3r/Xenon&max=15">
+<a href="https://github.com/xenon-emu/Xenon/graphs/contributors">
+  <img src="https://contrib.rocks/image?repo=xenon-emu/Xenon&max=15">
 </a>
 
 # Building
-Check the build instructions for [**Windows**](https://github.com/bitsh1ft3r/Xenon/blob/main/Docs/Building/building-windows.md).
+Check the build instructions for [**Windows**](https://github.com/xenon-emu/Xenon/blob/main/Docs/Building/building-windows.md).
 
 # License
-- [**GPL-2.0 license**](https://github.com/bitsh1ft3r/Xenon/blob/main/LICENSE)
+- [**GPL-2.0 license**](https://github.com/xenon-emu/Xenon/blob/main/LICENSE)
