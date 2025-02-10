@@ -8,6 +8,7 @@
 // Store Byte
 //
 
+#include <iostream>
 #define DBG_LOAD(x) // std::cout << x
 
 void PPCInterpreter::PPCInterpreter_dcbst(PPU_STATE *hCore) {
@@ -30,6 +31,11 @@ void PPCInterpreter::PPCInterpreter_dcbz(PPU_STATE *hCore) {
   // As far as i can tell, XCPU does all the crypto, scrambling of
   // data on L2 cache, and DCBZ is used for creating cache blocks
   // and also erasing them.
+}
+
+void PPCInterpreter::PPCInterpreter_icbi(PPU_STATE* hCore)
+{
+    // Do nothing.
 }
 
 void PPCInterpreter::PPCInterpreter_stb(PPU_STATE *hCore) {
@@ -156,6 +162,18 @@ void PPCInterpreter::PPCInterpreter_stswi(PPU_STATE *hCore) {
     EA++;
     n--;
   }
+}
+
+void PPCInterpreter::PPCInterpreter_stmw(PPU_STATE* hCore)
+{
+    D_FORM_rD_rA_D;
+    D = EXTS(D, 16);
+
+    u64 EA = (rA ? hCore->ppuThread[hCore->currentThread].GPR[rA] : 0) + D;
+    for (u32 idx = rD; idx < 32; ++idx, EA += 4)
+    {
+        MMUWrite32(hCore, EA, static_cast<u32>(hCore->ppuThread[hCore->currentThread].GPR[idx]));         
+    }
 }
 
 //
@@ -563,6 +581,19 @@ void PPCInterpreter::PPCInterpreter_lswi(PPU_STATE *hCore) {
   }
 }
 
+void PPCInterpreter::PPCInterpreter_lmw(PPU_STATE* hCore)
+{
+    D_FORM_rD_rA_D;
+    D = EXTS(D, 16);
+
+    u64 EA = (rA ? hCore->ppuThread[hCore->currentThread].GPR[rA] : 0) + D;
+    for (u32 idx = rD; idx < 32; ++idx, EA += 4)
+    {
+        hCore->ppuThread[hCore->currentThread].GPR[idx] =
+            MMURead32(hCore, EA);
+    }
+}
+
 //
 // Load Word
 //
@@ -710,6 +741,24 @@ void PPCInterpreter::PPCInterpreter_ld(PPU_STATE *hCore) {
   hCore->ppuThread[hCore->currentThread].GPR[rD] = data;
 }
 
+void PPCInterpreter::PPCInterpreter_ldbrx(PPU_STATE *hCore) {
+  X_FORM_rD_rA_rB;
+
+  u64 EA = (rA ? hCore->ppuThread[hCore->currentThread].GPR[rA] : 0) +
+    hCore->ppuThread[hCore->currentThread].GPR[rB];
+
+  u64 RA = EA & ~7;
+
+  u64 data = MMURead64(hCore, EA);
+
+  if (hCore->ppuThread[hCore->currentThread].exceptReg & PPU_EX_DATASEGM ||
+    hCore->ppuThread[hCore->currentThread].exceptReg & PPU_EX_DATASTOR)
+    return;
+
+  DBG_LOAD("ldbrx: Addr 0x" << std::hex << EA << " data = 0x" << std::hex << (int)data << std::endl;)
+  hCore->ppuThread[hCore->currentThread].GPR[rD] = data;
+}
+
 void PPCInterpreter::PPCInterpreter_ldarx(PPU_STATE *hCore) {
   X_FORM_rD_rA_rB;
 
@@ -732,7 +781,7 @@ void PPCInterpreter::PPCInterpreter_ldarx(PPU_STATE *hCore) {
   if (hCore->ppuThread[hCore->currentThread].exceptReg & PPU_EX_DATASEGM ||
       hCore->ppuThread[hCore->currentThread].exceptReg & PPU_EX_DATASTOR)
     return;
-  DBG_LOAD("ldarx: Addr 0x" << EA << " data = 0x" << data << std::endl;)
+  DBG_LOAD("ldarx:Addr 0x" << std::hex << EA << " data = 0x" << std::hex << (int)data << std::endl;)
   hCore->ppuThread[hCore->currentThread].GPR[rD] = data;
 }
 

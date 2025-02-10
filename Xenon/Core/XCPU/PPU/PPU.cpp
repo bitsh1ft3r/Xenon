@@ -193,7 +193,7 @@ void PPU::StartExecution() {
     // Check for external interrupts that enable us if we're allowed to.
     //
 
-    // If TSCR[WEXT] = -1-, wake up at System Reset and set SRR1[42:44] = -100-.
+    // If TSCR[WEXT] = '1', wake up at System Reset and set SRR1[42:44] = '100'.
     bool WEXT = (ppuState->SPR.TSCR & 0x100000) >> 20;
     if (xenonContext->xenonIIC.checkExtInterrupt(
             ppuState->ppuThread[ppuState->currentThread].SPR.PIR) &&
@@ -278,7 +278,7 @@ bool PPU::ppuReadNextInstruction() {
   ppuState->ppuThread[ppuState->currentThread].NIA += 4;
   ppuState->ppuThread[ppuState->currentThread].iFetch = true;
   // Fetch the instruction from memory.
-  ppuState->ppuThread[ppuState->currentThread].CI = PPCInterpreter::MMURead32(
+  ppuState->ppuThread[ppuState->currentThread].CI.opcode = PPCInterpreter::MMURead32(
       ppuState, ppuState->ppuThread[ppuState->currentThread].CIA);
   if (ppuState->ppuThread[ppuState->currentThread].exceptReg & PPU_EX_INSSTOR ||
       ppuState->ppuThread[ppuState->currentThread].exceptReg &

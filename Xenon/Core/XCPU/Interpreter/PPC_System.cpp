@@ -5,7 +5,12 @@
 #include "PPCInterpreter.h"
 
 void PPCInterpreter::PPCInterpreter_isync(PPU_STATE *hCore) {
-  // Do nothing :)
+  // Do nothing.
+}
+
+void PPCInterpreter::PPCInterpreter_eieio(PPU_STATE* hCore)
+{
+    // Do nothing.
 }
 
 void PPCInterpreter::PPCInterpreter_sc(PPU_STATE *hCore) {
@@ -189,8 +194,8 @@ void PPCInterpreter::PPCInterpreter_tdi(PPU_STATE *hCore) {
 
 void PPCInterpreter::PPCInterpreter_mfspr(PPU_STATE *hCore) {
   u64 rS, crm = 0;
-  PPC_OPC_TEMPL_XFX(hCore->ppuThread[hCore->currentThread].CI, rS, crm);
-  u32 sprNum = ExtractBits(hCore->ppuThread[hCore->currentThread].CI, 11, 20);
+  PPC_OPC_TEMPL_XFX(hCore->ppuThread[hCore->currentThread].CI.opcode, rS, crm);
+  u32 sprNum = hCore->ppuThread[hCore->currentThread].CI.spr;
   sprNum = ((sprNum & 0x1f) << 5) | ((sprNum >> 5) & 0x1F);
 
   u64 value = 0;
@@ -296,7 +301,7 @@ void PPCInterpreter::PPCInterpreter_mfspr(PPU_STATE *hCore) {
     value = hCore->SPR.CTRL;
     break;
   default:
-    LOG_ERROR(Xenon, "{}(Thrd{:#d}) mfspr: Unknown SPR: 0x{:#x}",hCore->ppuName, (u8)hCore->currentThread, sprNum);
+    LOG_ERROR(Xenon, "{}(Thrd{:#d}) mfspr: Unknown SPR: 0x{:#x}", hCore->ppuName, (u8)hCore->currentThread, sprNum);
     break;
   }
 
@@ -517,4 +522,29 @@ void PPCInterpreter::PPCInterpreter_mtmsrd(PPU_STATE *hCore) {
       hCore->ppuThread[hCore->currentThread].SPR.MSR.DR = 0;
     }
   }
+}
+
+void PPCInterpreter::PPCInterpreter_sync(PPU_STATE* hCore)
+{
+    // Do nothing.
+}
+
+void PPCInterpreter::PPCInterpreter_dcbf(PPU_STATE* hCore)
+{
+    // Do nothing.
+}
+
+void PPCInterpreter::PPCInterpreter_dcbi(PPU_STATE* hCore)
+{
+    // Do nothing.
+}
+
+void PPCInterpreter::PPCInterpreter_dcbt(PPU_STATE* hCore)
+{
+    // Do nothing.
+}
+
+void PPCInterpreter::PPCInterpreter_dcbtst(PPU_STATE* hCore)
+{
+    // Do nothing.
 }

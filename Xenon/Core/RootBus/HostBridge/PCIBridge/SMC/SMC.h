@@ -3,7 +3,7 @@
 #pragma once
 
 #ifdef _WIN32
-#include <Windows.h>
+#include <windows.h>
 #endif
 #include <thread>
 #include <mutex>
@@ -227,54 +227,6 @@ struct SMC_PCI_STATE {
   u32 regF4;
   u32 regF8;
   u32 regFC;
-};
- 
-class UARTEmulator {
-public:
-  UARTEmulator() : running(true) {
-    std::thread(&UARTEmulator::uartThread, this).detach();
-  }
-  
-  ~UARTEmulator() {
-    running = false;
-  }
-  
-  void writeData(u8 data) {
-    std::lock_guard<std::mutex> lock(mutex);
-    txBuffer.push(data);
-    conditionVar.notify_one();
-  }
-  
-  bool readData(void* data) {
-    std::lock_guard<std::mutex> lock(mutex);
-    if (!rxBuffer.empty()) {
-        *(u8*)data = rxBuffer.front();
-        rxBuffer.pop();
-        return true;
-    }
-    return false;
-  }
-
-  bool hasDataAvaliable() {
-    return !rxBuffer.empty();
-  }
-private:
-  void uartThread() {
-    while (running) {
-      std::unique_lock<std::mutex> lock(mutex);
-      if (!txBuffer.empty()) {
-        printf("%c", txBuffer.front());
-        txBuffer.pop();
-      }
-      lock.unlock();
-    }
-  }
-
-  std::queue<u8> txBuffer;
-  std::queue<u8> rxBuffer;
-  std::mutex mutex;
-  std::condition_variable conditionVar;
-  bool running;
 };
 
 // SMC Core State, tracks current state of the system as per view from the SMC.

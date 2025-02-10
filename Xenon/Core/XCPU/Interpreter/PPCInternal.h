@@ -5,7 +5,6 @@
 #include "Base/Types.h"
 
 #define PPC_OPC_RC 1
-#define PPC_OPC_OE (1 << 10)
 #define PPC_OPC_LK 1
 #define PPC_OPC_AA (1 << 1)
 
@@ -98,7 +97,7 @@
   crB = ((hCore->CI) >> 11) & 0x1f
 
 static inline u64 GetBits64(u64 data, s8 begin, s8 end) {
-  u64 mask = (0xFFFFFFFFFFFFFFFF << (63 - end));
+  const u64 mask = (0xFFFFFFFFFFFFFFFF << (63 - end));
   return data & mask;
 }
 
@@ -123,9 +122,9 @@ static inline u64 ExtractBits64(u32 input, u32 begin, u32 end) {
   (dw) |= ((dwSet) << (31 - (e))) & DMASK(b, e);
 
 #define IFIELD(v, b, e)                                                        \
-  u32 v = DGET(hCore->ppuThread[hCore->currentThread].CI, b, e);
+  u32 v = DGET(hCore->ppuThread[hCore->currentThread].CI.opcode, b, e);
 #define IFIELDQ(v, b, e)                                                       \
-  u64 v = DGET(hCore->ppuThread[hCore->currentThread].CI, b, e);
+  u64 v = DGET(hCore->ppuThread[hCore->currentThread].CI.opcode, b, e);
 
 #define I_FORM_LI_AA_LK                                                        \
   IFIELD(LI, 6, 29);                                                           \
@@ -307,21 +306,19 @@ static inline u64 ExtractBits64(u32 input, u32 begin, u32 end) {
   IFIELD(RC, 31, 31);                                                          \
   u32 sh = (sh_2 << 5) | sh_1;
 
-#define XO_FORM_rD_rA_rB_OE_RC                                                 \
+#define XO_FORM_rD_rA_rB_RC                                                    \
   IFIELD(rD, 6, 10);                                                           \
   IFIELD(rA, 11, 15);                                                          \
   IFIELD(rB, 16, 20);                                                          \
-  IFIELD(OE, 21, 21);                                                          \
   IFIELD(RC, 31, 31);
 #define XO_FORM_rD_rA_rB_RC                                                    \
   IFIELD(rD, 6, 10);                                                           \
   IFIELD(rA, 11, 15);                                                          \
   IFIELD(rB, 16, 20);                                                          \
   IFIELD(RC, 31, 31);
-#define XO_FORM_rD_rA_OE_RC                                                    \
+#define XO_FORM_rD_rA_RC                                                       \
   IFIELD(rD, 6, 10);                                                           \
   IFIELD(rA, 11, 15);                                                          \
-  IFIELD(OE, 21, 21);                                                          \
   IFIELD(RC, 31, 31);
 
 #define A_FORM_FrD_FrA_FrB_FRC_XO_RC                                           \

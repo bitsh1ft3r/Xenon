@@ -110,7 +110,7 @@ void loadConfig(const std::filesystem::path &path) {
     const toml::value &gpu = data.at("GPU");
     screenWidth = toml::find_or<int>(gpu, "screenWidth", screenWidth);
     screenHeight = toml::find_or<int>(gpu, "screenHeight", screenHeight);
-    //        gpuId = toml::find_or<int>(gpu, "gpuId", -1);
+    // gpuId = toml::find_or<int>(gpu, "gpuId", -1);
   }
 
   if (data.contains("Paths")) {
@@ -167,6 +167,7 @@ void saveConfig(const std::filesystem::path &path) {
   data["PowerPC"]["HW_INIT_SKIP2"] = SKIP_HW_INIT_2;
 
   // GPU.
+  data["GPU"].comments().push_back("# Window Size (Not the Resolution!)");
   data["GPU"]["screenWidth"] = screenWidth;
   data["GPU"]["screenHeight"] = screenHeight;
   //data["GPU"]["gpuId"] = gpuId;
@@ -178,8 +179,10 @@ void saveConfig(const std::filesystem::path &path) {
   data["Paths"]["ISO"] = oddDiscImagePath;
 
   // HighlyExperimental.
-  data["HighlyExperimental"].comments().push_back("# Do not touch these options unless you know what you're doing!");
-  data["HighlyExperimental"].comments().push_back("# It can break execution! User beware.");
+  if (data["HighlyExperimental"].comments().empty()) {
+    data["HighlyExperimental"].comments().push_back("# Do not touch these options unless you know what you're doing!");
+    data["HighlyExperimental"].comments().push_back("# It can break execution! User beware.");
+  }
   data["HighlyExperimental"]["TPI"] = ticksPerInstruction;
 
   std::ofstream file(path, std::ios::binary);

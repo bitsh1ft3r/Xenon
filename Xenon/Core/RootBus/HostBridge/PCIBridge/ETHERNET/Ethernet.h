@@ -8,10 +8,11 @@
 
 #include "Core/RootBus/HostBridge/PCIBridge/PCIDevice.h"
 
+#define ETHERNET_DEV_SIZE 0x80
+
 namespace Xe {
 namespace PCIDev {
 namespace ETHERNET {
-#define ETHERNET_DEV_SIZE 0x80
 
 // Register Set and offsets.
 // Taken from Linux kernel patches for the Xbox 360.

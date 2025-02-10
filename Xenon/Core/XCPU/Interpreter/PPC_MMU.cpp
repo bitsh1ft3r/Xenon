@@ -94,7 +94,7 @@ void PPCInterpreter::PPCInterpreter_slbia(PPU_STATE *hCore) {
 }
 
 void PPCInterpreter::PPCInterpreter_tlbiel(PPU_STATE *hCore) {
-  X_FORM_L_rB;
+  X_FORM_L_rB
 
   // The PPU adds two new fields to this instruction, them being LP abd IS.
 
@@ -176,6 +176,18 @@ void PPCInterpreter::PPCInterpreter_tlbiel(PPU_STATE *hCore) {
     hCore->TLB.tlbSet3[rb_44_51].LP = 0;
     hCore->TLB.tlbSet3[rb_44_51].p = 0;
   }
+}
+
+void PPCInterpreter::PPCInterpreter_tlbie(PPU_STATE* hCore)
+{
+    // Do nothing.
+    LOG_INFO(Xenon, "tlbie");
+}
+
+void PPCInterpreter::PPCInterpreter_tlbsync(PPU_STATE* hCore)
+{
+    // Do nothing.
+    LOG_INFO(Xenon, "tlbsync");
 }
 
 // Helper function for getting Page Size (p bit).
@@ -850,7 +862,7 @@ bool PPCInterpreter::MMUTranslateAddress(u64 *EA, PPU_STATE *hCoreState,
             /*
                 Conditions for a match to occur:
 
-                * PTE: H = 0 for the primary PTEG, 1 for the secondary PTEG
+                * PTE: H = 0 for the primary PTEG, 1 for the secondary PTEG
                 * PTE: V = 1
                 * PTE: AVPN[0:51] = VA0:51
                 * if p < 28, PTE: AVPN[52:51+q] = VA[52:51+q]
@@ -875,7 +887,7 @@ bool PPCInterpreter::MMUTranslateAddress(u64 *EA, PPU_STATE *hCoreState,
 
             /*
                 The PPE also requires that PTE[LP] = SLBE[LP] whenever PTE[L] =
-               -1-. In other words, the PTE page size must match the SLBE page
+               '1'. In other words, the PTE page size must match the SLBE page
                size exactly for a page-table match to occur.
             */
 
@@ -936,7 +948,7 @@ bool PPCInterpreter::MMUTranslateAddress(u64 *EA, PPU_STATE *hCoreState,
             /*
                 Conditions for a match to occur:
 
-                * PTE: H = 0 for the primary PTEG, 1 for the secondary PTEG
+                * PTE: H = 0 for the primary PTEG, 1 for the secondary PTEG
                 * PTE: V = 1
                 * PTE: AVPN[0:51] = VA0:51
                 * if p < 28, PTE: AVPN[52:51+q] = VA[52:51+q]
@@ -961,7 +973,7 @@ bool PPCInterpreter::MMUTranslateAddress(u64 *EA, PPU_STATE *hCoreState,
 
             /*
                 The PPE also requires that PTE[LP] = SLBE[LP] whenever PTE[L] =
-               -1-. In other words, the PTE page size must match the SLBE page
+               '1'. In other words, the PTE page size must match the SLBE page
                size exactly for a page-table match to occur.
             */
 
@@ -1055,7 +1067,7 @@ bool PPCInterpreter::MMUTranslateAddress(u64 *EA, PPU_STATE *hCoreState,
   end:
     RA = (RPN | QGET(*EA, 64 - p, 63));
     // Real Address 0 - 21 bits are not implemented;
-    QSET(RA, 0, 21, 0);
+    QSET(RA, 0, 21, 0)
   }
 
   *EA = RA;

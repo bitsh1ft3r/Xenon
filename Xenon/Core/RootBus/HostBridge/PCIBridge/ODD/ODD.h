@@ -28,7 +28,7 @@ public:
   u32 Space(void) { return Size - Pointer; }
   u32 Count(void) { return Pointer; }
   u8 *Ptr(void) { return Data + Pointer; }
-  void Increment(s32 Inc) { Pointer += Inc; }
+  void Increment(u32 Inc) { Pointer += Inc; }
   void ResetPtr(void) { Pointer = 0; }
   bool Initialize(u32 MaxLength, bool fClear) {
     if (Data && (MaxLength > Size)) {
@@ -69,7 +69,7 @@ public:
   }
 
   bool IsFound(void) {
-    return file.is_open() && !std::filesystem::file_size(path);
+    return file.is_open() && Size();
   }
 
   u32 Size(void) {
@@ -79,7 +79,7 @@ public:
   bool Read(u64 Offset, u8* Destination, u32 cu8s) {
     file.seekg(static_cast<std::streamoff>(Offset), std::ios::beg);
     if (!file) {
-        return false;
+      return false;
     }
     return file.read(reinterpret_cast<char*>(Destination), cu8s) && file.gcount() == static_cast<std::streamsize>(cu8s);
   }

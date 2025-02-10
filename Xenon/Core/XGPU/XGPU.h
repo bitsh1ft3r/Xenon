@@ -10,9 +10,12 @@
 #include <functional>
 
 #include <SDL3/SDL.h>
+
 #define GL_GLEXT_PROTOTYPES
+extern "C" {
 #include <KHR/khrplatform.h>
 #include <glad/glad.h>
+}
 
 #include "Base/Types.h"
 #include "Core/RAM/RAM.h"
@@ -118,6 +121,8 @@ public:
 private:
   // XGPU Config Space Data at address 0xD0010000.
   GENRAL_PCI_DEVICE_CONFIG_SPACE xgpuConfigSpace = {0};
+  // PCI Device Size, using when determining PCI device size of each BAR in Linux.
+  u32 pciDevSizes[6] = {};
 
   RAM *ramPtr = nullptr;
 
@@ -144,7 +149,7 @@ private:
   bool isFullscreen;
   // Pixel buffer
   int pitch = 0;
-  std::vector<uint32_t> pixels{};
+  std::vector<u32> pixels{};
   // SDL Window data
   SDL_Window *mainWindow{};
   SDL_GLContext context;

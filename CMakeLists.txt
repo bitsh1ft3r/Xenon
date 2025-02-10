@@ -28,7 +28,7 @@ function(create_target_directory_groups target_name)
 endfunction()
 
 find_package(fmt 11.1.3 CONFIG)
-find_package(SDL3 3.2.0 CONFIG)
+find_package(SDL3 3.2.4 CONFIG)
 find_package(toml11 4.3.0 CONFIG)
 find_package(OpenGL REQUIRED)
 
@@ -124,6 +124,7 @@ set(RootBus
 )
 
 set(XCPU
+    Xenon/Core/XCPU/Bitfield.h
     Xenon/Core/XCPU/Xenon.cpp
     Xenon/Core/XCPU/Xenon.h
     Xenon/Core/XCPU/XenonReservations.cpp
@@ -132,6 +133,7 @@ set(XCPU
     Xenon/Core/XCPU/IIC/IIC.cpp
     Xenon/Core/XCPU/IIC/IIC.h
     Xenon/Core/XCPU/Interpreter/PPC_ALU.cpp
+    Xenon/Core/XCPU/Interpreter/PPC_FPU.cpp
     Xenon/Core/XCPU/Interpreter/Interpreter_Helpers.cpp
     Xenon/Core/XCPU/Interpreter/PPC_MMU.cpp
     Xenon/Core/XCPU/Interpreter/PPC_Instruction.cpp
@@ -142,6 +144,7 @@ set(XCPU
     Xenon/Core/XCPU/Interpreter/PPCInterpreter.cpp
     Xenon/Core/XCPU/Interpreter/PPCInterpreter.h
     Xenon/Core/XCPU/Interpreter/PPCInternal.h
+    Xenon/Core/XCPU/Interpreter/PPCOpcodes.h
     Xenon/Core/XCPU/PostBus/PostBus.cpp
     Xenon/Core/XCPU/PostBus/PostBus.h
     Xenon/Core/XCPU/PPU/PPU.cpp

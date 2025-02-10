@@ -16,7 +16,7 @@ Once you are within the installer:
 ### Cloning the source code
 
 1. Open Git for Windows, navigate to a place where you want to store the Xenon source code folder
-2. Clone the repository by running `git clone --recursive https://github.com/bitsh1ft3r/Xenon.git`
+2. Clone the repository by running `git clone --recursive https://github.com/xenon-emu/Xenon.git`
 
 ### Compiling with Visual Studio GUI
 
