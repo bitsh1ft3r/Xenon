@@ -613,6 +613,7 @@ namespace PPCInterpreter {
       { 0x08A, GETRC(adde) },
       { 0x28A, GETRC(addeo) },
       { 0x090, GET(mtocrf) },
+      { 0x092, GET(mtmsr) },
       { 0x095, GET(stdx) },
       { 0x096, GET(stwcx) },
       { 0x097, GET(stwx) },
@@ -783,7 +784,7 @@ namespace PPCInterpreter {
       { 0x32F, GETRC(fctidz) },
       { 0x34E, GETRC(fcfid) },
   	});
-  }	
+  }
   std::string legacy_GetOpcodeName(u32 instrData) {
     u32 OPCD = ExtractBits(instrData, 0, 5);
 
