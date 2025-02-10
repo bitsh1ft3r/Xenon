@@ -8,6 +8,7 @@
 // Store Byte
 //
 
+#include <iostream>
 #define DBG_LOAD(x) // std::cout << x
 
 void PPCInterpreter::PPCInterpreter_dcbst(PPU_STATE *hCore) {
@@ -740,6 +741,24 @@ void PPCInterpreter::PPCInterpreter_ld(PPU_STATE *hCore) {
   hCore->ppuThread[hCore->currentThread].GPR[rD] = data;
 }
 
+void PPCInterpreter::PPCInterpreter_ldbrx(PPU_STATE *hCore) {
+  X_FORM_rD_rA_rB;
+
+  u64 EA = (rA ? hCore->ppuThread[hCore->currentThread].GPR[rA] : 0) +
+    hCore->ppuThread[hCore->currentThread].GPR[rB];
+
+  u64 RA = EA & ~7;
+
+  u64 data = MMURead64(hCore, EA);
+
+  if (hCore->ppuThread[hCore->currentThread].exceptReg & PPU_EX_DATASEGM ||
+    hCore->ppuThread[hCore->currentThread].exceptReg & PPU_EX_DATASTOR)
+    return;
+
+  DBG_LOAD("ldbrx: Addr 0x" << std::hex << EA << " data = 0x" << std::hex << (int)data << std::endl;)
+  hCore->ppuThread[hCore->currentThread].GPR[rD] = data;
+}
+
 void PPCInterpreter::PPCInterpreter_ldarx(PPU_STATE *hCore) {
   X_FORM_rD_rA_rB;
 
@@ -762,7 +781,7 @@ void PPCInterpreter::PPCInterpreter_ldarx(PPU_STATE *hCore) {
   if (hCore->ppuThread[hCore->currentThread].exceptReg & PPU_EX_DATASEGM ||
       hCore->ppuThread[hCore->currentThread].exceptReg & PPU_EX_DATASTOR)
     return;
-  DBG_LOAD("ldarx: Addr 0x" << EA << " data = 0x" << data << std::endl;)
+  DBG_LOAD("ldarx:Addr 0x" << std::hex << EA << " data = 0x" << std::hex << (int)data << std::endl;)
   hCore->ppuThread[hCore->currentThread].GPR[rD] = data;
 }
 

@@ -7,13 +7,9 @@
 #define XER_SET_CA(v) hCore->ppuThread[hCore->currentThread].SPR.XER.CA = v
 
 void PPCInterpreter::PPCInterpreter_addx(PPU_STATE *hCore) {
-  XO_FORM_rD_rA_rB_OE_RC;
+  XO_FORM_rD_rA_rB_RC;
 
   GPR(rD) = GPR(rA) + GPR(rB);
-
-  if (OE) {
-      LOG_CRITICAL(Xenon, "ADDX -> Fatal error, OE not implemented!");
-  }
 
   if (RC) {
     u32 CR = CRCompS(hCore, GPR(rD), 0);
@@ -22,14 +18,10 @@ void PPCInterpreter::PPCInterpreter_addx(PPU_STATE *hCore) {
 }
 
 void PPCInterpreter::PPCInterpreter_addex(PPU_STATE *hCore) {
-  XO_FORM_rD_rA_rB_OE_RC;
+  XO_FORM_rD_rA_rB_RC;
 
   GPR(rD) = ppcAddCarrying(hCore, GPR(rA), GPR(rB),
                            hCore->ppuThread[hCore->currentThread].SPR.XER.CA);
-
-  if (OE) {
-      LOG_CRITICAL(Xenon, "ADDEXX -> Fatal error, OE not implemented!");
-  }
 
   if (RC) {
     u32 CR = CRCompS(hCore, GPR(rD), 0);
@@ -49,15 +41,11 @@ void PPCInterpreter::PPCInterpreter_addic(PPU_STATE *hCore) {
   D_FORM_rD_rA_SI;
   SI = EXTS(SI, 16);
   GPR(rD) = ppcAddCarrying(hCore, GPR(rA), SI, 0);
-}
-
-void PPCInterpreter::PPCInterpreter_addic_rc(PPU_STATE *hCore) {
-  D_FORM_rD_rA_SI;
-  SI = EXTS(SI, 16);
-
-  GPR(rD) = ppcAddCarrying(hCore, GPR(rA), SI, 0);
-  u32 CR = CRCompS(hCore, GPR(rD), 0);
-  ppcUpdateCR(hCore, 0, CR);
+  // _rc
+  if (hCore->ppuThread[hCore->currentThread].CI.main & 1) {
+    u32 CR = CRCompS(hCore, GPR(rD), 0);
+    ppcUpdateCR(hCore, 0, CR);
+  }
 }
 
 void PPCInterpreter::PPCInterpreter_addis(PPU_STATE *hCore) {
@@ -68,14 +56,10 @@ void PPCInterpreter::PPCInterpreter_addis(PPU_STATE *hCore) {
 }
 
 void PPCInterpreter::PPCInterpreter_addzex(PPU_STATE *hCore) {
-  XO_FORM_rD_rA_OE_RC;
+  XO_FORM_rD_rA_RC;
 
   GPR(rD) = ppcAddCarrying(hCore, GPR(rA), 0,
                            hCore->ppuThread[hCore->currentThread].SPR.XER.CA);
-
-  if (OE) {
-      LOG_CRITICAL(Xenon, "ADDZEX -> Fatal error, OE not implemented!");
-  }
 
   if (RC) {
     u32 CR = CRCompS(hCore, GPR(rD), 0);
@@ -83,7 +67,7 @@ void PPCInterpreter::PPCInterpreter_addzex(PPU_STATE *hCore) {
   }
 }
 
-void PPCInterpreter::PPCInterpreter_and(PPU_STATE *hCore) {
+void PPCInterpreter::PPCInterpreter_andx(PPU_STATE *hCore) {
   X_FORM_rS_rA_rB_RC;
 
   GPR(rA) = GPR(rS) & GPR(rB);
@@ -94,7 +78,7 @@ void PPCInterpreter::PPCInterpreter_and(PPU_STATE *hCore) {
   }
 }
 
-void PPCInterpreter::PPCInterpreter_andc(PPU_STATE *hCore) {
+void PPCInterpreter::PPCInterpreter_andcx(PPU_STATE *hCore) {
   X_FORM_rS_rA_rB_RC;
 
   GPR(rA) = GPR(rS) & ~GPR(rB);
@@ -178,7 +162,7 @@ void PPCInterpreter::PPCInterpreter_cmpli(PPU_STATE *hCore) {
   ppcUpdateCR(hCore, BF, CR);
 }
 
-void PPCInterpreter::PPCInterpreter_cntlzd(PPU_STATE *hCore) {
+void PPCInterpreter::PPCInterpreter_cntlzdx(PPU_STATE *hCore) {
   X_FORM_rS_rA_RC;
 
   u64 RegS = GPR(rS);
@@ -197,7 +181,7 @@ void PPCInterpreter::PPCInterpreter_cntlzd(PPU_STATE *hCore) {
   }
 }
 
-void PPCInterpreter::PPCInterpreter_cntlzw(PPU_STATE *hCore) {
+void PPCInterpreter::PPCInterpreter_cntlzwx(PPU_STATE *hCore) {
   X_FORM_rS_rA_RC;
 
   u32 RegS = (u32)GPR(rS);
@@ -327,17 +311,13 @@ void PPCInterpreter::PPCInterpreter_crxor(PPU_STATE *hCore) {
     BCLR(hCore->ppuThread[hCore->currentThread].CR.CR_Hex, 32, BT);
 }
 
-void PPCInterpreter::PPCInterpreter_divd(PPU_STATE *hCore) {
-  XO_FORM_rD_rA_rB_OE_RC;
+void PPCInterpreter::PPCInterpreter_divdx(PPU_STATE *hCore) {
+  XO_FORM_rD_rA_rB_RC;
 
   if (GPR(rB) != 0 &&
       (GPR(rA) != 0x8000000000000000 || GPR(rB) != 0xFFFFFFFFFFFFFFFF)) {
     s64 r = (s64)GPR(rA) / (s64)GPR(rB);
     GPR(rD) = (u64)r;
-  }
-
-  if (OE) {
-    LOG_CRITICAL(Xenon, "DIVDX -> Fatal error, OE not implemented!");
   }
 
   if (RC) {
@@ -346,15 +326,11 @@ void PPCInterpreter::PPCInterpreter_divd(PPU_STATE *hCore) {
   }
 }
 
-void PPCInterpreter::PPCInterpreter_divdu(PPU_STATE *hCore) {
-  XO_FORM_rD_rA_rB_OE_RC;
+void PPCInterpreter::PPCInterpreter_divdux(PPU_STATE *hCore) {
+  XO_FORM_rD_rA_rB_RC;
 
   if (GPR(rB) != 0) {
     GPR(rD) = (u64)((u64)GPR(rA) / (u64)GPR(rB));
-  }
-
-  if (OE) {
-      LOG_CRITICAL(Xenon, "DIVDU -> Fatal error, OE not implemented!");
   }
 
   if (RC) {
@@ -364,14 +340,10 @@ void PPCInterpreter::PPCInterpreter_divdu(PPU_STATE *hCore) {
 }
 
 void PPCInterpreter::PPCInterpreter_divwx(PPU_STATE *hCore) {
-  XO_FORM_rD_rA_rB_OE_RC;
+  XO_FORM_rD_rA_rB_RC;
 
   if (GPR(rB) != 0 && (GPR(rA) != 0x80000000 || GPR(rB) != 0xFFFFFFFF)) {
     GPR(rD) = (u32)((s64)(long)GPR(rA) / (s64)(long)GPR(rB));
-  }
-
-  if (OE) {
-    LOG_CRITICAL(Xenon, "DIVWX -> Fatal error, OE not implemented!");
   }
 
   if (RC) {
@@ -381,14 +353,10 @@ void PPCInterpreter::PPCInterpreter_divwx(PPU_STATE *hCore) {
 }
 
 void PPCInterpreter::PPCInterpreter_divwux(PPU_STATE *hCore) {
-  XO_FORM_rD_rA_rB_OE_RC;
+  XO_FORM_rD_rA_rB_RC;
 
   if ((u32)GPR(rB) != 0) {
     GPR(rD) = (u32)((u64)(u32)GPR(rA) / (u64)(u32)GPR(rB));
-  }
-
-  if (OE) {
-    LOG_CRITICAL(Xenon, "DIVWUX -> Fatal error, OE not implemented!");
   }
 
   if (RC) {
@@ -445,7 +413,7 @@ void PPCInterpreter::PPCInterpreter_mcrf(PPU_STATE *hCore) {
   ppcUpdateCR(hCore, BF, CR);
 }
 
-void PPCInterpreter::PPCInterpreter_mfcr(PPU_STATE *hCore) {
+void PPCInterpreter::PPCInterpreter_mfocrf(PPU_STATE *hCore) {
   XFX_FORM_rD;
 
   GPR(rD) = hCore->ppuThread[hCore->currentThread].CR.CR_Hex;
@@ -468,9 +436,8 @@ void PPCInterpreter::PPCInterpreter_mftb(PPU_STATE *hCore) {
   }
 }
 
-void PPCInterpreter::PPCInterpreter_mtcrf(PPU_STATE *hCore) {
+void PPCInterpreter::PPCInterpreter_mtocrf(PPU_STATE *hCore) {
   XFX_FORM_rS_FXM;
-
   u32 Mask = 0;
   u32 b = 0x80;
 
@@ -480,8 +447,7 @@ void PPCInterpreter::PPCInterpreter_mtcrf(PPU_STATE *hCore) {
     if (FXM & b) {
       Mask |= 0xF;
     }
-  }
-
+  }  
   hCore->ppuThread[hCore->currentThread].CR.CR_Hex =
       ((u32)GPR(rS) & Mask) |
       (hCore->ppuThread[hCore->currentThread].CR.CR_Hex & ~Mask);
@@ -499,13 +465,9 @@ void PPCInterpreter::PPCInterpreter_mulli(PPU_STATE *hCore) {
 }
 
 void PPCInterpreter::PPCInterpreter_mulldx(PPU_STATE *hCore) {
-  XO_FORM_rD_rA_rB_OE_RC;
+  XO_FORM_rD_rA_rB_RC;
 
   u64 qwH, qwL;
-
-  if (OE) {
-    LOG_CRITICAL(Xenon, "MULLDX -> Fatal error, OE not implemented!");
-  }
 
   ppcMul64Signed(GPR(rA), GPR(rB), &qwH, &qwL);
 
@@ -517,18 +479,14 @@ void PPCInterpreter::PPCInterpreter_mulldx(PPU_STATE *hCore) {
   }
 }
 
-void PPCInterpreter::PPCInterpreter_mullw(PPU_STATE *hCore) {
-  XO_FORM_rD_rA_rB_OE_RC;
+void PPCInterpreter::PPCInterpreter_mullwx(PPU_STATE *hCore) {
+  XO_FORM_rD_rA_rB_RC;
 
   const s64 regA = static_cast<s32>(GPR(rA));
   const s64 regB = static_cast<s32>(GPR(rB));
   const s64 res = regA * regB;
 
   GPR(rD) = static_cast<u32>(res);
-
-  if (OE) {
-      LOG_CRITICAL(Xenon, "MULLW -> Fatal error, OE not implemented!");
-  }
 
   if (RC) {
     u32 CR = CRCompS(hCore, GPR(rD), 0);
@@ -577,13 +535,9 @@ void PPCInterpreter::PPCInterpreter_nandx(PPU_STATE *hCore) {
 }
 /* Negate */
 void PPCInterpreter::PPCInterpreter_negx(PPU_STATE *hCore) {
-  XO_FORM_rD_rA_OE_RC;
+  XO_FORM_rD_rA_RC;
 
   GPR(rD) = (~GPR(rA)) + 1;
-
-  if (OE) {
-      LOG_CRITICAL(Xenon, "NEG -> Fatal error, OE not implemented!");
-  }
 
   if (RC) {
     u32 CR = CRCompS(hCore, GPR(rD), 0);
@@ -903,14 +857,10 @@ void PPCInterpreter::PPCInterpreter_srwx(PPU_STATE *hCore) {
 }
 
 void PPCInterpreter::PPCInterpreter_subfcx(PPU_STATE *hCore) {
-  XO_FORM_rD_rA_rB_OE_RC;
+  XO_FORM_rD_rA_rB_RC;
 
   GPR(rD) = ~GPR(rA) + GPR(rB) + 1;
   XER_SET_CA((GPR(rD) < ~GPR(rA)));
-
-  if (OE) {
-      LOG_CRITICAL(Xenon, "SUBFCX -> Fatal error, OE not implemented!");
-  }
 
   if (RC) {
     u32 CR = CRCompS(hCore, GPR(rD), 0);
@@ -919,13 +869,9 @@ void PPCInterpreter::PPCInterpreter_subfcx(PPU_STATE *hCore) {
 }
 
 void PPCInterpreter::PPCInterpreter_subfx(PPU_STATE *hCore) {
-  XO_FORM_rD_rA_rB_OE_RC;
+  XO_FORM_rD_rA_rB_RC;
 
   GPR(rD) = ~GPR(rA) + GPR(rB) + 1;
-
-  if (OE) {
-      LOG_CRITICAL(Xenon, "SUBFX -> Fatal error, OE not implemented!");
-  }
 
   if (RC) {
     u32 CR = CRCompS(hCore, GPR(rD), 0);
@@ -934,14 +880,10 @@ void PPCInterpreter::PPCInterpreter_subfx(PPU_STATE *hCore) {
 }
 
 void PPCInterpreter::PPCInterpreter_subfex(PPU_STATE *hCore) {
-  XO_FORM_rD_rA_rB_OE_RC;
+  XO_FORM_rD_rA_rB_RC;
 
   GPR(rD) = ppcAddCarrying(hCore, ~GPR(rA), GPR(rB),
                            hCore->ppuThread[hCore->currentThread].SPR.XER.CA);
-
-  if (OE) {
-      LOG_CRITICAL(Xenon, "SUBFEX -> Fatal error, OE not implemented!");
-  }
 
   if (RC) {
     u32 CR = CRCompS(hCore, GPR(rD), 0);

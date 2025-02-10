@@ -1,253 +1,88 @@
-// Copyright 2025 Xenon Emulator Project
-
 #pragma once
+/*
+* Copyright 2025 Xenon Emulator Project
 
+* All original authors of the rpcs3 PPU_Decoder and PPU_Opcodes maintain their original copyright.
+* Modifed for usage in the Xenon Emulator
+* All rights reserved
+* License: GPL2
+*/
+
+#include <array>
 #include <string>
 
 #include "Base/Types.h"
+#include "Base/Logging/Log.h"
+#include "Core/XCPU/Bitfield.h"
+#include "Core/XCPU/PPU/PowerPC.h"
 
-//
-// PowerPC Instruction definitions
-//
+constexpr u64 PPCRotateMask(u32 mb, u32 me) {
+  const u64 mask = ~0ull << (~(me - mb) & 63);
+  return (mask >> (mb & 63)) | (mask << ((64 - mb) & 63));
+}
 
-enum class PPCInstruction {
-  invalidInstruction,
-  addcx,
-  addex,
-  addi,
-  addic,
-  addicx,
-  addis,
-  addmex,
-  addx,
-  addzex,
-  andcx,
-  andix,
-  andisx,
-  andx,
-  bcctrx,
-  bclrx,
-  bcx,
-  bx,
-  cmp,
-  cmpi,
-  cmpl,
-  cmpli,
-  cntlzdx,
-  cntlzwx,
-  crand,
-  crandc,
-  creqv,
-  crnand,
-  crnor,
-  cror,
-  crorc,
-  crxor,
-  dcbf,
-  dcbi,
-  dcbst,
-  dcbt,
-  dcbtst,
-  dcbz,
-  divdux,
-  divdx,
-  divwux,
-  divwx,
-  eciwx,
-  ecowx,
-  eieio,
-  eqvx,
-  extsbx,
-  extshx,
-  extswx,
-  fabsx,
-  faddsx,
-  faddx,
-  fcfidx,
-  fcmpo,
-  fcmpu,
-  fctidx,
-  fctidzx,
-  fctiwx,
-  fctiwzx,
-  fdivsx,
-  fdivx,
-  fmaddsx,
-  fmaddx,
-  fmrx,
-  fmsubsx,
-  fmsubx,
-  fmulsx,
-  fmulx,
-  fnabsx,
-  fnegx,
-  fnmaddsx,
-  fnmaddx,
-  fnmsubsx,
-  fnmsubx,
-  fresx,
-  frspx,
-  frsqrtex,
-  fselx,
-  fsqrtsx,
-  fsqrtx,
-  fsubsx,
-  fsubx,
-  icbi,
-  isync,
-  lbz,
-  lbzu,
-  lbzux,
-  lbzx,
-  ld,
-  ldarx,
-  ldbrx,
-  ldu,
-  ldux,
-  ldx,
-  lfd,
-  lfdu,
-  lfdux,
-  lfdx,
-  lfs,
-  lfsu,
-  lfsux,
-  lfsx,
-  lha,
-  lhau,
-  lhaux,
-  lhax,
-  lhbrx,
-  lhz,
-  lhzu,
-  lhzux,
-  lhzx,
-  lmw,
-  lswi,
-  lswx,
-  lwa,
-  lwarx,
-  lwaux,
-  lwax,
-  lwbrx,
-  lwz,
-  lwzu,
-  lwzux,
-  lwzx,
-  mcrf,
-  mcrfs,
-  mcrxr,
-  mfcr,
-  mffsx,
-  mfmsr,
-  mfocrf,
-  mfspr,
-  mfsr,
-  mfsrin,
-  mftb,
-  mtcrf,
-  mtfsb0x,
-  mtfsb1x,
-  mtfsfix,
-  mtfsfx,
-  mtmsr,
-  mtmsrd,
-  mtocrf,
-  mtspr,
-  mtsr,
-  mtsrin,
-  mulhdux,
-  mulhdx,
-  mulhwux,
-  mulhwx,
-  mulldx,
-  mulli,
-  mullwx,
-  nandx,
-  negx,
-  norx,
-  orcx,
-  ori,
-  oris,
-  orx,
-  rfid,
-  rldclx,
-  rldcrx,
-  rldiclx,
-  rldicrx,
-  rldicx,
-  rldimix,
-  rlwimix,
-  rlwinmx,
-  rlwnmx,
-  sc,
-  slbia,
-  slbie,
-  slbmfee,
-  slbmfev,
-  slbmte,
-  sldx,
-  slwx,
-  sradix,
-  sradx,
-  srawix,
-  srawx,
-  srdx,
-  srwx,
-  stb,
-  stbu,
-  stbux,
-  stbx,
-  std,
-  stdcx,
-  stdu,
-  stdux,
-  stdx,
-  stfd,
-  stdbrx,
-  stfdu,
-  stfdux,
-  stfdx,
-  stfiwx,
-  stfs,
-  stfsu,
-  stfsux,
-  stfsx,
-  sth,
-  sthbrx,
-  sthu,
-  sthux,
-  sthx,
-  stmw,
-  stswi,
-  stswx,
-  stw,
-  stwbrx,
-  stwcx,
-  stwu,
-  stwux,
-  stwx,
-  subfcx,
-  subfex,
-  subfic,
-  subfmex,
-  subfx,
-  subfzex,
-  sync,
-  td,
-  tdi,
-  tlbia,
-  tlbie,
-  tlbiel,
-  tlbsync,
-  tw,
-  twi,
-  xori,
-  xoris,
-  xorx
-};
+constexpr u32 PPCDecode(u32 inst) {
+  return ((inst >> 26) | (inst << 6)) & 0x1FFFF; // Rotate + mask
+}
 
 namespace PPCInterpreter {
-PPCInstruction getOpcode(u32 instrData);
-std::string getOpcodeName(u32 instrData);
+	// Define a type alias for function pointers
+	using instructionHandler = void(*)(PPU_STATE*);
+	extern void PPCInterpreter_nop(PPU_STATE *hCore);
+	extern void PPCInterpreter_invalid(PPU_STATE *hCore);
+	extern void PPCInterpreter_known_unimplemented(const char *name, PPU_STATE *hCore);
+	class PPCDecoder {
+		class InstrInfo {
+		public:
+			constexpr InstrInfo(u32 v, instructionHandler p, instructionHandler pRc, u32 m = 0) :
+				value(v), ptr0(p), ptrRc(pRc), magn(m)
+			{}
+
+			constexpr InstrInfo(u32 v, const instructionHandler* p, const instructionHandler* pRc, u32 m = 0) :
+				value(v), ptr0(*p), ptrRc(*pRc), magn(m)
+			{}
+
+			u32 value;
+			instructionHandler ptr0;
+			instructionHandler ptrRc;
+			u32 magn; // Non-zero for "columns" (effectively, number of most significant bits "eaten")
+		};
+	public:
+		PPCDecoder();
+		~PPCDecoder() = default;
+		const std::array<instructionHandler, 0x20000>& getTable() const noexcept {
+			return table;
+		}
+		instructionHandler decode(u32 inst) const noexcept {
+			if (inst == 0x60000000) {
+				return &PPCInterpreter_nop;
+			}
+			return table[PPCDecode(inst)];
+		}
+	private:
+		// Fast lookup table
+		std::array<instructionHandler, 0x20000> table;
+
+		void fillTable(u32 mainOp, u32 count, u32 sh, std::initializer_list<InstrInfo> entries) noexcept {
+			if (sh < 11) {
+				for (const auto& v : entries) {
+					for (u32 i = 0; i < 1u << (v.magn + (11 - sh - count)); i++) {
+						for (u32 j = 0; j < 1u << sh; j++) {
+							const u32 k = (((i << (count - v.magn)) | v.value) << sh) | j;
+							c_at(table, (k << 6) | mainOp) = k & 1 ? v.ptrRc : v.ptr0;
+						}
+					}
+				}
+			}
+			else {
+				// Main table (special case)
+				for (const auto& v : entries) {
+					for (u32 i = 0; i < 1u << 11; i++) {
+						c_at(table, i << 6 | v.value) = i & 1 ? v.ptrRc : v.ptr0;
+					}
+				}
+			}
+		}
+	};
+	std::string legacy_GetOpcodeName(u32 instrData);
 } // namespace PPCInterpreter
