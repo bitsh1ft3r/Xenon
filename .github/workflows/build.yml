@@ -8,6 +8,9 @@ concurrency:
   group: ci-${{ github.event_name }}-${{ github.ref }}
   cancel-in-progress: ${{ github.event_name == 'push' }}
 
+permissions:
+  contents: write
+
 env:
   BUILD_TYPE: Release
 
@@ -22,7 +25,7 @@ jobs:
     - name: Cache CMake Configuration
       uses: actions/cache@main
       env:
-          cache-name: ${{ runner.os }}-xenon-cache-config
+          cache-name: ${{ runner.os }}-xenon-cache-config-windows
       with:
           path: | 
             ${{github.workspace}}/build
@@ -33,7 +36,7 @@ jobs:
     - name: Cache CMake Build
       uses: hendrikmuhs/ccache-action@v1.2.17
       env:
-          cache-name: ${{ runner.os }}-xenon-cache-build
+          cache-name: ${{ runner.os }}-xenon-cache-build-windows
       with:
         append-timestamp: false
         key: ${{ env.cache-name }}-${{ hashFiles('**/CMakeLists.txt', 'cmake/**') }}
@@ -54,3 +57,49 @@ jobs:
       with:
         name: Xenon-win64
         path: ${{github.workspace}}/build/Xenon.exe
+
+  Linux:
+    runs-on: ubuntu-24.04
+    steps:
+    - uses: actions/checkout@main
+      with:
+        submodules: recursive
+
+    - name: Install dependencies
+      run: sudo apt-get update && sudo apt install -y libglfw3-dev libgles2-mesa-dev libfuse2 gcc-14 build-essential
+
+    - name: Cache CMake Configuration
+      uses: actions/cache@main
+      env: 
+          cache-name: ${{ runner.os }}-xenon-cache-config-linux
+      with: 
+          path: |  
+            ${{github.workspace}}/build 
+          key: ${{ env.cache-name }}-${{ hashFiles('**/CMakeLists.txt', 'cmake/**') }} 
+          restore-keys: | 
+            ${{ env.cache-name }}- 
+
+    - name: Cache CMake Build
+      uses: hendrikmuhs/ccache-action@v1.2.17
+      env:
+          cache-name: ${{ runner.os }}-xenon-cache-build-linux
+      with:
+        append-timestamp: false
+        key: ${{ env.cache-name }}-${{ hashFiles('**/CMakeLists.txt', 'cmake/**') }}
+
+    - name: Configure CMake
+      run: cmake --fresh -B ${{github.workspace}}/build -DCMAKE_BUILD_TYPE=${{env.BUILD_TYPE}} -DCMAKE_INTERPROCEDURAL_OPTIMIZATION_RELEASE=ON -DCMAKE_C_COMPILER=gcc-14 -DCMAKE_CXX_COMPILER=g++-14 -DCMAKE_C_COMPILER_LAUNCHER=ccache -DCMAKE_CXX_COMPILER_LAUNCHER=ccache
+
+    - name: Build
+      run: cmake --build ${{github.workspace}}/build --config ${{env.BUILD_TYPE}} --parallel $(nproc)
+
+    - name: Run AppImage packaging script
+      run:  ./.github/linux-appimage.sh
+
+    - name: Package and Upload Linux Artifact
+      run: |
+        tar cf Xenon-linux64.tar.gz -C ${{github.workspace}}/build Xenon
+    - uses: actions/upload-artifact@main
+      with:
+        name: Xenon-linux64
+        path: Xenon.AppImage

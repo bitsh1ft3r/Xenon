@@ -1,0 +1,9 @@
+[Desktop Entry]
+Name=Xenon
+Exec=Xenon
+Terminal=false
+Type=Application
+Icon=Xenon
+Comment=Xbox 360 emulator
+Categories=Game;Emulator;
+StartupWMClass=Xenon;
