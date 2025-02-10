@@ -194,8 +194,8 @@ void PPCInterpreter::PPCInterpreter_tdi(PPU_STATE *hCore) {
 
 void PPCInterpreter::PPCInterpreter_mfspr(PPU_STATE *hCore) {
   u64 rS, crm = 0;
-  PPC_OPC_TEMPL_XFX(hCore->ppuThread[hCore->currentThread].CI, rS, crm);
-  u32 sprNum = ExtractBits(hCore->ppuThread[hCore->currentThread].CI, 11, 20);
+  PPC_OPC_TEMPL_XFX(hCore->ppuThread[hCore->currentThread].CI.opcode, rS, crm);
+  u32 sprNum = hCore->ppuThread[hCore->currentThread].CI.spr;
   sprNum = ((sprNum & 0x1f) << 5) | ((sprNum >> 5) & 0x1F);
 
   u64 value = 0;

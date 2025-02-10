@@ -122,6 +122,7 @@ set(RootBus
 )
 
 set(XCPU
+    Xenon/Core/XCPU/Bitfield.h
     Xenon/Core/XCPU/Xenon.cpp
     Xenon/Core/XCPU/Xenon.h
     Xenon/Core/XCPU/XenonReservations.cpp
@@ -141,6 +142,7 @@ set(XCPU
     Xenon/Core/XCPU/Interpreter/PPCInterpreter.cpp
     Xenon/Core/XCPU/Interpreter/PPCInterpreter.h
     Xenon/Core/XCPU/Interpreter/PPCInternal.h
+    Xenon/Core/XCPU/Interpreter/PPCOpcodes.h
     Xenon/Core/XCPU/PostBus/PostBus.cpp
     Xenon/Core/XCPU/PostBus/PostBus.h
     Xenon/Core/XCPU/PPU/PPU.cpp
