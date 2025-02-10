@@ -25,13 +25,13 @@ using f32 = float;
 using f64 = double;
 
 // UDLs for memory size values
-inline [[nodiscard]] constexpr u64 operator""_KB(const u64 x) {
+[[nodiscard]] inline constexpr u64 operator""_KB(const u64 x) {
     return 1024ULL * x;
 }
-inline [[nodiscard]] constexpr u64 operator""_MB(const u64 x) {
+[[nodiscard]] inline constexpr u64 operator""_MB(const u64 x) {
     return 1024_KB * x;
 }
-inline [[nodiscard]] constexpr u64 operator""_GB(const u64 x) {
+[[nodiscard]] inline constexpr u64 operator""_GB(const u64 x) {
     return 1024_MB * x;
 }
 

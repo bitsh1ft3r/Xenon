@@ -176,7 +176,7 @@ void saveConfig(const std::filesystem::path &path) {
   data["Paths"]["Fuses"] = fusesTxtPath;
   data["Paths"]["OneBL"] = oneBlBinPath;
   data["Paths"]["Nand"] = nandBinPath;
-  data["Paths"]["ISO"] = oddDiscImagePath;
+  data["Paths"]["ODDImage"] = oddDiscImagePath;
 
   // HighlyExperimental.
   if (data["HighlyExperimental"].comments().empty()) {
