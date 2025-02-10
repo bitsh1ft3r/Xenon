@@ -8,8 +8,7 @@
 #define SET_FPSCR(x)	hCore->ppuThread[hCore->currentThread].FPSCR.FPSCR_Hex = x
 
 static inline void checkFpuAvailable(PPU_STATE* hCore) {
-	if (hCore->ppuThread[hCore->currentThread].SPR.MSR.FP != 1)
-	{
+	if (hCore->ppuThread[hCore->currentThread].SPR.MSR.FP != 1) {
 		hCore->ppuThread[hCore->currentThread].exceptReg |= PPU_EX_FPU;
 		return;
 	}
