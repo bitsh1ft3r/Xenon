@@ -10,6 +10,7 @@
 
 void assert_fail_impl();
 [[noreturn]] void unreachable_impl();
+void assert_fail_debug_msg(const std::string& msg);
 
 #ifdef _MSC_VER
 #define XENON_NO_INLINE __declspec(noinline)

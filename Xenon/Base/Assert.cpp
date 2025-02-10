@@ -29,7 +29,7 @@ void assert_fail_impl() {
     throw std::runtime_error("Unreachable code");
 }
 
-void assert_fail_debug_msg(const char* msg) {
-    LOG_CRITICAL(Debug, "Assertion Failed!\n{}", msg);
+void assert_fail_debug_msg(const std::string& msg) {
+    LOG_CRITICAL(Debug, "Assertion Failed!\n{}", msg.data());
     assert_fail_impl();
 }

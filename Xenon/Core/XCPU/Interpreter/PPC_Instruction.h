@@ -1,45 +1,88 @@
-// Copyright 2025 Xenon Emulator Project
-
 #pragma once
+/*
+* Copyright 2025 Xenon Emulator Project
 
+* All original authors of the rpcs3 PPU_Decoder and PPU_Opcodes maintain their original copyright.
+* Modifed for usage in the Xenon Emulator
+* All rights reserved
+* License: GPL2
+*/
+
+#include <array>
 #include <string>
-#include <unordered_map>
 
 #include "Base/Types.h"
+#include "Base/Logging/Log.h"
+#include "Core/XCPU/Bitfield.h"
+#include "Core/XCPU/PPU/PowerPC.h"
 
-//
-// PowerPC Instruction definitions
-//
+constexpr u64 PPCRotateMask(u32 mb, u32 me) {
+  const u64 mask = ~0ull << (~(me - mb) & 63);
+  return (mask >> (mb & 63)) | (mask << ((64 - mb) & 63));
+}
 
-struct PPU_STATE;
-extern void PPCInterpreter_invalid(PPU_STATE*);
+constexpr u32 PPCDecode(u32 inst) {
+  return ((inst >> 26) | (inst << 6)) & 0x1FFFF; // Rotate + mask
+}
 
 namespace PPCInterpreter {
-  // Define a type alias for function pointers
-  using PPCInstructionHandler = void(*)(PPU_STATE*);
-  struct PPCInstruction {
-    const char* name;
-    PPCInstructionHandler handler;
-  };
-  union PPCInstructionData {
-    uint32_t Data;
-    struct {
-      unsigned int XO_30to31 : 2;
-      unsigned int XO_27to30 : 4;
-      unsigned int XO_27to29 : 3;
-      unsigned int XO_22to30 : 9;
-      unsigned int XO_21to30 : 10;
-      unsigned int XO_21to29 : 9;
-      unsigned int XO_20to30 : 11;
-      unsigned int OPCD : 6;
-    };
-  };
-  extern const std::unordered_map<u32, PPCInstruction> opcodeMap;
-  extern const std::unordered_map<u32, PPCInstruction> subgroup19Map;
-  extern const std::unordered_map<u32, PPCInstruction> subgroup30Map;
-  extern const std::unordered_map<u32, PPCInstruction> subgroup31Map;
-  extern const std::unordered_map<u32, PPCInstruction> subgroup58Map;
-  extern const std::unordered_map<u32, PPCInstruction> subgroup62Map;
-  extern const std::unordered_map<u32, PPCInstruction> subgroup63Map;
-  extern PPCInstruction getInstruction(const PPCInstructionData& data);                                          \
+	// Define a type alias for function pointers
+	using instructionHandler = void(*)(PPU_STATE*);
+	extern void PPCInterpreter_nop(PPU_STATE *hCore);
+	extern void PPCInterpreter_invalid(PPU_STATE *hCore);
+	extern void PPCInterpreter_known_unimplemented(const char *name, PPU_STATE *hCore);
+	class PPCDecoder {
+		class InstrInfo {
+		public:
+			constexpr InstrInfo(u32 v, instructionHandler p, instructionHandler pRc, u32 m = 0) :
+				value(v), ptr0(p), ptrRc(pRc), magn(m)
+			{}
+
+			constexpr InstrInfo(u32 v, const instructionHandler* p, const instructionHandler* pRc, u32 m = 0) :
+				value(v), ptr0(*p), ptrRc(*pRc), magn(m)
+			{}
+
+			u32 value;
+			instructionHandler ptr0;
+			instructionHandler ptrRc;
+			u32 magn; // Non-zero for "columns" (effectively, number of most significant bits "eaten")
+		};
+	public:
+		PPCDecoder();
+		~PPCDecoder() = default;
+		const std::array<instructionHandler, 0x20000>& getTable() const noexcept {
+			return table;
+		}
+		instructionHandler decode(u32 inst) const noexcept {
+			if (inst == 0x60000000) {
+				return &PPCInterpreter_nop;
+			}
+			return table[PPCDecode(inst)];
+		}
+	private:
+		// Fast lookup table
+		std::array<instructionHandler, 0x20000> table;
+
+		void fillTable(u32 mainOp, u32 count, u32 sh, std::initializer_list<InstrInfo> entries) noexcept {
+			if (sh < 11) {
+				for (const auto& v : entries) {
+					for (u32 i = 0; i < 1u << (v.magn + (11 - sh - count)); i++) {
+						for (u32 j = 0; j < 1u << sh; j++) {
+							const u32 k = (((i << (count - v.magn)) | v.value) << sh) | j;
+							c_at(table, (k << 6) | mainOp) = k & 1 ? v.ptrRc : v.ptr0;
+						}
+					}
+				}
+			}
+			else {
+				// Main table (special case)
+				for (const auto& v : entries) {
+					for (u32 i = 0; i < 1u << 11; i++) {
+						c_at(table, i << 6 | v.value) = i & 1 ? v.ptrRc : v.ptr0;
+					}
+				}
+			}
+		}
+	};
+	std::string legacy_GetOpcodeName(u32 instrData);
 } // namespace PPCInterpreter

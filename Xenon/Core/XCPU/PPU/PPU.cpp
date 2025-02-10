@@ -278,7 +278,7 @@ bool PPU::ppuReadNextInstruction() {
   ppuState->ppuThread[ppuState->currentThread].NIA += 4;
   ppuState->ppuThread[ppuState->currentThread].iFetch = true;
   // Fetch the instruction from memory.
-  ppuState->ppuThread[ppuState->currentThread].CI = PPCInterpreter::MMURead32(
+  ppuState->ppuThread[ppuState->currentThread].CI.opcode = PPCInterpreter::MMURead32(
       ppuState, ppuState->ppuThread[ppuState->currentThread].CIA);
   if (ppuState->ppuThread[ppuState->currentThread].exceptReg & PPU_EX_INSSTOR ||
       ppuState->ppuThread[ppuState->currentThread].exceptReg &
