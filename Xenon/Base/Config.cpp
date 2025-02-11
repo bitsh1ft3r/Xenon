@@ -30,6 +30,7 @@ static bool gpuRenderThreadEnabled = true;
 static bool isFullscreen = false;
 static bool shouldQuitOnWindowClosure = false;
 Base::Log::Level currentLogLevel = Base::Log::Level::Warning;
+static bool islogAdvanced = false;
 
 // SMC.
 static int smcPowerOnReason = 0x11; // Valid values are: 0x11 (SMC_PWR_REAS_PWRBTN) and 0x12
@@ -68,6 +69,8 @@ bool gpuThreadEnabled() { return gpuRenderThreadEnabled; }
 bool quitOnWindowClosure() { return shouldQuitOnWindowClosure; }
 
 Base::Log::Level getCurrentLogLevel() { return currentLogLevel; }
+
+bool logAdvanced() { return islogAdvanced; }
 
 int smcPowerOnType() { return smcPowerOnReason; }
 
@@ -120,6 +123,7 @@ void loadConfig(const std::filesystem::path &path) {
     shouldQuitOnWindowClosure =
         toml::find_or<bool>(general, "QuitOnWindowClosure", false);
     currentLogLevel = (Base::Log::Level)find_or<int>(general, "Loglevel", false);
+    islogAdvanced = toml::find_or<bool>(general, "logAdvanced", false);
   }
 
   if (data.contains("SMC")) {
@@ -184,6 +188,7 @@ void saveConfig(const std::filesystem::path &path) {
   data["General"]["Fullscreen"] = isFullscreen;
   data["General"]["QuitOnWindowClosure"] = shouldQuitOnWindowClosure;
   data["General"]["Loglevel"] = (int)currentLogLevel;
+  data["General"]["logAdvanced"] = islogAdvanced;
 
   // SMC.                                      
   data["SMC"]["COMPort"] = comPort;
@@ -197,7 +202,7 @@ void saveConfig(const std::filesystem::path &path) {
   data["GPU"].comments().push_back("# Window Size (Not the Resolution!)");
   data["GPU"]["screenWidth"] = screenWidth;
   data["GPU"]["screenHeight"] = screenHeight;
-  //    data["GPU"]["gpuId"] = gpuId;
+  // data["GPU"]["gpuId"] = gpuId;
 
   // Paths.
   data["Paths"]["Fuses"] = fusesTxtPath;

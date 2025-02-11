@@ -26,6 +26,8 @@ bool gpuThreadEnabled();
 bool quitOnWindowClosure();
 // Current log level.
 Base::Log::Level getCurrentLogLevel();
+// Show more details on log.
+bool logAdvanced();
 
 //
 // SMC Options.

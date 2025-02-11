@@ -7,6 +7,7 @@
 #endif
 
 #include "Base/Assert.h"
+#include "Base/Config.h"
 #include "Filter.h"
 #include "Log_entry.h"
 
@@ -19,12 +20,12 @@ std::string FormatLogMessage(const Entry& entry) {
     const char* class_name = GetLogClassName(entry.log_class);
     const char* level_name = GetLevelName(entry.log_level);
 
-#ifndef _DEBUG
-    return fmt::format("[{}] <{}> {}", class_name, level_name, entry.message);
-#else
+if (Config::logAdvanced()) {
     return fmt::format("[{}] <{}> {}:{}:{}: {}", class_name, level_name, entry.filename,
         entry.function, entry.line_num, entry.message);
-#endif // !_DEBUG
+} else {
+    return fmt::format("[{}] <{}> {}", class_name, level_name, entry.message);
+}
 }
 
 void PrintMessage(const Entry& entry) {
