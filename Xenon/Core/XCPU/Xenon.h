@@ -13,8 +13,6 @@
 // - 32 Kb SROM.
 // - 768 bits of IBM's eFuse technology.
 
-#include <thread>
-
 #include "Core/RootBus/RootBus.h"
 #include "Core/XCPU/PPU/PPU.h"
 

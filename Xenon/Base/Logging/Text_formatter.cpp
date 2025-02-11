@@ -1,7 +1,6 @@
 // Copyright 2025 Xenon Emulator Project
 
-#include <array>
-#include <cstdio>
+#include "Text_formatter.h"
 
 #ifdef _WIN32
 #include <Windows.h>
@@ -9,9 +8,7 @@
 
 #include "Base/Assert.h"
 #include "Filter.h"
-#include "Log.h"
 #include "Log_entry.h"
-#include "Text_formatter.h"
 
 namespace Base::Log {
 

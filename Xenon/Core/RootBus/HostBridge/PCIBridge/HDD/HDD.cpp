@@ -1,8 +1,8 @@
 // Copyright 2025 Xenon Emulator Project
 
-#include "Base/Logging/Log.h"
-
 #include "HDD.h"
+
+#include "Base/Logging/Log.h"
 
 HDD::HDD(PCIBridge *parentPCIBridge) {
   // TODO(bitsh1ft3r): Implement PCIe Capabilities.

@@ -1,7 +1,6 @@
 // Copyright 2025 Xenon Emulator Project
 
 #include "PPCInterpreter.h"
-#include "Base/Logging/Log.h"
 #include "Core/XCPU/PostBus/PostBus.h"
 
 //

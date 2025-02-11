@@ -2,8 +2,6 @@
 
 #pragma once
 
-#include <vector>
-
 #include "PCIDevice.h"
 
 #include "Core/RootBus/HostBridge/PCIe.h"

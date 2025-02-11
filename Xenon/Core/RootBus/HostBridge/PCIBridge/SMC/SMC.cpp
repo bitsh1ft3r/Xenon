@@ -1,8 +1,9 @@
 // Copyright 2025 Xenon Emulator Project
 
+#include "SMC.h"
+
 #include "Base/Logging/Log.h"
 
-#include "SMC.h"
 #include "HANA_State.h"
 #include "SMC_Config.h"
 

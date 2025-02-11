@@ -1,8 +1,6 @@
 // Copyright 2025 Xenon Emulator Project
 
-#include <chrono>
-#include <filesystem>
-#include <thread>
+#include "Backend.h"
 
 #include <fmt/format.h>
 
@@ -10,18 +8,15 @@
 #include <Windows.h> // For OutputDebugStringW
 #endif
 
-#include "Backend.h"
-#include "Log.h"
-#include "Log_entry.h"
-#include "Text_formatter.h"
-
-
 #include "Base/Bounded_threadsafe_queue.h"
-#include "Base/Config.h"
 #include "Base/io_file.h"
 #include "Base/Path_util.h"
 #include "Base/String_util.h"
 #include "Base/Thread.h"
+
+#include "Log.h"
+#include "Log_entry.h"
+#include "Text_formatter.h"
 
 namespace Base::Log {
 

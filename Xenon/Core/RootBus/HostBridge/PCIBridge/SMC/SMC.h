@@ -3,8 +3,6 @@
 #pragma once
 
 #include <Windows.h>
-#include <thread>
-#include <vector>
 
 #include "Core/RootBus/HostBridge/PCIBridge/PCIBridge.h"
 #include "Core/RootBus/HostBridge/PCIBridge/PCIDevice.h"

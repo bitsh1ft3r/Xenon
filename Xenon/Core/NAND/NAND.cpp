@@ -1,8 +1,8 @@
 // Copyright 2025 Xenon Emulator Project
 
-#include "Base/Logging/Log.h"
-
 #include "NAND.h"
+
+#include "Base/Logging/Log.h"
 
 /********************Responsible for loading the NAND file********************/
 bool NAND::Load(const std::string filePath) {

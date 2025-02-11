@@ -2,7 +2,6 @@
 
 #pragma once
 
-#include <string_view>
 #include "Filter.h"
 
 namespace Base::Log {

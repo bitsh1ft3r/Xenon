@@ -1,9 +1,9 @@
 // Copyright 2025 Xenon Emulator Project
 
+#include "ODD.h"
+
 #include "Base/Config.h"
 #include "Base/Logging/Log.h"
-
-#include "ODD.h"
 
 //
 // ATAPI Registers Offsets

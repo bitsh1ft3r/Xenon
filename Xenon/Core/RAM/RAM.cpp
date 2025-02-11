@@ -1,7 +1,5 @@
 // Copyright 2025 Xenon Emulator Project
 
-#include <iostream>
-
 #include "RAM.h"
 
 /***Sets the destination, value (205) and size (RAMData)***/

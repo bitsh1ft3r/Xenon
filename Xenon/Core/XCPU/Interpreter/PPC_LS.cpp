@@ -8,7 +8,6 @@
 // Store Byte
 //
 
-#include <iostream>
 #define DBG_LOAD(x) // std::cout << x
 
 void PPCInterpreter::PPCInterpreter_dcbst(PPU_STATE *hCore) {

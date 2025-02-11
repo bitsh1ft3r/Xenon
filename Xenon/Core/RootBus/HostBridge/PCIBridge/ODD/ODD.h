@@ -3,7 +3,6 @@
 #pragma once
 
 #include <Windows.h>
-#include <vector>
 
 #include "Core/RAM/RAM.h"
 #include "Core/RootBus/HostBridge/PCIBridge/PCIBridge.h"

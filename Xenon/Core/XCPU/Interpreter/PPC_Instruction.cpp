@@ -7,9 +7,10 @@
 * License: GPL2
 */
 
-#include "Base/Logging/Log.h"
-#include "PPCInterpreter.h"
 #include "PPC_Instruction.h"
+
+#include "PPCInterpreter.h"
+
 #define D_STUB(name) void PPCInterpreter_##name(PPU_STATE *hCore) { return PPCInterpreter_known_unimplemented(#name, hCore); }
 #define D_STUBRC(name) void PPCInterpreter_##name##x(PPU_STATE *hCore) { return PPCInterpreter_known_unimplemented(#name "x", hCore); } 
 

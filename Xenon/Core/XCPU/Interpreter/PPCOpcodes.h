@@ -1,4 +1,5 @@
-#pragma once 
+#pragma once
+
 #include "PPCInternal.h"
 #include "Core/XCPU/PPU/PowerPC.h"
 

@@ -2,8 +2,6 @@
 
 #pragma once
 
-#include <cstdint>
-#include <type_traits>
 #include <format>
 
 // Signed
@@ -50,11 +48,13 @@ static consteval T min_t() {
 		return (-0x7F - 1);
 	}
 }
+
 template <typename T>
 class min {
 public:
 	static constexpr T value = min_t<T>();
 };
+
 template <typename T>
 constexpr T min_v = min<T>::value;
 template <typename T>
@@ -77,11 +77,13 @@ static consteval T max_t() {
 		return 0x7F;
 	}
 }
+
 template <typename T>
 class max {
 public:
 	static constexpr T value = max_t<T>();
 };
+
 template <typename T>
 constexpr T max_v = max<T>::value;
 
@@ -90,6 +92,7 @@ extern void assert_fail_debug_msg(const std::string& msg);
 // Array accessors
 template <typename cT, typename T>
 	requires requires (cT&& x) { std::size(x); std::data(x); } || requires (cT && x) {	std::size(x); x.front(); }
+
 [[nodiscard]] constexpr auto& c_at(cT&& c, T&& idx) {
 	// Associative container												
 	size_t cSize = c.size();
@@ -100,6 +103,7 @@ template <typename cT, typename T>
 	std::advance(it, idx);
 	return *it;
 }
+
 template <typename cT, typename T>
 	requires requires(cT&& x, T&& y) { x.count(y); x.find(y); }
 [[nodiscard]] static constexpr auto& c_at(cT&& c, T&& idx) {

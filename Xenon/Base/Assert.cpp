@@ -1,7 +1,7 @@
 // Copyright 2025 Xenon Emulator Project
 
-#include "Arch.h"
 #include "Assert.h"
+
 #include "Logging/Backend.h"
 
 #ifdef  _MSC_VER

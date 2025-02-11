@@ -1,8 +1,8 @@
 // Copyright 2025 Xenon Emulator Project
 
-#include "Base/Logging/Log.h"
-
 #include "SFCX.h"
+
+#include "Base/Logging/Log.h"
 
 SFCX::SFCX(const std::string nandLoadPath, PCIBridge *parentPCIBridge) {
   // Asign parent PCI Bridge pointer.

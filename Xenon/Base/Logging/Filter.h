@@ -3,8 +3,6 @@
 #pragma once
 
 #include <array>
-#include <cstddef>
-#include <string_view>
 #include "Types.h"
 
 namespace Base::Log {

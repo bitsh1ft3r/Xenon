@@ -2,9 +2,6 @@
 
 #pragma once
 
-#include <type_traits>
-#include "Types.h"
-
 #define DECLARE_ENUM_FLAG_OPERATORS(type)                                                          \
     [[nodiscard]] constexpr type operator|(type a, type b) noexcept {                              \
         using T = std::underlying_type_t<type>;                                                    \

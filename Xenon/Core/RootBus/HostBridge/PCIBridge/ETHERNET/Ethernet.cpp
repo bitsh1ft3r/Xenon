@@ -1,6 +1,7 @@
 // Copyright 2025 Xenon Emulator Project
 
 #include "Ethernet.h"
+
 #include "Base/Logging/Log.h"
 
 #define XE_NET_STATUS_INT 0x0000004C

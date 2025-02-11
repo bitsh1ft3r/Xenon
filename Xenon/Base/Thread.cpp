@@ -1,12 +1,9 @@
 // Copyright 2025 Xenon Emulator Project
 
-#include <string>
-#include <thread>
-
-#include "Error.h"
-#include "Logging/Log.h"
 #include "Thread.h"
+
 #include "ntapi.h"
+
 #ifdef __APPLE__
 #include <mach/mach.h>
 #include <mach/mach_time.h>
@@ -15,6 +12,7 @@
 #include <Windows.h>
 #include "String_util.h"
 #else
+
 #if defined(__Bitrig__) || defined(__DragonFly__) || defined(__FreeBSD__) || defined(__OpenBSD__)
 #include <pthread_np.h>
 #else

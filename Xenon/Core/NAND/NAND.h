@@ -2,8 +2,6 @@
 
 #pragma once
 
-#include <fstream>
-
 #include "Base/SystemDevice.h"
 
 #define NAND_START_ADDR 0xC8000000

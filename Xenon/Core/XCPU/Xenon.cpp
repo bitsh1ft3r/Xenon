@@ -1,8 +1,8 @@
 // Copyright 2025 Xenon Emulator Project
 
-#include "Base/Logging/Log.h"
-
 #include "Xenon.h"
+
+#include "Base/Logging/Log.h"
 
 Xenon::Xenon(RootBus *inBus, const std::string blPath, eFuses inFuseSet) {
   // First, Initialize system bus.

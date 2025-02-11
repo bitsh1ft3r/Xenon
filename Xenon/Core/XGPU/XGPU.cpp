@@ -1,6 +1,7 @@
 // Copyright 2025 Xenon Emulator Project
 
 #include "XGPU.h"
+
 #include "XGPUConfig.h"
 #include "XenosRegisters.h"
 

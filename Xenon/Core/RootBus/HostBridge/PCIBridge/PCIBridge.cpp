@@ -1,8 +1,9 @@
 // Copyright 2025 Xenon Emulator Project
 
+#include "PCIBridge.h"
+
 #include "Base/Logging/Log.h"
 
-#include "PCIBridge.h"
 #include "PCIBridgeConfig.h"
 
 // Device tree, taken from an actual system, Corona V6.

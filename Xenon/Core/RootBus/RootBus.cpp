@@ -1,7 +1,8 @@
 // Copyright 2025 Xenon Emulator Project
 
-#include "Base/Logging/Log.h"
 #include "RootBus.h"
+
+#include "Base/Logging/Log.h"
 
 #define PCI_CONFIG_SPACE_BEGIN 0xD0000000
 #define PCI_CONFIG_SPACE_END 0xD1000000
