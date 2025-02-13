@@ -184,18 +184,29 @@ void saveConfig(const std::filesystem::path &path) {
   }
 
   // General.
+  data["General"]["GPURenderThreadEnabled"].comments().push_back("# Enable the GPU Render thread and main window.");
   data["General"]["GPURenderThreadEnabled"] = gpuRenderThreadEnabled;
+  data["General"]["GPURenderThreadEnabled"].comments().push_back("");
   data["General"]["Fullscreen"] = isFullscreen;
   data["General"]["QuitOnWindowClosure"] = shouldQuitOnWindowClosure;
+  data["General"]["Loglevel"].comments().push_back("# Controls the current log level output filter.");
   data["General"]["Loglevel"] = (int)currentLogLevel;
   data["General"]["logAdvanced"] = islogAdvanced;
 
   // SMC.                                      
+  data["SMC"]["COMPort"].comments().push_back("# Current vCOM Port used for communication between Xenon and your PC.");
   data["SMC"]["COMPort"] = comPort;
+  data["SMC"]["SMCPowerOnType"].comments().push_back("# SMC power-up type/cause (Power Button, Eject Button, etc...)");
+  data["SMC"]["SMCPowerOnType"].comments().push_back("# Most used values are:");
+  data["SMC"]["SMCPowerOnType"].comments().push_back("# 17: Console is being powered by a Power button press.");
+  data["SMC"]["SMCPowerOnType"].comments().push_back("# 18: Console is being powered by an Eject button press.");
+  data["SMC"]["SMCPowerOnType"].comments().push_back("# Note: When trying to boot Linux/XeLL Reloaded this must be set to 18.");
   data["SMC"]["SMCPowerOnType"] = smcPowerOnReason;
 
   // PowerPC.
+  data["PowerPC"]["HW_INIT_SKIP1"].comments().push_back("# Hardware Init Skip address 1.");
   data["PowerPC"]["HW_INIT_SKIP1"] = SKIP_HW_INIT_1;
+  data["PowerPC"]["HW_INIT_SKIP2"].comments().push_back("# Hardware Init Skip address 2.");
   data["PowerPC"]["HW_INIT_SKIP2"] = SKIP_HW_INIT_2;
 
   // GPU.
