@@ -33,6 +33,8 @@ Base::Log::Level currentLogLevel = Base::Log::Level::Warning;
 static bool islogAdvanced = false;
 
 // SMC.
+static int smcAvPackType = 31; // Set to HDMI_NO_AUDIO. See SMC.cpp for a list of values.
+
 static int smcPowerOnReason = 0x11; // Valid values are: 0x11 (SMC_PWR_REAS_PWRBTN) and 0x12
                                     // (SMC_PWR_REAS_EJECT).
 static int comPort = 2;
@@ -71,6 +73,8 @@ bool quitOnWindowClosure() { return shouldQuitOnWindowClosure; }
 Base::Log::Level getCurrentLogLevel() { return currentLogLevel; }
 
 bool logAdvanced() { return islogAdvanced; }
+
+int smcCurrentAvPack() { return smcAvPackType; }
 
 int smcPowerOnType() { return smcPowerOnReason; }
 
@@ -129,6 +133,7 @@ void loadConfig(const std::filesystem::path &path) {
   if (data.contains("SMC")) {
     const toml::value &smc = data.at("SMC");
     comPort = toml::find_or<int>(smc, "COMPort", false);
+    smcAvPackType = toml::find_or<int>(smc, "SMCAvPackType", false);
     smcPowerOnReason = toml::find_or<int>(smc, "SMCPowerOnType", false);
   }
 
@@ -196,6 +201,11 @@ void saveConfig(const std::filesystem::path &path) {
   // SMC.                                      
   data["SMC"]["COMPort"].comments().push_back("# Current vCOM Port used for communication between Xenon and your PC.");
   data["SMC"]["COMPort"] = comPort;
+  data["SMC"]["SMCAvPackType"].comments().push_back("# The current connected AV Pack. Used to set Xenos internal render resolution.");
+  data["SMC"]["SMCAvPackType"].comments().push_back("# Default value is 31 (HDMI_NO_AUDIO) = 1280*720.");
+  data["SMC"]["SMCAvPackType"].comments().push_back("# Lowest value is 87 (COMPOSITE) = 640*480.");
+  data["SMC"]["SMCAvPackType"].comments().push_back("# Note: The window size must never be smaller than the internal resolution.");
+  data["SMC"]["SMCAvPackType"] = smcAvPackType;
   data["SMC"]["SMCPowerOnType"].comments().push_back("# SMC power-up type/cause (Power Button, Eject Button, etc...)");
   data["SMC"]["SMCPowerOnType"].comments().push_back("# Most used values are:");
   data["SMC"]["SMCPowerOnType"].comments().push_back("# 17: Console is being powered by a Power button press.");
@@ -210,7 +220,7 @@ void saveConfig(const std::filesystem::path &path) {
   data["PowerPC"]["HW_INIT_SKIP2"] = SKIP_HW_INIT_2;
 
   // GPU.
-  data["GPU"].comments().push_back("# Window Size (Not the Resolution!)");
+  data["GPU"].comments().push_back("# Window Size (Not the Internal Resolution!)");
   data["GPU"]["screenWidth"] = screenWidth;
   data["GPU"]["screenHeight"] = screenHeight;
   // data["GPU"]["gpuId"] = gpuId;

@@ -33,6 +33,9 @@ bool logAdvanced();
 // SMC Options.
 //
 
+// SMC Detected AV Pack. Tells the system what kind of video output it is connected to.
+// This is used to detect the current resolution.
+int smcCurrentAvPack();
 // SMC Power On type (PowerButton, eject button, controller, etc...).
 int smcPowerOnType();
 
