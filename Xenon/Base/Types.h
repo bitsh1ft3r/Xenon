@@ -117,3 +117,322 @@ template <typename cT, typename T>
 	}
 	return found->second;
 }
+
+#ifndef _MSC_VER
+using u128 = __uint128_t;
+using s128 = __int128_t;
+#else
+
+extern "C"
+{
+	union __m128;
+	union __m128i;
+	struct __m128d;
+
+	unsigned char _addcarry_u64(unsigned char, u64, u64, u64*);
+	unsigned char _subborrow_u64(unsigned char, u64, u64, u64*);
+	u64 __shiftleft128(u64, u64, unsigned char);
+	u64 __shiftright128(u64, u64, unsigned char);
+	u64 _umul128(u64, u64, u64*);
+}
+
+// Unsigned 128-bit integer implementation.
+struct alignas(16) u128
+{
+	u64 lo, hi;
+
+	u128() noexcept = default;
+
+	template <typename T, std::enable_if_t<std::is_unsigned_v<T>, u64> = 0>
+	constexpr u128(T arg) noexcept
+		: lo(arg)
+		, hi(0)
+	{
+	}
+
+	template <typename T, std::enable_if_t<std::is_signed_v<T>, s64> = 0>
+	constexpr u128(T arg) noexcept
+		: lo(s64{ arg })
+		, hi(s64{ arg } >> 63)
+	{
+	}
+
+	constexpr explicit operator bool() const noexcept
+	{
+		return !!(lo | hi);
+	}
+
+	constexpr explicit operator u64() const noexcept
+	{
+		return lo;
+	}
+
+	constexpr explicit operator s64() const noexcept
+	{
+		return lo;
+	}
+
+	constexpr friend u128 operator+(const u128& l, const u128& r)
+	{
+		u128 value = l;
+		value += r;
+		return value;
+	}
+
+	constexpr friend u128 operator-(const u128& l, const u128& r)
+	{
+		u128 value = l;
+		value -= r;
+		return value;
+	}
+
+	constexpr friend u128 operator*(const u128& l, const u128& r)
+	{
+		u128 value = l;
+		value *= r;
+		return value;
+	}
+
+	constexpr u128 operator+() const
+	{
+		return *this;
+	}
+
+	constexpr u128 operator-() const
+	{
+		u128 value{};
+		value -= *this;
+		return value;
+	}
+
+	constexpr u128& operator++()
+	{
+		*this += 1;
+		return *this;
+	}
+
+	constexpr u128 operator++(int)
+	{
+		u128 value = *this;
+		*this += 1;
+		return value;
+	}
+
+	constexpr u128& operator--()
+	{
+		*this -= 1;
+		return *this;
+	}
+
+	constexpr u128 operator--(int)
+	{
+		u128 value = *this;
+		*this -= 1;
+		return value;
+	}
+
+	constexpr u128 operator<<(u128 shift_value) const
+	{
+		u128 value = *this;
+		value <<= shift_value;
+		return value;
+	}
+
+	constexpr u128 operator>>(u128 shift_value) const
+	{
+		u128 value = *this;
+		value >>= shift_value;
+		return value;
+	}
+
+	constexpr u128 operator~() const
+	{
+		u128 value{};
+		value.lo = ~lo;
+		value.hi = ~hi;
+		return value;
+	}
+
+	constexpr friend u128 operator&(const u128& l, const u128& r)
+	{
+		u128 value{};
+		value.lo = l.lo & r.lo;
+		value.hi = l.hi & r.hi;
+		return value;
+	}
+
+	constexpr friend u128 operator|(const u128& l, const u128& r)
+	{
+		u128 value{};
+		value.lo = l.lo | r.lo;
+		value.hi = l.hi | r.hi;
+		return value;
+	}
+
+	constexpr friend u128 operator^(const u128& l, const u128& r)
+	{
+		u128 value{};
+		value.lo = l.lo ^ r.lo;
+		value.hi = l.hi ^ r.hi;
+		return value;
+	}
+
+	constexpr u128& operator+=(const u128& r)
+	{
+		if (std::is_constant_evaluated())
+		{
+			lo += r.lo;
+			hi += r.hi + (lo < r.lo);
+		}
+		else
+		{
+			_addcarry_u64(_addcarry_u64(0, r.lo, lo, &lo), r.hi, hi, &hi);
+		}
+
+		return *this;
+	}
+
+	constexpr u128& operator-=(const u128& r)
+	{
+		if (std::is_constant_evaluated())
+		{
+			hi -= r.hi + (lo < r.lo);
+			lo -= r.lo;
+		}
+		else
+		{
+			_subborrow_u64(_subborrow_u64(0, lo, r.lo, &lo), hi, r.hi, &hi);
+		}
+
+		return *this;
+	}
+
+	constexpr u128& operator*=(const u128& r)
+	{
+		const u64 _hi = r.hi * lo + r.lo * hi;
+
+		if (std::is_constant_evaluated())
+		{
+			hi = (lo >> 32) * (r.lo >> 32) + (((lo >> 32) * (r.lo & 0xffffffff)) >> 32) + (((r.lo >> 32) * (lo & 0xffffffff)) >> 32);
+			lo = lo * r.lo;
+		}
+		else
+		{
+			lo = _umul128(lo, r.lo, &hi);
+		}
+
+		hi += _hi;
+		return *this;
+	}
+
+	constexpr u128& operator<<=(const u128& r)
+	{
+		if (std::is_constant_evaluated())
+		{
+			if (r.hi == 0 && r.lo < 64)
+			{
+				hi = (hi << r.lo) | (lo >> (64 - r.lo));
+				lo = (lo << r.lo);
+				return *this;
+			}
+			else if (r.hi == 0 && r.lo < 128)
+			{
+				hi = (lo << (r.lo - 64));
+				lo = 0;
+				return *this;
+			}
+		}
+
+		const u64 v0 = lo << (r.lo & 63);
+		const u64 v1 = __shiftleft128(lo, hi, static_cast<unsigned char>(r.lo));
+		lo = (r.lo & 64) ? 0 : v0;
+		hi = (r.lo & 64) ? v0 : v1;
+		return *this;
+	}
+
+	constexpr u128& operator>>=(const u128& r)
+	{
+		if (std::is_constant_evaluated())
+		{
+			if (r.hi == 0 && r.lo < 64)
+			{
+				lo = (lo >> r.lo) | (hi << (64 - r.lo));
+				hi = (hi >> r.lo);
+				return *this;
+			}
+			else if (r.hi == 0 && r.lo < 128)
+			{
+				lo = (hi >> (r.lo - 64));
+				hi = 0;
+				return *this;
+			}
+		}
+
+		const u64 v0 = hi >> (r.lo & 63);
+		const u64 v1 = __shiftright128(lo, hi, static_cast<unsigned char>(r.lo));
+		lo = (r.lo & 64) ? v0 : v1;
+		hi = (r.lo & 64) ? 0 : v0;
+		return *this;
+	}
+
+	constexpr u128& operator&=(const u128& r)
+	{
+		lo &= r.lo;
+		hi &= r.hi;
+		return *this;
+	}
+
+	constexpr u128& operator|=(const u128& r)
+	{
+		lo |= r.lo;
+		hi |= r.hi;
+		return *this;
+	}
+
+	constexpr u128& operator^=(const u128& r)
+	{
+		lo ^= r.lo;
+		hi ^= r.hi;
+		return *this;
+	}
+};
+
+// Signed 128-bit integer implementation
+struct s128 : u128
+{
+	using u128::u128;
+
+	constexpr s128 operator>>(u128 shift_value) const
+	{
+		s128 value = *this;
+		value >>= shift_value;
+		return value;
+	}
+
+	constexpr s128& operator>>=(const u128& r)
+	{
+		if (std::is_constant_evaluated())
+		{
+			if (r.hi == 0 && r.lo < 64)
+			{
+				lo = (lo >> r.lo) | (hi << (64 - r.lo));
+				hi = (static_cast<s64>(hi) >> r.lo);
+				return *this;
+			}
+			else if (r.hi == 0 && r.lo < 128)
+			{
+				s64 _lo = static_cast<s64>(hi) >> (r.lo - 64);
+				lo = _lo;
+				hi = _lo >> 63;
+				return *this;
+			}
+		}
+
+		const u64 v0 = static_cast<s64>(hi) >> (r.lo & 63);
+		const u64 v1 = __shiftright128(lo, hi, static_cast<unsigned char>(r.lo));
+		lo = (r.lo & 64) ? v0 : v1;
+		hi = (r.lo & 64) ? static_cast<s64>(hi) >> 63 : v0;
+		return *this;
+	}
+};
+#endif
