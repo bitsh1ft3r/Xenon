@@ -151,7 +151,6 @@ namespace PPCInterpreter {
   D_STUB(stvewx);
   D_STUB(eciwx);
   D_STUB(ecowx);
-  D_STUB(orc);
   D_STUB(slbmfev);
   D_STUB(slbmfee);
 
@@ -661,7 +660,8 @@ namespace PPCInterpreter {
       { 0x177, GET(lhaux) },
       { 0x192, GET(slbmte) },
       { 0x197, GET(sthx) },
-      { 0x19C, GET(orc) },
+      { 0x19C, GET(orcx) },
+      { 0x1B2, GET(slbie) },
       { 0x1B6, GET(ecowx) },
       { 0x1B7, GET(sthux) },
       { 0x1BC, GETRC(or) },
