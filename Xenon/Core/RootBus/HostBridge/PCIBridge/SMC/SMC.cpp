@@ -417,6 +417,9 @@ void Xe::PCIDev::SMC::SMCCore::smcMainThread() {
       // Set FIFO_IN_STATUS_REG to FIFO_STATUS_READY
       smcPCIState->fifoInStatusReg = FIFO_STATUS_READY;
 
+      // Some commands does'nt have responses/interrupts.
+      bool noResponse = false;
+
       // Note that the first byte in the response is always Command ID.
 
       switch (
@@ -530,6 +533,7 @@ void Xe::PCIDev::SMC::SMCCore::smcMainThread() {
         break;
       case Xe::PCIDev::SMC::SMC_SET_FP_LEDS:
           LOG_WARNING(SMC, "Unimplemented SMC_FIFO_CMD: SMC_SET_FP_LEDS");
+          noResponse = true;
         break;
       case Xe::PCIDev::SMC::SMC_SET_RTC_WAKE:
           LOG_WARNING(SMC, "Unimplemented SMC_FIFO_CMD: SMC_SET_RTC_WAKE");
@@ -557,7 +561,7 @@ void Xe::PCIDev::SMC::SMCCore::smcMainThread() {
       smcPCIState->fifoOutStatusReg = FIFO_STATUS_READY;
 
       // If interrupts are active set Int status and issue one.
-      if (smcPCIState->smiIntEnabledReg & SMI_INT_ENABLED) {
+      if (smcPCIState->smiIntEnabledReg & SMI_INT_ENABLED && noResponse == false) {
         smcPCIState->smiIntPendingReg = SMI_INT_PENDING;
         pciBridge->RouteInterrupt(PRIO_SMM);
       }
