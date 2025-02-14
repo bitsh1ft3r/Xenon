@@ -275,6 +275,12 @@ void Xe::PCIDev::SMC::SMCCore::setupUART(u32 uartConfig) {
   //  Initialize the DCB structure.
   SecureZeroMemory(&smcCoreState->comPortDCB, sizeof(DCB));
   smcCoreState->comPortDCB.DCBlength = sizeof(DCB);
+
+  // Get Current COM Port State
+  if (!GetCommState(smcCoreState->comPortHandle, &smcCoreState->comPortDCB)) {
+    LOG_ERROR(SMC, "UART: GetCommState failed with error {:#x}.", GetLastError());
+  }
+
   switch (uartConfig) {
   case 0x1e6:
     LOG_INFO(SMC, " * BaudRate: 115200bps, DataSize: 8, Parity: N, StopBits: 1.");
@@ -314,10 +320,6 @@ void Xe::PCIDev::SMC::SMCCore::setupUART(u32 uartConfig) {
     return;
   }
 
-  // Get Current COM Port State
-  if (!GetCommState(smcCoreState->comPortHandle, &smcCoreState->comPortDCB)) {
-    LOG_ERROR(SMC, "UART: GetCommState failed with error {:#x}.", GetLastError());
-  }
   // Set The COM Port State as per config value.
   if (!SetCommState(smcCoreState->comPortHandle, &smcCoreState->comPortDCB)) {
     LOG_ERROR(SMC, "UART: SetCommState failed with error {:#x}.", GetLastError());
