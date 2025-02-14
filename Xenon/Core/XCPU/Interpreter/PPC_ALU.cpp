@@ -3,105 +3,167 @@
 #include "Base/Logging/Log.h"
 #include "PPCInterpreter.h"
 
-#define GPR(x) hCore->ppuThread[hCore->currentThread].GPR[x]
+#define GPR(x)        hCore->ppuThread[hCore->currentThread].GPR[x]
 #define XER_SET_CA(v) hCore->ppuThread[hCore->currentThread].SPR.XER.CA = v
+#define XER_GET_CA    hCore->ppuThread[hCore->currentThread].SPR.XER.CA
+#define _instr        hCore->ppuThread[hCore->currentThread].CI
+
+//
+// Helper functions.
+//
+
+// Based on the work done by the rpcs3 team.
+
+// Add/Add Carrying implementation.
+template<typename T>
+struct addResult
+{
+  T result;
+  bool carry;
+
+  addResult() = default;
+
+  // Straighforward ADD with flags
+  addResult(T a, T b)
+    : result(a + b)
+    , carry(result < a)
+  {
+  }
+
+  // Straighforward ADC with flags
+  addResult(T a, T b, bool c)
+    : addResult(a, b)
+  {
+    addResult r(result, c);
+    result = r.result;
+    carry |= r.carry;
+  }
+};
+
+static addResult<u64> add64Bits(u64 a, u64 b)
+{
+  return{ a, b };
+}
+
+static addResult<u64> add64Bits(u64 a, u64 b, bool c)
+{
+  return{ a, b, c };
+}
+
+// Multiply High Sign/Unsigned.
+inline u64 umulh64(u64 x, u64 y)
+{
+#ifdef _MSC_VER
+  return __umulh(x, y);
+#else
+  return static_cast<u64>((u128{ x } *u128{ y }) >> 64);
+#endif
+}
+
+inline s64 mulh64(s64 x, s64 y)
+{
+#ifdef _MSC_VER
+  return __mulh(x, y);
+#else
+  return (s128{ x } *s128{ y }) >> 64;
+#endif
+}
+
+//
+// Instruction definitions.
+//
 
 void PPCInterpreter::PPCInterpreter_addx(PPU_STATE *hCore) {
-  XO_FORM_rD_rA_rB_RC;
+  const u64 RA = GPR(_instr.ra);
+  const u64 RB = GPR(_instr.rb);
 
-  GPR(rD) = GPR(rA) + GPR(rB);
+  GPR(_instr.rd) = RA + RB;
 
-  if (RC) {
-    u32 CR = CRCompS(hCore, GPR(rD), 0);
+  if (_instr.rc) {
+    u32 CR = CRCompS(hCore, GPR(_instr.rd), 0);
     ppcUpdateCR(hCore, 0, CR);
   }
 }
 
 void PPCInterpreter::PPCInterpreter_addex(PPU_STATE *hCore) {
-  XO_FORM_rD_rA_rB_RC;
+  const u64 RA = GPR(_instr.ra);
+  const u64 RB = GPR(_instr.rb);
 
-  GPR(rD) = ppcAddCarrying(hCore, GPR(rA), GPR(rB),
-                           hCore->ppuThread[hCore->currentThread].SPR.XER.CA);
+  const auto add = add64Bits(RA, RB, XER_GET_CA);
+  GPR(_instr.rd) = add.result;
+  XER_SET_CA(add.carry);
 
-  if (RC) {
-    u32 CR = CRCompS(hCore, GPR(rD), 0);
+  if (_instr.rc) {
+    u32 CR = CRCompS(hCore, add.result, 0);
     ppcUpdateCR(hCore, 0, CR);
   }
 }
 
-/* Add Immediate */
 void PPCInterpreter::PPCInterpreter_addi(PPU_STATE *hCore) {
-  D_FORM_rD_rA_SI;
-  SI = EXTS(SI, 16);
-
-  GPR(rD) = (rA ? GPR(rA) : 0) + SI;
+  GPR(_instr.rd) = _instr.ra ? GPR(_instr.ra) + _instr.simm16 : _instr.simm16;
 }
 
 void PPCInterpreter::PPCInterpreter_addic(PPU_STATE *hCore) {
-  D_FORM_rD_rA_SI;
-  SI = EXTS(SI, 16);
-  GPR(rD) = ppcAddCarrying(hCore, GPR(rA), SI, 0);
+  const s64 ra = GPR(_instr.ra);
+  const s64 i = _instr.simm16;
+
+  const auto add = add64Bits(ra, i);
+  GPR(_instr.rd) = add.result;
+  XER_SET_CA(add.carry);
+
   // _rc
   if (hCore->ppuThread[hCore->currentThread].CI.main & 1) {
-    u32 CR = CRCompS(hCore, GPR(rD), 0);
+    u32 CR = CRCompS(hCore, add.result, 0);
     ppcUpdateCR(hCore, 0, CR);
   }
 }
 
 void PPCInterpreter::PPCInterpreter_addis(PPU_STATE *hCore) {
-  D_FORM_rD_rA_SI;
-  SI = EXTS(SI, 16);
-
-  GPR(rD) = (rA ? GPR(rA) : 0) + (SI << 16);
+  GPR(_instr.rd) = _instr.ra ? GPR(_instr.ra) + (_instr.simm16 * 65536) : (_instr.simm16 * 65536);
 }
 
 void PPCInterpreter::PPCInterpreter_addzex(PPU_STATE *hCore) {
-  XO_FORM_rD_rA_RC;
+  const u64 ra = GPR(_instr.ra);
 
-  GPR(rD) = ppcAddCarrying(hCore, GPR(rA), 0,
-                           hCore->ppuThread[hCore->currentThread].SPR.XER.CA);
+  const auto add = add64Bits(ra, 0, XER_GET_CA);
+  GPR(_instr.rd) = add.result;
+  XER_SET_CA(add.carry);
 
-  if (RC) {
-    u32 CR = CRCompS(hCore, GPR(rD), 0);
+  if (_instr.rc) {
+    u32 CR = CRCompS(hCore, add.result, 0);
     ppcUpdateCR(hCore, 0, CR);
   }
 }
 
 void PPCInterpreter::PPCInterpreter_andx(PPU_STATE *hCore) {
-  X_FORM_rS_rA_rB_RC;
+  GPR(_instr.ra) = GPR(_instr.rs) & GPR(_instr.rb);
 
-  GPR(rA) = GPR(rS) & GPR(rB);
-
-  if (RC) {
-    u32 CR = CRCompS(hCore, GPR(rA), 0);
+  if (_instr.rc) {
+    u32 CR = CRCompS(hCore, GPR(_instr.ra), 0);
     ppcUpdateCR(hCore, 0, CR);
   }
 }
 
 void PPCInterpreter::PPCInterpreter_andcx(PPU_STATE *hCore) {
-  X_FORM_rS_rA_rB_RC;
+  GPR(_instr.ra) = GPR(_instr.rs) & ~GPR(_instr.rb);
 
-  GPR(rA) = GPR(rS) & ~GPR(rB);
-
-  if (RC) {
-    u32 CR = CRCompS(hCore, GPR(rA), 0);
+  if (_instr.rc) {
+    u32 CR = CRCompS(hCore, GPR(_instr.ra), 0);
     ppcUpdateCR(hCore, 0, CR);
   }
 }
 
 void PPCInterpreter::PPCInterpreter_andi(PPU_STATE *hCore) {
-  D_FORM_rS_rA_UI;
+  GPR(_instr.ra) = GPR(_instr.rs) & _instr.uimm16;
 
-  GPR(rA) = GPR(rS) & UI;
-  u32 CR = CRCompS(hCore, GPR(rA), 0);
+  u32 CR = CRCompS(hCore, GPR(_instr.ra), 0);
   ppcUpdateCR(hCore, 0, CR);
 }
 
 void PPCInterpreter::PPCInterpreter_andis(PPU_STATE *hCore) {
-  D_FORM_rS_rA_UI;
+  GPR(_instr.ra) = GPR(_instr.rs) & (u64{ _instr.uimm16 } << 16);
 
-  GPR(rA) = GPR(rS) & (UI << 16);
-  u32 CR = CRCompS(hCore, GPR(rA), 0);
+  u32 CR = CRCompS(hCore, GPR(_instr.ra), 0);
   ppcUpdateCR(hCore, 0, CR);
 }
 
@@ -163,43 +225,23 @@ void PPCInterpreter::PPCInterpreter_cmpli(PPU_STATE *hCore) {
 }
 
 void PPCInterpreter::PPCInterpreter_cntlzdx(PPU_STATE *hCore) {
-  X_FORM_rS_rA_RC;
+  GPR(_instr.ra) = std::countl_zero(GPR(_instr.rs));
 
-  u64 RegS = GPR(rS);
-  u64 Mask = 0x8000000000000000;
-  u64 regA = 0;
-
-  for (; Mask && (RegS & Mask) == 0; Mask >>= 1) {
-    regA += 1;
-  }
-
-  GPR(rA) = regA;
-
-  if (RC) {
-    u32 CR = CRCompS(hCore, GPR(rA), 0);
+  if (_instr.rc) {
+    u32 CR = CRCompS(hCore, GPR(_instr.ra), 0);
     ppcUpdateCR(hCore, 0, CR);
   }
 }
 
 void PPCInterpreter::PPCInterpreter_cntlzwx(PPU_STATE *hCore) {
-  X_FORM_rS_rA_RC;
+  GPR(_instr.ra) = std::countl_zero(static_cast<u32>(GPR(_instr.rs)));
 
-  u32 RegS = (u32)GPR(rS);
-  u32 Mask = (1u << 31);
-  u32 regA = 0;
-
-  for (; Mask && (RegS & Mask) == 0; Mask >>= 1) {
-    regA += 1;
-  }
-
-  GPR(rA) = regA;
-
-  if (RC) {
-    u32 CR = CRCompS(hCore, GPR(rA), 0);
+  if (_instr.rc) {
+    u32 CR = CRCompS(hCore, GPR(_instr.ra), 0);
     ppcUpdateCR(hCore, 0, CR);
   }
 }
-/* CR And */
+
 void PPCInterpreter::PPCInterpreter_crand(PPU_STATE *hCore) {
   XL_FORM_BT_BA_BB;
 
@@ -213,7 +255,7 @@ void PPCInterpreter::PPCInterpreter_crand(PPU_STATE *hCore) {
   else
     BCLR(hCore->ppuThread[hCore->currentThread].CR.CR_Hex, 32, BT);
 }
-/* CR And Carrying */
+
 void PPCInterpreter::PPCInterpreter_crandc(PPU_STATE *hCore) {
   XL_FORM_BT_BA_BB;
 
@@ -227,7 +269,7 @@ void PPCInterpreter::PPCInterpreter_crandc(PPU_STATE *hCore) {
   else
     BCLR(hCore->ppuThread[hCore->currentThread].CR.CR_Hex, 32, BT);
 }
-/* CR Equivalent */
+
 void PPCInterpreter::PPCInterpreter_creqv(PPU_STATE *hCore) {
   XL_FORM_BT_BA_BB;
 
@@ -241,7 +283,7 @@ void PPCInterpreter::PPCInterpreter_creqv(PPU_STATE *hCore) {
   else
     BCLR(hCore->ppuThread[hCore->currentThread].CR.CR_Hex, 32, BT);
 }
-/* CR Nand */
+
 void PPCInterpreter::PPCInterpreter_crnand(PPU_STATE *hCore) {
   XL_FORM_BT_BA_BB;
 
@@ -255,7 +297,7 @@ void PPCInterpreter::PPCInterpreter_crnand(PPU_STATE *hCore) {
   else
     BCLR(hCore->ppuThread[hCore->currentThread].CR.CR_Hex, 32, BT);
 }
-/* CR Nor */
+
 void PPCInterpreter::PPCInterpreter_crnor(PPU_STATE *hCore) {
   XL_FORM_BT_BA_BB;
 
@@ -269,7 +311,7 @@ void PPCInterpreter::PPCInterpreter_crnor(PPU_STATE *hCore) {
   else
     BCLR(hCore->ppuThread[hCore->currentThread].CR.CR_Hex, 32, BT);
 }
-/* CR Or */
+
 void PPCInterpreter::PPCInterpreter_cror(PPU_STATE *hCore) {
   XL_FORM_BT_BA_BB;
   const u32 a = CR_GET(BA);
@@ -282,7 +324,7 @@ void PPCInterpreter::PPCInterpreter_cror(PPU_STATE *hCore) {
   else
     BCLR(hCore->ppuThread[hCore->currentThread].CR.CR_Hex, 32, BT);
 }
-/* CR Or with Complement */
+
 void PPCInterpreter::PPCInterpreter_crorc(PPU_STATE *hCore) {
   XL_FORM_BT_BA_BB;
 
@@ -296,7 +338,7 @@ void PPCInterpreter::PPCInterpreter_crorc(PPU_STATE *hCore) {
   else
     BCLR(hCore->ppuThread[hCore->currentThread].CR.CR_Hex, 32, BT);
 }
-/* CR Xor */
+
 void PPCInterpreter::PPCInterpreter_crxor(PPU_STATE *hCore) {
   XL_FORM_BT_BA_BB;
 
@@ -312,94 +354,74 @@ void PPCInterpreter::PPCInterpreter_crxor(PPU_STATE *hCore) {
 }
 
 void PPCInterpreter::PPCInterpreter_divdx(PPU_STATE *hCore) {
-  XO_FORM_rD_rA_rB_RC;
+  const s64 RA = GPR(_instr.ra);
+  const s64 RB = GPR(_instr.rb);
+  const bool o = RB == 0 || (RA == INT64_MIN && RB == -1);
+  GPR(_instr.rd) = o ? 0 : RA / RB;
 
-  if (GPR(rB) != 0 &&
-      (GPR(rA) != 0x8000000000000000 || GPR(rB) != 0xFFFFFFFFFFFFFFFF)) {
-    s64 r = (s64)GPR(rA) / (s64)GPR(rB);
-    GPR(rD) = (u64)r;
-  }
-
-  if (RC) {
-    u32 CR = CRCompS(hCore, GPR(rD), 0);
+  if (_instr.rc) {
+    u32 CR = CRCompS(hCore, GPR(_instr.rd), 0);
     ppcUpdateCR(hCore, 0, CR);
   }
 }
 
 void PPCInterpreter::PPCInterpreter_divdux(PPU_STATE *hCore) {
-  XO_FORM_rD_rA_rB_RC;
+  const u64 RA = GPR(_instr.ra);
+  const u64 RB = GPR(_instr.rb);
+  GPR(_instr.rd) = RB == 0 ? 0 : RA / RB;
 
-  if (GPR(rB) != 0) {
-    GPR(rD) = (u64)((u64)GPR(rA) / (u64)GPR(rB));
-  }
-
-  if (RC) {
-    u32 CR = CRCompS(hCore, GPR(rD), 0);
+  if (_instr.rc) {
+    u32 CR = CRCompS(hCore, GPR(_instr.rd), 0);
     ppcUpdateCR(hCore, 0, CR);
   }
 }
 
 void PPCInterpreter::PPCInterpreter_divwx(PPU_STATE *hCore) {
-  XO_FORM_rD_rA_rB_RC;
+  const s32 RA = static_cast<s32>(GPR(_instr.ra));
+  const s32 RB = static_cast<s32>(GPR(_instr.rb));
+  const bool o = RB == 0 || (RA == INT32_MIN && RB == -1);
+  GPR(_instr.rd) = o ? 0 : static_cast<u32>(RA / RB);
 
-  if (GPR(rB) != 0 && (GPR(rA) != 0x80000000 || GPR(rB) != 0xFFFFFFFF)) {
-    GPR(rD) = (u32)((s64)(long)GPR(rA) / (s64)(long)GPR(rB));
-  }
-
-  if (RC) {
-    u32 CR = CRCompS(hCore, GPR(rD), 0);
+  if (_instr.rc) {
+    u32 CR = CRCompS(hCore, GPR(_instr.rd), 0);
     ppcUpdateCR(hCore, 0, CR);
   }
 }
 
 void PPCInterpreter::PPCInterpreter_divwux(PPU_STATE *hCore) {
-  XO_FORM_rD_rA_rB_RC;
+  const u32 RA = static_cast<u32>(GPR(_instr.ra));
+  const u32 RB = static_cast<u32>(GPR(_instr.rb));
+  GPR(_instr.rd) = RB == 0 ? 0 : RA / RB;
 
-  if ((u32)GPR(rB) != 0) {
-    GPR(rD) = (u32)((u64)(u32)GPR(rA) / (u64)(u32)GPR(rB));
-  }
-
-  if (RC) {
-    u32 CR = CRCompS(hCore, GPR(rD), 0);
+  if (_instr.rc) {
+    u32 CR = CRCompS(hCore, GPR(_instr.rd), 0);
     ppcUpdateCR(hCore, 0, CR);
   }
 }
 
 void PPCInterpreter::PPCInterpreter_extsbx(PPU_STATE *hCore) {
-  X_FORM_rS_rA_RC;
+  GPR(_instr.ra) = static_cast<s8>(GPR(_instr.rs));
 
-  u32 extendedByte = (u8)GPR(rS);
-
-  GPR(rA) = EXTS(extendedByte, 8);
-
-  if (RC) {
-    u32 CR = CRCompS(hCore, GPR(rA), 0);
+  if (_instr.rc) {
+    u32 CR = CRCompS(hCore, GPR(_instr.ra), 0);
     ppcUpdateCR(hCore, 0, CR);
   }
 }
 
 void PPCInterpreter::PPCInterpreter_extshx(PPU_STATE *hCore) {
-  X_FORM_rS_rA_RC;
+  GPR(_instr.ra) = static_cast<s16>(GPR(_instr.rs));
 
-  u32 extended_u16 = (u16)GPR(rS);
-
-  GPR(rA) = EXTS(extended_u16, 16);
-
-  if (RC) {
-    u32 CR = CRCompS(hCore, GPR(rA), 0);
+  if (_instr.rc) {
+    u32 CR = CRCompS(hCore, GPR(_instr.ra), 0);
     ppcUpdateCR(hCore, 0, CR);
   }
 }
 
 void PPCInterpreter::PPCInterpreter_extswx(PPU_STATE *hCore) {
-  X_FORM_rS_rA_RC;
+  GPR(_instr.ra) = static_cast<s32>(GPR(_instr.rs));
 
-  u32 extendedWord = (u32)GPR(rS);
-
-  GPR(rA) = EXTS(extendedWord, 32);
-
-  if (RC) {
-    u32 CR = CRCompS(hCore, GPR(rA), 0);
+  if (_instr.rc) {
+    u32 CR = CRCompS(hCore, GPR(_instr.ra), 0);
     ppcUpdateCR(hCore, 0, CR);
   }
 }
@@ -454,139 +476,100 @@ void PPCInterpreter::PPCInterpreter_mtocrf(PPU_STATE *hCore) {
 }
 
 void PPCInterpreter::PPCInterpreter_mulli(PPU_STATE *hCore) {
-  D_FORM_rD_rA_SI;
-  SI = EXTS(SI, 16);
-
-  u64 operand0, operand1;
-
-  ppcMul64Signed(GPR(rA), SI, &operand0, &operand1);
-
-  GPR(rD) = operand1;
+  GPR(_instr.rd) = static_cast<s64>(GPR(_instr.ra)) * _instr.simm16;
 }
 
 void PPCInterpreter::PPCInterpreter_mulldx(PPU_STATE *hCore) {
-  XO_FORM_rD_rA_rB_RC;
+  const s64 RA = GPR(_instr.ra);
+  const s64 RB = GPR(_instr.rb);
+  GPR(_instr.rd) = RA * RB;
 
-  u64 qwH, qwL;
-
-  ppcMul64Signed(GPR(rA), GPR(rB), &qwH, &qwL);
-
-  GPR(rD) = qwL;
-
-  if (RC) {
-      u32 CR = CRCompS(hCore, GPR(rD), 0);
+  if (_instr.rc) {
+      u32 CR = CRCompS(hCore, GPR(_instr.rd), 0);
       ppcUpdateCR(hCore, 0, CR);
   }
 }
 
 void PPCInterpreter::PPCInterpreter_mullwx(PPU_STATE *hCore) {
-  XO_FORM_rD_rA_rB_RC;
+  GPR(_instr.rd) = s64{ static_cast<s32>(GPR(_instr.ra)) } *static_cast<s32>(GPR(_instr.rb));
 
-  const s64 regA = static_cast<s32>(GPR(rA));
-  const s64 regB = static_cast<s32>(GPR(rB));
-  const s64 res = regA * regB;
-
-  GPR(rD) = static_cast<u32>(res);
-
-  if (RC) {
-    u32 CR = CRCompS(hCore, GPR(rD), 0);
+  if (_instr.rc) {
+    u32 CR = CRCompS(hCore, GPR(_instr.rd), 0);
     ppcUpdateCR(hCore, 0, CR);
   }
 }
 
 void PPCInterpreter::PPCInterpreter_mulhwux(PPU_STATE *hCore) {
-  XO_FORM_rD_rA_rB_RC;
+  u32 a = static_cast<u32>(GPR(_instr.ra));
+  u32 b = static_cast<u32>(GPR(_instr.rb));
+  GPR(_instr.rd) = (u64{ a } *b) >> 32;
 
-  u64 operand0 = (u64)LODW(GPR(rA));
-  u64 operand1 = (u64)LODW(GPR(rB));
-  operand0 = operand0 * operand1;
-  GPR(rD) = HIDW(operand0);
-
-  if (RC) {
-    u32 CR = CRCompS(hCore, GPR(rD), 0);
+  if (_instr.rc) {
+    u32 CR = CRCompS(hCore, GPR(_instr.rd), 0);
     ppcUpdateCR(hCore, 0, CR);
   }
 }
 
 void PPCInterpreter::PPCInterpreter_mulhdux(PPU_STATE *hCore) {
-  XO_FORM_rD_rA_rB_RC;
+  GPR(_instr.rd) = umulh64(GPR(_instr.ra), GPR(_instr.rb));
 
-  u64 qwH, qwL;
-
-  ppcMul64(GPR(rA), GPR(rB), &qwH, &qwL);
-
-  GPR(rD) = qwH;
-
-  if (RC) {
-    u32 CR = CRCompS(hCore, GPR(rD), 0);
+  if (_instr.rc) {
+    u32 CR = CRCompS(hCore, GPR(_instr.rd), 0);
     ppcUpdateCR(hCore, 0, CR);
   }
 }
-/* Nand */
+
 void PPCInterpreter::PPCInterpreter_nandx(PPU_STATE *hCore) {
-  X_FORM_rS_rA_rB_RC;
+  GPR(_instr.ra) = ~(GPR(_instr.rs) & GPR(_instr.rb));
 
-  GPR(rA) = ~(GPR(rS) & GPR(rB));
-
-  if (RC) {
-    u32 CR = CRCompS(hCore, GPR(rA), 0);
+  if (_instr.rc) {
+    u32 CR = CRCompS(hCore, GPR(_instr.ra), 0);
     ppcUpdateCR(hCore, 0, CR);
   }
 }
-/* Negate */
+
 void PPCInterpreter::PPCInterpreter_negx(PPU_STATE *hCore) {
-  XO_FORM_rD_rA_RC;
+  const u64 RA = GPR(_instr.ra);
+  GPR(_instr.rd) = 0 - RA;
 
-  GPR(rD) = (~GPR(rA)) + 1;
-
-  if (RC) {
-    u32 CR = CRCompS(hCore, GPR(rD), 0);
+  if (_instr.rc) {
+    u32 CR = CRCompS(hCore, GPR(_instr.rd), 0);
     ppcUpdateCR(hCore, 0, CR);
   }
 }
-/* Nor */
+
 void PPCInterpreter::PPCInterpreter_norx(PPU_STATE *hCore) {
-  X_FORM_rS_rA_rB_RC;
+  GPR(_instr.ra) = ~(GPR(_instr.rs) | GPR(_instr.rb));
 
-  GPR(rA) = ~(GPR(rS) | GPR(rB));
-
-  if (RC) {
-    u32 CR = CRCompS(hCore, GPR(rA), 0);
+  if (_instr.rc) {
+    u32 CR = CRCompS(hCore, GPR(_instr.ra), 0);
     ppcUpdateCR(hCore, 0, CR);
   }
 }
-/* Or with Complement */
+
 void PPCInterpreter::PPCInterpreter_orcx(PPU_STATE* hCore)
 {
-    X_FORM_rS_rA_rB_RC;
+  GPR(_instr.ra) = GPR(_instr.rs) | ~GPR(_instr.rb);
 
-    GPR(rA) = (GPR(rS) | ~GPR(rB));
-
-    if (RC) {
-        u32 CR = CRCompS(hCore, GPR(rA), 0);
+  if (_instr.rc) {
+        u32 CR = CRCompS(hCore, GPR(_instr.ra), 0);
         ppcUpdateCR(hCore, 0, CR);
     }
 }
-/* Or Immediate */
+
 void PPCInterpreter::PPCInterpreter_ori(PPU_STATE *hCore) {
-  D_FORM_rS_rA_UI;
-
-  GPR(rA) = GPR(rS) | UI;
+  GPR(_instr.ra) = GPR(_instr.rs) | _instr.uimm16;
 }
-/* Or Immediate Shifted */
+
 void PPCInterpreter::PPCInterpreter_oris(PPU_STATE *hCore) {
-  D_FORM_rS_rA_UI;
-
-  GPR(rA) = GPR(rS) | (UI << 16);
+  GPR(_instr.ra) = GPR(_instr.rs) | (u64{ _instr.uimm16 } << 16);
 }
-/* Or */
+
 void PPCInterpreter::PPCInterpreter_orx(PPU_STATE *hCore) {
-  X_FORM_rS_rA_rB_RC;
+  GPR(_instr.ra) = GPR(_instr.rs) | GPR(_instr.rb);
 
-  GPR(rA) = GPR(rS) | GPR(rB);
-
-  if (RC) {
-    u32 CR = CRCompU(hCore, GPR(rA), 0);
+  if (_instr.rc) {
+    u32 CR = CRCompU(hCore, GPR(_instr.ra), 0);
     ppcUpdateCR(hCore, 0, CR);
   }
 }
@@ -720,7 +703,6 @@ void PPCInterpreter::PPCInterpreter_sldx(PPU_STATE *hCore) {
   }
 }
 
-/* Shift Left Word */
 void PPCInterpreter::PPCInterpreter_slwx(PPU_STATE *hCore) {
   X_FORM_rS_rA_rB_RC;
 
@@ -783,7 +765,6 @@ void PPCInterpreter::PPCInterpreter_sradix(PPU_STATE *hCore) {
   }
 }
 
-/* Shift Right Algebraic Word */
 void PPCInterpreter::PPCInterpreter_srawx(PPU_STATE *hCore) {
   X_FORM_rS_rA_rB_RC;
 
@@ -805,7 +786,6 @@ void PPCInterpreter::PPCInterpreter_srawx(PPU_STATE *hCore) {
   }
 }
 
-/* Shift Right Algebraic Word Immediate */
 void PPCInterpreter::PPCInterpreter_srawix(PPU_STATE *hCore) {
   X_FORM_rS_rA_SH_RC;
 
@@ -842,7 +822,7 @@ void PPCInterpreter::PPCInterpreter_srdx(PPU_STATE *hCore) {
     ppcUpdateCR(hCore, 0, CR);
   }
 }
-/* Shift Right Word */
+
 void PPCInterpreter::PPCInterpreter_srwx(PPU_STATE *hCore) {
   X_FORM_rS_rA_rB_RC;
 
@@ -857,66 +837,80 @@ void PPCInterpreter::PPCInterpreter_srwx(PPU_STATE *hCore) {
 }
 
 void PPCInterpreter::PPCInterpreter_subfcx(PPU_STATE *hCore) {
-  XO_FORM_rD_rA_rB_RC;
+  const u64 RA = GPR(_instr.ra);
+  const u64 RB = GPR(_instr.rb);
 
-  GPR(rD) = ~GPR(rA) + GPR(rB) + 1;
-  XER_SET_CA((GPR(rD) < ~GPR(rA)));
+  const auto add = add64Bits(~RA, RB, 1);
+  GPR(_instr.rd) = add.result;
+  XER_SET_CA(add.carry);
 
-  if (RC) {
-    u32 CR = CRCompS(hCore, GPR(rD), 0);
+  if (_instr.rc) {
+    u32 CR = CRCompS(hCore, GPR(_instr.rd), 0);
     ppcUpdateCR(hCore, 0, CR);
   }
 }
 
 void PPCInterpreter::PPCInterpreter_subfx(PPU_STATE *hCore) {
-  XO_FORM_rD_rA_rB_RC;
+  const u64 RA = GPR(_instr.ra);
+  const u64 RB = GPR(_instr.rb);
 
-  GPR(rD) = ~GPR(rA) + GPR(rB) + 1;
+  GPR(_instr.rd) = RB - RA;
 
-  if (RC) {
-    u32 CR = CRCompS(hCore, GPR(rD), 0);
+  if (_instr.rc) {
+    u32 CR = CRCompS(hCore, GPR(_instr.rd), 0);
     ppcUpdateCR(hCore, 0, CR);
   }
 }
 
 void PPCInterpreter::PPCInterpreter_subfex(PPU_STATE *hCore) {
-  XO_FORM_rD_rA_rB_RC;
+  const u64 RA = GPR(_instr.ra);
+  const u64 RB = GPR(_instr.rb);
 
-  GPR(rD) = ppcAddCarrying(hCore, ~GPR(rA), GPR(rB),
-                           hCore->ppuThread[hCore->currentThread].SPR.XER.CA);
+  const auto add = add64Bits(~RA, RB, XER_GET_CA);
+  GPR(_instr.rd) = add.result;
+  XER_SET_CA(add.carry);
 
-  if (RC) {
-    u32 CR = CRCompS(hCore, GPR(rD), 0);
+  if (_instr.ra) {
+    u32 CR = CRCompS(hCore, add.result, 0);
+    ppcUpdateCR(hCore, 0, CR);
+  }
+}
+
+void PPCInterpreter::PPCInterpreter_subfzex(PPU_STATE* hCore) {
+  const u64 RA = GPR(_instr.ra);
+
+  const auto add = add64Bits(~RA, 0, XER_GET_CA);
+  GPR(_instr.rd) = add.result;
+  XER_SET_CA(add.carry);
+
+  if (_instr.ra) {
+    u32 CR = CRCompS(hCore, add.result, 0);
     ppcUpdateCR(hCore, 0, CR);
   }
 }
 
 void PPCInterpreter::PPCInterpreter_subfic(PPU_STATE *hCore) {
-  D_FORM_rD_rA_SI;
-  SI = EXTS(SI, 16);
+  const u64 RA = GPR(_instr.ra);
+  const s64 i = _instr.simm16;
 
-  GPR(rD) = ppcAddCarrying(hCore, ~GPR(rA), SI, 1);
+  const auto add = add64Bits(~RA, i, 1);
+  GPR(_instr.rd) = add.result;
+  XER_SET_CA(add.carry);
+}
+
+void PPCInterpreter::PPCInterpreter_xorx(PPU_STATE* hCore) {
+  GPR(_instr.ra) = GPR(_instr.rs) ^ GPR(_instr.rb);
+
+  if (_instr.rc) {
+    u32 CR = CRCompS(hCore, GPR(_instr.ra), 0);
+    ppcUpdateCR(hCore, 0, CR);
+  }
 }
 
 void PPCInterpreter::PPCInterpreter_xori(PPU_STATE *hCore) {
-  D_FORM_rS_rA_UI;
-
-  GPR(rA) = GPR(rS) ^ UI;
+  GPR(_instr.ra) = GPR(_instr.rs) ^ _instr.uimm16;
 }
 
 void PPCInterpreter::PPCInterpreter_xoris(PPU_STATE *hCore) {
-  D_FORM_rS_rA_UI;
-
-  GPR(rA) = GPR(rS) ^ (UI << 16);
-}
-
-void PPCInterpreter::PPCInterpreter_xorx(PPU_STATE *hCore) {
-  X_FORM_rS_rA_rB_RC;
-
-  GPR(rA) = GPR(rS) ^ GPR(rB);
-
-  if (RC) {
-    u32 CR = CRCompS(hCore, GPR(rA), 0);
-    ppcUpdateCR(hCore, 0, CR);
-  }
+  GPR(_instr.ra) = GPR(_instr.rs) ^ (u64{ _instr.uimm16 } << 16);
 }

@@ -51,7 +51,6 @@ namespace PPCInterpreter {
   D_STUBRC(subfco);
   D_STUBRC(subfeo);
   D_STUBRC(subfo);
-  D_STUBRC(subfze);
   D_STUBRC(subfzeo);
   D_STUBRC(subfme);
   D_STUBRC(subfmeo);
