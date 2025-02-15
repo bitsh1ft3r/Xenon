@@ -113,6 +113,7 @@ set(RootBus
     Xenon/Core/RootBus/HostBridge/PCIBridge/PCIDevice.h
     Xenon/Core/RootBus/HostBridge/PCIBridge/SFCX/SFCX.cpp
     Xenon/Core/RootBus/HostBridge/PCIBridge/SFCX/SFCX.h
+    Xenon/Core/RootBus/HostBridge/PCIBridge/SATA.h
     Xenon/Core/RootBus/HostBridge/PCIBridge/SMC/SMC.cpp
     Xenon/Core/RootBus/HostBridge/PCIBridge/SMC/SMC.h
     Xenon/Core/RootBus/HostBridge/PCIBridge/SMC/HANA_State.h
