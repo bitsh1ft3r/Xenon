@@ -6,8 +6,6 @@
 
 #pragma once
 
-#include <version>
-
 #ifdef __cpp_lib_jthread
 
 #include <chrono>

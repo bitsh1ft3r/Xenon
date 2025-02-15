@@ -1,9 +1,8 @@
 // Copyright 2025 Xenon Emulator Project
 
-#include <algorithm>
+#include "Filter.h"
 
 #include "Base/Assert.h"
-#include "Filter.h"
 
 namespace Base::Log {
 namespace {

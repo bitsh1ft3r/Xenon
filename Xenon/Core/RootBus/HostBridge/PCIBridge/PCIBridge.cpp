@@ -1,8 +1,9 @@
 // Copyright 2025 Xenon Emulator Project
 
+#include "PCIBridge.h"
+
 #include "Base/Logging/Log.h"
 
-#include "PCIBridge.h"
 #include "PCIBridgeConfig.h"
 
 // Device tree, taken from an actual system, Corona V6.
@@ -80,17 +81,73 @@ bool PCIBridge::RouteInterrupt(u8 prio) {
   case PRIO_CLOCK:
     if (pciBridgeState.PRIO_REG_CLCK.intEnabled) {
       xenonIIC->genInterrupt(PRIO_CLOCK,
-                             pciBridgeState.PRIO_REG_CLCK.targetCPU);
+        pciBridgeState.PRIO_REG_CLCK.targetCPU);
+    }
+    break;
+  case PRIO_SATA_ODD:
+    if (pciBridgeState.PRIO_REG_ODD.intEnabled) {
+      xenonIIC->genInterrupt(PRIO_SATA_ODD,
+        pciBridgeState.PRIO_REG_ODD.targetCPU);
+    }
+    break;
+  case PRIO_SATA_HDD:
+    if (pciBridgeState.PRIO_REG_HDD.intEnabled) {
+      xenonIIC->genInterrupt(PRIO_SATA_HDD,
+        pciBridgeState.PRIO_REG_HDD.targetCPU);
     }
     break;
   case PRIO_SMM:
     if (pciBridgeState.PRIO_REG_SMM.intEnabled) {
-      xenonIIC->genInterrupt(PRIO_SMM, pciBridgeState.PRIO_REG_SMM.targetCPU);
+      xenonIIC->genInterrupt(PRIO_SMM, 
+        pciBridgeState.PRIO_REG_SMM.targetCPU);
+    }
+    break;  
+  case PRIO_OHCI_0:
+    if (pciBridgeState.PRIO_REG_OHCI0.intEnabled) {
+      xenonIIC->genInterrupt(PRIO_OHCI_0,
+        pciBridgeState.PRIO_REG_OHCI0.targetCPU);
+    }
+    break;  
+  case PRIO_OHCI_1:
+    if (pciBridgeState.PRIO_REG_OHCI1.intEnabled) {
+      xenonIIC->genInterrupt(PRIO_OHCI_1,
+        pciBridgeState.PRIO_REG_OHCI1.targetCPU);
+    }
+    break;  
+  case PRIO_EHCI_0:
+    if (pciBridgeState.PRIO_REG_EHCI0.intEnabled) {
+      xenonIIC->genInterrupt(PRIO_EHCI_0, 
+        pciBridgeState.PRIO_REG_EHCI0.targetCPU);
+    }
+    break;  
+  case PRIO_EHCI_1:
+    if (pciBridgeState.PRIO_REG_EHCI1.intEnabled) {
+      xenonIIC->genInterrupt(PRIO_EHCI_1, 
+        pciBridgeState.PRIO_REG_EHCI1.targetCPU);
+    }
+    break;  
+  case PRIO_ENET:
+    if (pciBridgeState.PRIO_REG_ENET.intEnabled) {
+      xenonIIC->genInterrupt(PRIO_ENET,
+        pciBridgeState.PRIO_REG_ENET.targetCPU);
+    }
+    break;  
+  case PRIO_XMA:
+    if (pciBridgeState.PRIO_REG_XMA.intEnabled) {
+      xenonIIC->genInterrupt(PRIO_XMA,
+        pciBridgeState.PRIO_REG_XMA.targetCPU);
+    }
+    break;  
+  case PRIO_AUDIO:
+    if (pciBridgeState.PRIO_REG_AUDIO.intEnabled) {
+      xenonIIC->genInterrupt(PRIO_AUDIO,
+        pciBridgeState.PRIO_REG_AUDIO.targetCPU);
     }
     break;
   case PRIO_SFCX:
     if (pciBridgeState.PRIO_REG_SFCX.intEnabled) {
-      xenonIIC->genInterrupt(PRIO_SFCX, pciBridgeState.PRIO_REG_SFCX.targetCPU);
+      xenonIIC->genInterrupt(PRIO_SFCX, 
+        pciBridgeState.PRIO_REG_SFCX.targetCPU);
     }
     break;
   default:
@@ -135,8 +192,35 @@ bool PCIBridge::Read(u64 readAddress, u64 *data, u8 byteCount) {
     case 0xEA000010:
       *data = pciBridgeState.PRIO_REG_CLCK.hexData;
       break;
+    case 0xEA000014:
+      *data = pciBridgeState.PRIO_REG_ODD.hexData;
+      break;
+    case 0xEA000018:
+      *data = pciBridgeState.PRIO_REG_HDD.hexData;
+      break;
     case 0xEA00001C:
       *data = pciBridgeState.PRIO_REG_SMM.hexData;
+      break;
+    case 0xEA000020:
+      *data = pciBridgeState.PRIO_REG_OHCI0.hexData;
+      break;
+    case 0xEA000024:
+      *data = pciBridgeState.PRIO_REG_OHCI1.hexData;
+      break;
+    case 0xEA000028:
+      *data = pciBridgeState.PRIO_REG_EHCI0.hexData;
+      break;
+    case 0xEA00002C:
+      *data = pciBridgeState.PRIO_REG_EHCI1.hexData;
+      break;
+    case 0xEA000038:
+      *data = pciBridgeState.PRIO_REG_ENET.hexData;
+      break;
+    case 0xEA00003C:
+      *data = pciBridgeState.PRIO_REG_XMA.hexData;
+      break;
+    case 0xEA000040:
+      *data = pciBridgeState.PRIO_REG_AUDIO.hexData;
       break;
     case 0xEA000044:
       *data = pciBridgeState.PRIO_REG_SFCX.hexData;
@@ -185,13 +269,76 @@ bool PCIBridge::Write(u64 writeAddress, u64 data, u8 byteCount) {
       pciBridgeState.PRIO_REG_CLCK.latched = latched;
       pciBridgeState.PRIO_REG_CLCK.targetCPU = targetCPU;
       pciBridgeState.PRIO_REG_CLCK.cpuIRQ = cpuIRQ;
+      break;    
+    case 0xEA000014: // PRIO_SATA_ODD
+      pciBridgeState.PRIO_REG_ODD.hexData = static_cast<u32>(data);
+      pciBridgeState.PRIO_REG_ODD.intEnabled = enabled;
+      pciBridgeState.PRIO_REG_ODD.latched = latched;
+      pciBridgeState.PRIO_REG_ODD.targetCPU = targetCPU;
+      pciBridgeState.PRIO_REG_ODD.cpuIRQ = cpuIRQ;
+      break;    
+    case 0xEA000018: // PRIO_SATA_HDD
+      pciBridgeState.PRIO_REG_HDD.hexData = static_cast<u32>(data);
+      pciBridgeState.PRIO_REG_HDD.intEnabled = enabled;
+      pciBridgeState.PRIO_REG_HDD.latched = latched;
+      pciBridgeState.PRIO_REG_HDD.targetCPU = targetCPU;
+      pciBridgeState.PRIO_REG_HDD.cpuIRQ = cpuIRQ;
       break;
-    case 0xEA00001C: // PRIO_SMM System Management Mode Int. Used by SMC.
+    case 0xEA00001C: // PRIO_SMM
       pciBridgeState.PRIO_REG_SMM.hexData = static_cast<u32>(data);
       pciBridgeState.PRIO_REG_SMM.intEnabled = enabled;
       pciBridgeState.PRIO_REG_SMM.latched = latched;
       pciBridgeState.PRIO_REG_SMM.targetCPU = targetCPU;
       pciBridgeState.PRIO_REG_SMM.cpuIRQ = cpuIRQ;
+      break;    
+    case 0xEA000020: // PRIO_OHCI0
+      pciBridgeState.PRIO_REG_OHCI0.hexData = static_cast<u32>(data);
+      pciBridgeState.PRIO_REG_OHCI0.intEnabled = enabled;
+      pciBridgeState.PRIO_REG_OHCI0.latched = latched;
+      pciBridgeState.PRIO_REG_OHCI0.targetCPU = targetCPU;
+      pciBridgeState.PRIO_REG_OHCI0.cpuIRQ = cpuIRQ;
+      break;    
+    case 0xEA000024: // PRIO_OHCI1
+      pciBridgeState.PRIO_REG_OHCI1.hexData = static_cast<u32>(data);
+      pciBridgeState.PRIO_REG_OHCI1.intEnabled = enabled;
+      pciBridgeState.PRIO_REG_OHCI1.latched = latched;
+      pciBridgeState.PRIO_REG_OHCI1.targetCPU = targetCPU;
+      pciBridgeState.PRIO_REG_OHCI1.cpuIRQ = cpuIRQ;
+      break;    
+    case 0xEA000028: // PRIO_EHCI0
+      pciBridgeState.PRIO_REG_EHCI0.hexData = static_cast<u32>(data);
+      pciBridgeState.PRIO_REG_EHCI0.intEnabled = enabled;
+      pciBridgeState.PRIO_REG_EHCI0.latched = latched;
+      pciBridgeState.PRIO_REG_EHCI0.targetCPU = targetCPU;
+      pciBridgeState.PRIO_REG_EHCI0.cpuIRQ = cpuIRQ;
+      break;    
+    case 0xEA00002C: // PRIO_EHCI1
+      pciBridgeState.PRIO_REG_EHCI1.hexData = static_cast<u32>(data);
+      pciBridgeState.PRIO_REG_EHCI1.intEnabled = enabled;
+      pciBridgeState.PRIO_REG_EHCI1.latched = latched;
+      pciBridgeState.PRIO_REG_EHCI1.targetCPU = targetCPU;
+      pciBridgeState.PRIO_REG_EHCI1.cpuIRQ = cpuIRQ;
+      break;    
+    case 0xEA000038: // PRIO_ENET
+      pciBridgeState.PRIO_REG_ENET.hexData = static_cast<u32>(data);
+      pciBridgeState.PRIO_REG_ENET.intEnabled = enabled;
+      pciBridgeState.PRIO_REG_ENET.latched = latched;
+      pciBridgeState.PRIO_REG_ENET.targetCPU = targetCPU;
+      pciBridgeState.PRIO_REG_ENET.cpuIRQ = cpuIRQ;
+      break;    
+    case 0xEA00003C: // PRIO_XMA
+      pciBridgeState.PRIO_REG_XMA.hexData = static_cast<u32>(data);
+      pciBridgeState.PRIO_REG_XMA.intEnabled = enabled;
+      pciBridgeState.PRIO_REG_XMA.latched = latched;
+      pciBridgeState.PRIO_REG_XMA.targetCPU = targetCPU;
+      pciBridgeState.PRIO_REG_XMA.cpuIRQ = cpuIRQ;
+      break;    
+    case 0xEA000040: // PRIO_AUDIO
+      pciBridgeState.PRIO_REG_AUDIO.hexData = static_cast<u32>(data);
+      pciBridgeState.PRIO_REG_AUDIO.intEnabled = enabled;
+      pciBridgeState.PRIO_REG_AUDIO.latched = latched;
+      pciBridgeState.PRIO_REG_AUDIO.targetCPU = targetCPU;
+      pciBridgeState.PRIO_REG_AUDIO.cpuIRQ = cpuIRQ;
       break;
     case 0xEA000044: // PRIO_SFCX Secure Flash Controller for Xbox Int.
       pciBridgeState.PRIO_REG_SFCX.hexData = static_cast<u32>(data);

@@ -1,7 +1,5 @@
 // Copyright 2025 Xenon Emulator Project
 
-#include "Base/Logging/Log.h"
-
 #include "SFCX.h"
 
 SFCX::SFCX(const char* deviceName, const std::string nandLoadPath, u64 size,

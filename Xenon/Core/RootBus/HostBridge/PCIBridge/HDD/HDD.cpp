@@ -1,7 +1,5 @@
 // Copyright 2025 Xenon Emulator Project
 
-#include "Base/Logging/Log.h"
-
 #include "HDD.h"
 
 HDD::HDD(const char* deviceName, u64 size, PCIBridge *parentPCIBridge) :

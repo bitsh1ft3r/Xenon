@@ -1,4 +1,5 @@
-#pragma once 
+#pragma once
+
 #include "PPCInternal.h"
 #include "Core/XCPU/PPU/PowerPC.h"
 
@@ -79,6 +80,7 @@ extern void PPCInterpreter_srwx(PPU_STATE *hCore);
 extern void PPCInterpreter_subfcx(PPU_STATE *hCore);
 extern void PPCInterpreter_subfx(PPU_STATE *hCore);
 extern void PPCInterpreter_subfex(PPU_STATE *hCore);
+extern void PPCInterpreter_subfzex(PPU_STATE *hCore);
 extern void PPCInterpreter_subfic(PPU_STATE *hCore);
 extern void PPCInterpreter_xori(PPU_STATE *hCore);
 extern void PPCInterpreter_xoris(PPU_STATE *hCore);

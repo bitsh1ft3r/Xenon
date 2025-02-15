@@ -8,8 +8,6 @@
 * License: GPL2
 */
 
-#include <type_traits>
-
 #include "Base/Types.h"
 
 template <typename T, u64 N>

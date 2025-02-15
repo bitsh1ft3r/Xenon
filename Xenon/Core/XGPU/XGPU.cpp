@@ -1,6 +1,7 @@
 // Copyright 2025 Xenon Emulator Project
 
 #include "XGPU.h"
+
 #include "XGPUConfig.h"
 #include "XenosRegisters.h"
 #include "Core/Xe_Main.h"
@@ -297,6 +298,11 @@ void Xe::Xenos::XGPU::XenosResize(int x, int y) {
   // Recreate our texture with the new size
   glBindTexture(GL_TEXTURE_2D, texture);
   glTexStorage2D(GL_TEXTURE_2D, 1, GL_R32UI, resWidth, resHeight);
+  // Vali: We may not need to reset these params
+  glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_NEAREST);
+  glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_NEAREST);
+  glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_EDGE);
+  glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_EDGE);
   glBindImageTexture(0, texture, 0, GL_FALSE, 0, GL_READ_WRITE, GL_R32UI);
   // Set our new pitch
   pitch = resWidth * resHeight * sizeof(u32);
@@ -722,6 +728,10 @@ void Xe::Xenos::XGPU::XenosThread() {
   glGenTextures(1, &texture);
   glBindTexture(GL_TEXTURE_2D, texture);
   glTexStorage2D(GL_TEXTURE_2D, 1, GL_R32UI, resWidth, resHeight);
+  glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_NEAREST);
+  glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_NEAREST);
+  glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_EDGE);
+  glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_EDGE);
   glBindImageTexture(0, texture, 0, GL_FALSE, 0, GL_READ_WRITE, GL_R32UI);
 
   // Init pixel buffer
@@ -757,7 +767,7 @@ void Xe::Xenos::XGPU::XenosThread() {
   while (rendering) {
     // Process events.
     while (SDL_PollEvent(&windowEvent)) {
-#ifdef IMGUI  
+#ifdef IMGUI
       ImGui_ImplSDL3_ProcessEvent(&windowEvent);
 #endif
       switch (windowEvent.type) {
@@ -778,6 +788,18 @@ void Xe::Xenos::XGPU::XenosThread() {
           useVsync ^= true;
           SDL_GL_SetSwapInterval((int)useVsync);
           LOG_INFO(Xenos, "RenderWindow: Setting Vsync to: {0:#b}", useVsync);
+        }
+        if (windowEvent.key.key == SDLK_F9) {
+          LOG_INFO(Xenos, "RenderWindow: Taking a XenosFB snapshot");
+          std::ofstream f(Base::FS::GetUserPath(Base::FS::PathType::UserDir) / "fbmem.bin", std::ios::out | std::ios::binary | std::ios::trunc);
+          if (!f) {
+            LOG_ERROR(Xenos, "Failed to open fbmem.bin for writing");
+          }
+          else {
+            f.write(reinterpret_cast<const char*>(fbPointer), pitch);
+            LOG_INFO(Xenos, "Framebuffer dumped to Xenon/fbmem.bin");
+          }
+          f.close();
         }
         if (windowEvent.key.key == SDLK_F11) {
           SDL_WindowFlags flag = SDL_GetWindowFlags(mainWindow);

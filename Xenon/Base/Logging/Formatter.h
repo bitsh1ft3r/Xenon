@@ -2,7 +2,6 @@
 
 #pragma once
 
-#include <type_traits>
 #include <fmt/format.h>
 
 namespace fmt {

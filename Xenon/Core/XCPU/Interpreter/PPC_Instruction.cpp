@@ -7,9 +7,10 @@
 * License: GPL2
 */
 
-#include "Base/Logging/Log.h"
-#include "PPCInterpreter.h"
 #include "PPC_Instruction.h"
+
+#include "PPCInterpreter.h"
+
 #define D_STUB(name) void PPCInterpreter_##name(PPU_STATE *hCore) { return PPCInterpreter_known_unimplemented(#name, hCore); }
 #define D_STUBRC(name) void PPCInterpreter_##name##x(PPU_STATE *hCore) { return PPCInterpreter_known_unimplemented(#name "x", hCore); } 
 
@@ -50,7 +51,6 @@ namespace PPCInterpreter {
   D_STUBRC(subfco);
   D_STUBRC(subfeo);
   D_STUBRC(subfo);
-  D_STUBRC(subfze);
   D_STUBRC(subfzeo);
   D_STUBRC(subfme);
   D_STUBRC(subfmeo);
@@ -150,7 +150,6 @@ namespace PPCInterpreter {
   D_STUB(stvewx);
   D_STUB(eciwx);
   D_STUB(ecowx);
-  D_STUB(orc);
   D_STUB(slbmfev);
   D_STUB(slbmfee);
 
@@ -660,7 +659,8 @@ namespace PPCInterpreter {
       { 0x177, GET(lhaux) },
       { 0x192, GET(slbmte) },
       { 0x197, GET(sthx) },
-      { 0x19C, GET(orc) },
+      { 0x19C, GET(orcx) },
+      { 0x1B2, GET(slbie) },
       { 0x1B6, GET(ecowx) },
       { 0x1B7, GET(sthux) },
       { 0x1BC, GETRC(or) },

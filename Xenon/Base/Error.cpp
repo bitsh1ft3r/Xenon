@@ -1,14 +1,13 @@
 // Copyright 2025 Xenon Emulator Project
 
-#include <cstddef>
+#include "Error.h"
+
 #ifdef _WIN32
 #include <windows.h>
 #else
 #include <cerrno>
 #include <cstring>
 #endif
-
-#include "Error.h"
 
 namespace Base {
 

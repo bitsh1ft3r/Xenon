@@ -1,9 +1,9 @@
 // Copyright 2025 Xenon Emulator Project
 
+#include "String_util.h"
+
 #include <algorithm>
 #include <sstream>
-#include <string>
-#include "String_util.h"
 #include "Types.h"
 
 #ifdef _WIN32

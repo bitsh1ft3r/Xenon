@@ -1,7 +1,5 @@
 // Copyright 2025 Xenon Emulator Project
 
-#include <iostream>
-
 #include "RAM.h"
 #include "Base/Logging/Log.h"
 

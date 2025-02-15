@@ -2,8 +2,6 @@
 
 #pragma once
 
-#include <vector>
-
 #include "Base/SystemDevice.h"
 #include "Core/RootBus/HostBridge/HostBridge.h"
 

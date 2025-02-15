@@ -1,7 +1,7 @@
 // Copyright 2025 Xenon Emulator Project
 
 #include "Base/Logging/Log.h"
-#include "Core/XCPU/Interpreter/PPCInterpreter.h"
+#include "PPCInterpreter.h"
 
 #define FPR(x)			hCore->ppuThread[hCore->currentThread].FPR[x]
 #define GET_FPSCR		hCore->ppuThread[hCore->currentThread].FPSCR.FPSCR_Hex

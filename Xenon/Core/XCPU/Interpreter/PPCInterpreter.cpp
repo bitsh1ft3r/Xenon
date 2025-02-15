@@ -1,9 +1,8 @@
 // Copyright 2025 Xenon Emulator Project
 
-#include "Base/Logging/Log.h"
 #include "PPCInterpreter.h"
 
-#include <unordered_map>
+#include "Base/Logging/Log.h"
 
 using namespace PPCInterpreter;
 

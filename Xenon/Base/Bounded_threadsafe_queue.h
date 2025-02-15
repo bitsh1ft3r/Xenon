@@ -2,11 +2,6 @@
 
 #pragma once
 
-#include <atomic>
-#include <condition_variable>
-#include <cstddef>
-#include <memory>
-#include <mutex>
 #include "Polyfill_thread.h"
 
 namespace Base {

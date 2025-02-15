@@ -1,7 +1,5 @@
 // Copyright 2025 Xenon Emulator Project
 
-#include "Base/Logging/Log.h"
-
 #include "NAND.h"
 
 NAND::NAND(const char* deviceName, const std::string filePath,

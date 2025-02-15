@@ -1,6 +1,7 @@
 // Copyright 2025 Xenon Emulator Project
 
 #include "Path_util.h"
+
 #include <unordered_map>
 #include <fstream>
 

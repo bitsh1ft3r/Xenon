@@ -1,6 +1,7 @@
 // Copyright 2025 Xenon Emulator Project
 
 #include "HostBridge.h"
+
 #include "Base/Logging/Log.h"
 
 HostBridge::HostBridge() {

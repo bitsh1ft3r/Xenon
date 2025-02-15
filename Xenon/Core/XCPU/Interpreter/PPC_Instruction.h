@@ -9,11 +9,9 @@
 */
 
 #include <array>
-#include <string>
 
 #include "Base/Types.h"
 #include "Base/Logging/Log.h"
-#include "Core/XCPU/Bitfield.h"
 #include "Core/XCPU/PPU/PowerPC.h"
 
 constexpr u64 PPCRotateMask(u32 mb, u32 me) {

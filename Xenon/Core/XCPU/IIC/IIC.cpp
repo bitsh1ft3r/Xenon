@@ -1,10 +1,10 @@
 // Copyright 2025 Xenon Emulator Project
 
+#include "IIC.h"
+
 #include <thread>
 
 #include "Base/Logging/Log.h"
-
-#include "IIC.h"
 
 Xe::XCPU::IIC::XenonIIC::XenonIIC() {
   for (s8 idx = 0; idx < 6; idx++) {

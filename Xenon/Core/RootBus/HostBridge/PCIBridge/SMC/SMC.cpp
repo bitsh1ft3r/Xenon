@@ -1,8 +1,9 @@
 // Copyright 2025 Xenon Emulator Project
 
+#include "SMC.h"
+
 #include "Base/Logging/Log.h"
 
-#include "SMC.h"
 #include "HANA_State.h"
 #include "SMC_Config.h"
 
@@ -317,6 +318,12 @@ void Xe::PCIDev::SMC::SMCCore::setupUART(u32 uartConfig) {
   //  Initialize the DCB structure.
   SecureZeroMemory(&smcCoreState->comPortDCB, sizeof(DCB));
   smcCoreState->comPortDCB.DCBlength = sizeof(DCB);
+
+  // Get Current COM Port State
+  if (!GetCommState(smcCoreState->comPortHandle, &smcCoreState->comPortDCB)) {
+    LOG_ERROR(SMC, "UART: GetCommState failed with error {:#x}.", GetLastError());
+  }
+
   switch (uartConfig) {
   case 0x1e6:
     LOG_INFO(SMC, " * BaudRate: 115200bps, DataSize: 8, Parity: N, StopBits: 1.");
@@ -356,10 +363,6 @@ void Xe::PCIDev::SMC::SMCCore::setupUART(u32 uartConfig) {
     return;
   }
 
-  // Get Current COM Port State
-  if (!GetCommState(smcCoreState->comPortHandle, &smcCoreState->comPortDCB)) {
-    LOG_ERROR(SMC, "UART: GetCommState failed with error {:#x}.", GetLastError());
-  }
   // Set The COM Port State as per config value.
   if (!SetCommState(smcCoreState->comPortHandle, &smcCoreState->comPortDCB)) {
     LOG_ERROR(SMC, "UART: SetCommState failed with error {:#x}.", GetLastError());
@@ -482,6 +485,9 @@ void Xe::PCIDev::SMC::SMCCore::smcMainThread() {
       // Set FIFO_IN_STATUS_REG to FIFO_STATUS_READY
       smcPCIState->fifoInStatusReg = FIFO_STATUS_READY;
 
+      // Some commands does'nt have responses/interrupts.
+      bool noResponse = false;
+
       // Note that the first byte in the response is always Command ID.
 
       switch (
@@ -595,6 +601,7 @@ void Xe::PCIDev::SMC::SMCCore::smcMainThread() {
         break;
       case Xe::PCIDev::SMC::SMC_SET_FP_LEDS:
           LOG_WARNING(SMC, "Unimplemented SMC_FIFO_CMD: SMC_SET_FP_LEDS");
+          noResponse = true;
         break;
       case Xe::PCIDev::SMC::SMC_SET_RTC_WAKE:
           LOG_WARNING(SMC, "Unimplemented SMC_FIFO_CMD: SMC_SET_RTC_WAKE");
@@ -622,7 +629,7 @@ void Xe::PCIDev::SMC::SMCCore::smcMainThread() {
       smcPCIState->fifoOutStatusReg = FIFO_STATUS_READY;
 
       // If interrupts are active set Int status and issue one.
-      if (smcPCIState->smiIntEnabledReg & SMI_INT_ENABLED) {
+      if (smcPCIState->smiIntEnabledReg & SMI_INT_ENABLED && noResponse == false) {
         smcPCIState->smiIntPendingReg = SMI_INT_PENDING;
         pciBridge->RouteInterrupt(PRIO_SMM);
       }

@@ -7,6 +7,7 @@
 #include <vector>
 
 #include "Core/RAM/RAM.h"
+#include "Core/RootBus/HostBridge/PCIBridge/SATA.h"
 #include "Core/RootBus/HostBridge/PCIBridge/PCIBridge.h"
 #include "Core/RootBus/HostBridge/PCIBridge/PCIDevice.h"
 

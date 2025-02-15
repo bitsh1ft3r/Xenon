@@ -1,10 +1,11 @@
 // Copyright 2025 Xenon Emulator Project
 
+#include "PPU.h"
+
 #include <assert.h>
 #include <chrono>
 #include <thread>
 
-#include "PPU.h"
 #include "Base/Config.h"
 #include "Base/Thread.h"
 #include "Base/Logging/Log.h"

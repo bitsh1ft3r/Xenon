@@ -16,6 +16,7 @@
 #endif // CORE_DUMP
 
 #include "PPCInternal.h"
+
 #include "PPC_Instruction.h"
 #include "PPCOpcodes.h"
 
@@ -43,11 +44,6 @@ void ppcDebugLoadImageSymbols(PPU_STATE *hCore, u64 moduleNameAddress,
                               u64 moduleInfoAddress);
 void ppcDebugUnloadImageSymbols(PPU_STATE *hCore, u64 moduleNameAddress,
                                 u64 moduleInfoAddress);
-
-// Interpreter helpers
-u64 ppcAddCarrying(PPU_STATE *hCore, u64 op1, u64 op2, u64 carryBit);
-void ppcMul64(u64 operand0, u64 operand1, u64 *u64High, u64 *u64Low);
-void ppcMul64Signed(u64 operand0, u64 operand1, u64 *u64High, u64 *u64Low);
 
 //
 // Condition Register
