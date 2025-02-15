@@ -285,6 +285,11 @@ void Xe::Xenos::XGPU::XenosResize(int x, int y) {
   // Recreate our texture with the new size
   glBindTexture(GL_TEXTURE_2D, texture);
   glTexStorage2D(GL_TEXTURE_2D, 1, GL_R32UI, resWidth, resHeight);
+  // Vali: We may not need to reset these params
+  glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_NEAREST);
+  glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_NEAREST);
+  glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_EDGE);
+  glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_EDGE);
   glBindImageTexture(0, texture, 0, GL_FALSE, 0, GL_READ_WRITE, GL_R32UI);
   // Set our new pitch
   pitch = resWidth * resHeight * sizeof(u32);
@@ -373,6 +378,10 @@ void Xe::Xenos::XGPU::XenosThread() {
   glGenTextures(1, &texture);
   glBindTexture(GL_TEXTURE_2D, texture);
   glTexStorage2D(GL_TEXTURE_2D, 1, GL_R32UI, resWidth, resHeight);
+  glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_NEAREST);
+  glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_NEAREST);
+  glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_EDGE);
+  glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_EDGE);
   glBindImageTexture(0, texture, 0, GL_FALSE, 0, GL_READ_WRITE, GL_R32UI);
 
   // Init pixel buffer
@@ -432,7 +441,7 @@ void Xe::Xenos::XGPU::XenosThread() {
             LOG_ERROR(Xenos, "Failed to open fbmem.bin for writing");
           }
           else {
-            f.write(reinterpret_cast<const char*>(fbPointer), pitch * 4);
+            f.write(reinterpret_cast<const char*>(fbPointer), pitch);
             LOG_INFO(Xenos, "Framebuffer dumped to Xenon/fbmem.bin");
           }
           f.close();
