@@ -45,6 +45,8 @@ void ODD::atapiIdentifyPacketDeviceCommand()
   atapiState.atapiRegs.statusReg |= ATA_STATUS_DRQ;
   // Request an interrupt.
   parentBus->RouteInterrupt(PRIO_SATA_ODD);
+  // Set interrupt reason.
+  atapiState.atapiRegs.interruptReasonReg = IDE_INTERRUPT_REASON_IO;
 }
 
 void ODD::atapiIdentifyCommand() {
@@ -73,6 +75,8 @@ void ODD::atapiIdentifyCommand() {
 
   // An interrupt must also be requested
   parentBus->RouteInterrupt(PRIO_SATA_ODD);
+  // Set interrupt reason.
+  atapiState.atapiRegs.interruptReasonReg = IDE_INTERRUPT_REASON_IO;
 }
 
 void ODD::processSCSICommand() {
@@ -245,8 +249,20 @@ void ODD::Read(u64 readAddress, u64 *data, u8 byteCount) {
     case ATAPI_REG_ERROR:
       memcpy(data, &atapiState.atapiRegs.errorReg, byteCount);
       return;
+    case ATAPI_REG_INT_REAS:
+      memcpy(data, &atapiState.atapiRegs.interruptReasonReg, byteCount);
+      return;
     case ATAPI_REG_LBA_LOW:
       memcpy(data, &atapiState.atapiRegs.lbaLowReg, byteCount);
+      return;
+    case ATAPI_REG_BYTE_COUNT_LOW:
+      memcpy(data, &atapiState.atapiRegs.byteCountLowReg, byteCount);
+      return;
+    case ATAPI_REG_BYTE_COUNT_HIGH:
+      memcpy(data, &atapiState.atapiRegs.byteCountHighReg, byteCount);
+      return;
+    case ATAPI_REG_DEVICE:
+      memcpy(data, &atapiState.atapiRegs.deviceReg, byteCount);
       return;
     case ATAPI_REG_STATUS:
       memcpy(data, &atapiState.atapiRegs.statusReg, byteCount);
