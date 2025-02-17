@@ -122,17 +122,14 @@ template <typename cT, typename T>
 using u128 = __uint128_t;
 using s128 = __int128_t;
 #else
+#include <xmmintrin.h>
 
 extern "C"
-{
-	union __m128;
-	union __m128i;
-	struct __m128d;
-
-	unsigned char _addcarry_u64(unsigned char, u64, u64, u64*);
-	unsigned char _subborrow_u64(unsigned char, u64, u64, u64*);
-	u64 __shiftleft128(u64, u64, unsigned char);
-	u64 __shiftright128(u64, u64, unsigned char);
+{		 
+	u8 _addcarry_u64(u8, u64, u64, u64*);
+	u8 _subborrow_u64(u8, u64, u64, u64*);
+	u64 __shiftleft128(u64, u64, u8);
+	u64 __shiftright128(u64, u64, u8);
 	u64 _umul128(u64, u64, u64*);
 }
 
