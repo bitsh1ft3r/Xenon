@@ -5,11 +5,50 @@
 #include "Base/Logging/Log.h"
 
 HDD::HDD(PCIBridge *parentPCIBridge) {
-  // TODO(bitsh1ft3r): Implement PCIe Capabilities.
-  // Set PCI Properties.
+  // Note:
+   // The ATA/ATAPI Controller in the Xenon Southbridge contain two BAR's:
+   // The first is for the Command Block (Regs 0-7) + DevCtrl/AltStatus reg at offset 0xA.
+   // The second is for the BMDMA (Bus Master DMA) block.
+
+   // Set PCI Properties.
   pciConfigSpace.configSpaceHeader.reg0.hexData = 0x58031414;
   pciConfigSpace.configSpaceHeader.reg1.hexData = 0x02300006;
   pciConfigSpace.configSpaceHeader.reg2.hexData = 0x01060000;
+  pciConfigSpace.configSpaceHeader.regD.hexData = 0x00000058; // Capabilites Ptr.
+  pciConfigSpace.configSpaceHeader.regF.hexData = 0x00000100; // Int line, pin.
+
+  u32 data = 0;
+
+  // Capabilities at offset 0x58:
+  data = 0x80020001;
+  memcpy(&pciConfigSpace.data[0x58], &data, 4);
+  data = 0x00112400;
+  memcpy(&pciConfigSpace.data[0x60], &data, 4);
+  data = 0x7f7f7f7f;
+  memcpy(&pciConfigSpace.data[0x70], &data, 4);
+  memcpy(&pciConfigSpace.data[0x74], &data, 4); // Field value is the same as above.
+  data = 0xc07231be;
+  memcpy(&pciConfigSpace.data[0x80], &data, 4);
+  data = 0x40;
+  memcpy(&pciConfigSpace.data[0x90], &data, 4);
+  data = 0x100c04cc;
+  memcpy(&pciConfigSpace.data[0x98], &data, 4);
+  data = 0x004108c0;
+  memcpy(&pciConfigSpace.data[0x9C], &data, 4);
+
+  // Set the SCR's at offset 0xC0 (SiS-like).
+  // SStatus.
+  data = 0x00000000;
+  memcpy(&pciConfigSpace.data[0xC0], &data, 4); // SSTATUS_DET_NO_DEVICE_DETECTED.
+                                                // SSTATUS_SPD_NO_SPEED.
+                                                // SSTATUS_IPM_NO_DEVICE.
+// SError.
+  data = 0x001f0201;
+  memcpy(&pciConfigSpace.data[0xC4], &data, 4);
+  // SControl.
+  data = 0x00000300;
+  memcpy(&pciConfigSpace.data[0xC8], &data, 4); // SCONTROL_IPM_ALL_PM_DISABLED.
+
   // Set our PCI Dev Sizes.
   pciDevSizes[0] = 0x20; // BAR0
   pciDevSizes[1] = 0x10; // BAR1
