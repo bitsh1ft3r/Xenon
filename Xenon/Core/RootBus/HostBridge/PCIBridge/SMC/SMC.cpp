@@ -276,11 +276,6 @@ void Xe::PCIDev::SMC::SMCCore::setupUART(u32 uartConfig) {
   SecureZeroMemory(&smcCoreState->comPortDCB, sizeof(DCB));
   smcCoreState->comPortDCB.DCBlength = sizeof(DCB);
 
-  // Get Current COM Port State
-  if (!GetCommState(smcCoreState->comPortHandle, &smcCoreState->comPortDCB)) {
-    LOG_ERROR(SMC, "UART: GetCommState failed with error {:#x}.", GetLastError());
-  }
-
   switch (uartConfig) {
   case 0x1e6:
     LOG_INFO(SMC, " * BaudRate: 115200bps, DataSize: 8, Parity: N, StopBits: 1.");
@@ -580,7 +575,7 @@ void Xe::PCIDev::SMC::SMCCore::smcMainThread() {
       {
         // Wait X time before next clock interrupt. TODO: Find the correct
         // delay.
-        if (timerNow >= timerStart + std::chrono::milliseconds(500)) {
+        if (timerNow >= timerStart + std::chrono::milliseconds(5000)) {
           // Update internal timer.
           timerStart = std::chrono::steady_clock::now();
           smcPCIState->clockIntStatusReg = CLCK_INT_TAKEN;
