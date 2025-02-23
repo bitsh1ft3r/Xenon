@@ -273,7 +273,11 @@
 // IDE interrupt reason flags for an ATAPI device.
 //
 
+// The COMMAND/DATA bit shall be cleared to zero if the transfer is data. Otherwise, the COMMAND/DATA bit shall be 
+// set to one.
 #define IDE_INTERRUPT_REASON_CD 0x01
+// The INPUT/OUTPUT bit shall be cleared to zero if the transfer is to the device. The INPUT/OUTPUT bit shall be set to 
+// one if the transfer is to the host.
 #define IDE_INTERRUPT_REASON_IO 0x02
 
 //
@@ -655,7 +659,7 @@ COMRESET having been issued, or in response to power-up.
 /*
 * This structure is returned by the IDENTIFY_DEVICE and IDENTIFY_PACKET_DEVICE commands.
 */
-
+#pragma pack(push, 1)
 struct XE_ATA_IDENTIFY_DATA {
   u16 generalConfiguration;                // word 0
   u16 numberOfCylinders;                   // word 1
@@ -805,3 +809,18 @@ struct XE_ATA_IDENTIFY_DATA {
   u16 reserved24 : 7;
   u16 reserved25[127];                     // word 129-255
 };
+#pragma pack(pop)
+
+// SCSI Status Codes.
+// The Status is a single byte returned by some SCSI commands.
+// Only nine status codes are defined under the SCSI-2 specification. All 
+// others are reserved.
+#define SCSI_STATUS_GOOD  0x00
+#define SCSI_STATUS_CHECK_CONDITION  0x01
+#define SCSI_STATUS_CONDITION_MET  0x02
+#define SCSI_STATUS_BUSY  0x04
+#define SCSI_STATUS_INTERMEDIATE  0x08
+#define SCSI_STATUS_INTERMEDIATE_CONDITION_MET  0x0A
+#define SCSI_STATUS_RESERVATION_CONFLICT  0x0C
+#define SCSI_STATUS_COMMAND_TERMINATED  0x11
+#define SCSI_STATUS_QUEUE_FULL  0x14
