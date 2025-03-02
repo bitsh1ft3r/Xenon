@@ -112,7 +112,8 @@ void XeMain::createSMCState() {
   // Initialize several settings from the struct.
   smcCoreState = std::make_shared<STRIP_UNIQUE(smcCoreState)>();
   smcCoreState->currentCOMPort = Config::COMPort()->data();
-  smcCoreState->currAVPackType = Xe::PCIDev::SMC::SMC_AVPACK_TYPE::HDMI_NO_AUDIO;
+  smcCoreState->currAVPackType =
+    (Xe::PCIDev::SMC::SMC_AVPACK_TYPE)Config::smcCurrentAvPack();
   smcCoreState->currPowerOnReas =
     (Xe::PCIDev::SMC::SMC_PWR_REAS)Config::smcPowerOnType();
   smcCoreState->currTrayState = Xe::PCIDev::SMC::SMC_TRAY_STATE::SMC_TRAY_CLOSE;
