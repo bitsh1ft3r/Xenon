@@ -292,6 +292,13 @@ struct XE_ATAPI_REGISTERS {
     // When written
     u32 commandReg;
   };
+  // Offset 0xA
+  struct {
+    // When Read
+    u32 altStatusReg;
+    // When written
+    u32 devControlReg;
+  };
 
   /* Control Block */
   // Offset 0x0
@@ -300,13 +307,6 @@ struct XE_ATAPI_REGISTERS {
   u32 dmaStatusReg;
   // Offset 0x4
   u32 dmaTableOffsetReg;
-  // Offset 0x6
-  struct {
-    // When Read
-    u32 alternateStatusReg;
-    // When written
-    u32 deviceControlReg;
-  };
 };
 
 //
@@ -321,6 +321,8 @@ struct XE_ATAPI_DEV_STATE {
   DataBuffer dataWriteBuffer;
   // ATAPI Inquiry Data
   XE_ATAPI_INQUIRY_DATA atapiInquiryData = {0};
+  // ATA Identify structure.
+  XE_ATA_IDENTIFY_DATA atapiIdentifyData = {0};
   // SCSI Command Descriptor Block
   XE_CDB scsiCBD = {0};
   // Direct Memroy Access Processing
@@ -345,7 +347,7 @@ private:
   // RAM pointer. Used for DMA.
   RAM *mainMemory;
 
-  // ATAPI Device State
+  // ATAPI Device State.
   XE_ATAPI_DEV_STATE atapiState = {0};
 
   // SCSI Command Processing
@@ -355,5 +357,6 @@ private:
 
   // Misc
   void atapiReset();
+  void atapiIdentifyPacketDeviceCommand();
   void atapiIdentifyCommand();
 };

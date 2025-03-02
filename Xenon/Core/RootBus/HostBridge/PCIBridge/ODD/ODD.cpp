@@ -26,7 +26,34 @@ void ODD::atapiReset() {
   }
 }
 
+void ODD::atapiIdentifyPacketDeviceCommand()
+{
+  // This command is only for ATAPI devices.
+
+  // TODO(bitsh1ft3r): Fill out the struct with data from an actual drive.
+
+  if (!atapiState.dataReadBuffer.Initialize(ATAPI_CDROM_SECTOR_SIZE, true)) {
+    LOG_ERROR(ODD, "Failed to initialize data buffer for atapiIdentifyPacketDeviceCommand");
+  }
+
+  // Set the struct.
+  atapiState.atapiIdentifyData.generalConfiguration = 0x8000; // ATAPI device.
+
+  // Reset the pointer.
+  atapiState.dataReadBuffer.ResetPtr();
+  // Copy the data.
+  memcpy(atapiState.dataReadBuffer.Ptr(), &atapiState.atapiIdentifyData, 
+    sizeof(XE_ATA_IDENTIFY_DATA));
+  // Set the drive status.
+  atapiState.atapiRegs.statusReg |= ATA_STATUS_DRQ;
+  // Request an interrupt.
+  parentBus->RouteInterrupt(PRIO_SATA_ODD);
+  // Set interrupt reason.
+  atapiState.atapiRegs.interruptReasonReg = IDE_INTERRUPT_REASON_IO;
+}
+
 void ODD::atapiIdentifyCommand() {
+  // Used by software to decide whether the device is an ATA or ATAPI device.
   /*
       ATAPI drives will set the ABRT bit in the Error register and will place
      the signature of ATAPI drives in the Interrupt Reason, LBA Low, Byte Count
@@ -51,6 +78,8 @@ void ODD::atapiIdentifyCommand() {
 
   // An interrupt must also be requested
   parentBus->RouteInterrupt(PRIO_SATA_ODD);
+  // Set interrupt reason.
+  atapiState.atapiRegs.interruptReasonReg = IDE_INTERRUPT_REASON_IO;
 }
 
 void ODD::processSCSICommand() {
@@ -143,11 +172,48 @@ void ODD::doDMA() {
 
 ODD::ODD(const char* deviceName, u64 size,
   PCIBridge *parentPCIBridge, RAM *ram) : PCIDevice(deviceName, size) {
-  // TODO(bitsh1ft3r): Implement PCIe Capabilities.
+  // Note:
+  // The ATA/ATAPI Controller in the Xenon Southbridge contain two BAR's:
+  // The first is for the Command Block (Regs 0-7) + DevCtrl/AltStatus reg at offset 0xA.
+  // The second is for the BMDMA (Bus Master DMA) block.
+
   // Set PCI Properties.
   pciConfigSpace.configSpaceHeader.reg0.hexData = 0x58021414;
   pciConfigSpace.configSpaceHeader.reg1.hexData = 0x02300006;
   pciConfigSpace.configSpaceHeader.reg2.hexData = 0x01060000;
+  pciConfigSpace.configSpaceHeader.regD.hexData = 0x00000058; // Capabilites Ptr.
+  pciConfigSpace.configSpaceHeader.regF.hexData = 0x00000100; // Int line, pin.
+
+  u32 data = 0;
+
+  // Capabilities at offset 0x58:
+  data = 0x80020001;
+  memcpy(&pciConfigSpace.data[0x58], &data, 4);
+  data = 0x00112400;
+  memcpy(&pciConfigSpace.data[0x60], &data, 4);
+  data = 0x7f7f7f7f;
+  memcpy(&pciConfigSpace.data[0x70], &data, 4);
+  memcpy(&pciConfigSpace.data[0x74], &data, 4); // Field value is the same as above.
+  data = 0xc07231be;
+  memcpy(&pciConfigSpace.data[0x80], &data, 4);
+  data = 0x100c04cc;
+  memcpy(&pciConfigSpace.data[0x98], &data, 4);
+  data = 0x004108c0;
+  memcpy(&pciConfigSpace.data[0x9C], &data, 4);
+
+  // Set the SCR's at offset 0xC0 (SiS-like).
+  // SStatus.
+  data = 0x00000113;
+  memcpy(&pciConfigSpace.data[0xC0], &data, 4); // SSTATUS_DET_COM_ESTABLISHED.
+                                                // SSTATUS_SPD_GEN1_COM_SPEED.
+                                                // SSTATUS_IPM_INTERFACE_ACTIVE_STATE.
+  // SError.
+  data = 0x001f0201;
+  memcpy(&pciConfigSpace.data[0xC4], &data, 4);
+  // SControl.
+  data = 0x00000300;
+  memcpy(&pciConfigSpace.data[0xC8], &data, 4); // SCONTROL_IPM_ALL_PM_DISABLED.
+  
   // Set our PCI Dev Sizes.
   pciDevSizes[0] = 0x20; // BAR0
   pciDevSizes[1] = 0x10; // BAR1
@@ -186,11 +252,26 @@ void ODD::Read(u64 readAddress, u64 *data, u8 byteCount) {
     case ATAPI_REG_ERROR:
       memcpy(data, &atapiState.atapiRegs.errorReg, byteCount);
       return;
+    case ATAPI_REG_INT_REAS:
+      memcpy(data, &atapiState.atapiRegs.interruptReasonReg, byteCount);
+      return;
     case ATAPI_REG_LBA_LOW:
       memcpy(data, &atapiState.atapiRegs.lbaLowReg, byteCount);
       return;
+    case ATAPI_REG_BYTE_COUNT_LOW:
+      memcpy(data, &atapiState.atapiRegs.byteCountLowReg, byteCount);
+      return;
+    case ATAPI_REG_BYTE_COUNT_HIGH:
+      memcpy(data, &atapiState.atapiRegs.byteCountHighReg, byteCount);
+      return;
+    case ATAPI_REG_DEVICE:
+      memcpy(data, &atapiState.atapiRegs.deviceReg, byteCount);
+      return;
     case ATAPI_REG_STATUS:
       memcpy(data, &atapiState.atapiRegs.statusReg, byteCount);
+      return;
+    case ATAPI_REG_ALTERNATE_STATUS:
+      memcpy(data, &atapiState.atapiRegs.altStatusReg, byteCount);
       return;
     default:
       LOG_ERROR(ODD, "Unknown Command Register Block register being read, command code = {:#x}", atapiCommandReg);
@@ -284,6 +365,9 @@ void ODD::Write(u64 writeAddress, u64 data, u8 byteCount) {
       case ATA_COMMAND_PACKET:
         atapiState.atapiRegs.statusReg |= ATA_STATUS_DRQ;
         return;
+      case ATA_COMMAND_IDENTIFY_PACKET_DEVICE:
+        atapiIdentifyPacketDeviceCommand();
+        return;
       case ATA_COMMAND_IDENTIFY_DEVICE:
         atapiIdentifyCommand();
         return;
@@ -291,6 +375,9 @@ void ODD::Write(u64 writeAddress, u64 data, u8 byteCount) {
         LOG_ERROR(ODD, "Unknown command, command code = {:#x}", data);
         break;
       }
+      return;
+    case ATAPI_REG_DEVICE_CONTROL:
+      memcpy(&atapiState.atapiRegs.devControlReg, &data, byteCount);
       return;
     default:
       LOG_ERROR(ODD, "Unknown Command Register Block register being written, command reg = {:#x}"
@@ -351,6 +438,7 @@ void ODD::ConfigRead(u64 readAddress, u64 *data, u8 byteCount) {
     }
   }
   memcpy(data, &pciConfigSpace.data[static_cast<u8>(readAddress)], byteCount);
+  LOG_DEBUG(ODD, "ConfigRead to reg {:#x}", readReg * 4);
 }
 
 void ODD::ConfigWrite(u64 writeAddress, u64 data, u8 byteCount) {
@@ -402,4 +490,5 @@ void ODD::ConfigWrite(u64 writeAddress, u64 data, u8 byteCount) {
     }
   }
   memcpy(&pciConfigSpace.data[static_cast<u8>(writeAddress)], &data, byteCount);
+  LOG_DEBUG(ODD, "ConfigWrite to reg {:#x}, data {:#x}", writeReg * 4, data);
 }

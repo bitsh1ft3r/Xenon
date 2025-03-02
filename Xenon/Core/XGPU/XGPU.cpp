@@ -16,6 +16,8 @@
 #include "backends/imgui_impl_sdl3.h"
 #endif
 
+#define XE_DEBUG 0
+
 Xe::Xenos::XGPU::XGPU(RAM *ram) {
   // Assign RAM Pointer
   ramPtr = ram;
@@ -58,6 +60,9 @@ void Xe::Xenos::XGPU::StartThread() {
 bool Xe::Xenos::XGPU::Read(u64 readAddress, u64 *data, u8 byteCount) {
   if (isAddressMappedInBAR(static_cast<u32>(readAddress))) {
     const u32 regIndex = (readAddress & 0xFFFFF) / 4;
+
+    if(XE_DEBUG)
+      LOG_DEBUG(Xenos, "Read to {}, index {:#x}", GetRegisterNameById(regIndex), regIndex);
 
     LOG_TRACE(Xenos, "Read Addr = {:#x}, reg: {:#x}.", readAddress, regIndex);
 
@@ -102,6 +107,10 @@ bool Xe::Xenos::XGPU::Write(u64 writeAddress, u64 data, u8 byteCount) {
   if (isAddressMappedInBAR(static_cast<u32>(writeAddress))) {
 
     const u32 regIndex = (writeAddress & 0xFFFFF) / 4;
+    
+    if (XE_DEBUG)
+      LOG_DEBUG(Xenos, "Write to {}, index {:#x}, data = {:#x}", GetRegisterNameById(regIndex), regIndex, 
+        _byteswap_ulong(static_cast<u32>(data)));
 
     LOG_TRACE(Xenos, "Write Addr = {:#x}, reg: {:#x}, data = {:#x}.", writeAddress, regIndex,
         std::byteswap(static_cast<u32>(data)));
