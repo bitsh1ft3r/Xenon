@@ -52,7 +52,8 @@ private:
   std::unique_ptr<Texture> backbuffer;
 
   // Resolution
-  u32 width = 720, height = 1280;
+  u32 width = 1280;
+  u32 height = 720;
   // Vertical SYNC
   bool VSYNC = true;
   bool fullscreen = false;
