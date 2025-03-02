@@ -2,7 +2,9 @@
 
 #pragma once
 
-#include <Windows.h>
+#ifdef _WIN32
+#include <windows.h>
+#endif
 
 #include "Core/RAM/RAM.h"
 #include "Core/RootBus/HostBridge/PCIBridge/SATA.h"

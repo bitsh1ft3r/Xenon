@@ -6,8 +6,9 @@
 
 #pragma once
 
-#ifdef __cpp_lib_jthread
+#if defined(__cpp_lib_jthread) || !defined(_MSVC_VER)
 
+#include <mutex>
 #include <chrono>
 #include <condition_variable>
 #include <stop_token>

@@ -1389,13 +1389,13 @@ u8 PPCInterpreter::MMURead8(PPU_STATE *ppuState, u64 EA) {
 u16 PPCInterpreter::MMURead16(PPU_STATE *ppuState, u64 EA) {
   u16 data = 0;
   data = static_cast<u16>(MMURead(intXCPUContext, ppuState, EA, 2));
-  return _byteswap_ushort(data);
+  return std::byteswap<u16>(data);
 }
 // Reads 4 Bytes of memory.
 u32 PPCInterpreter::MMURead32(PPU_STATE *ppuState, u64 EA) {
   u32 data = 0;
   data = static_cast<u32>(MMURead(intXCPUContext, ppuState, EA, 4));
-  return _byteswap_ulong(data);
+  return std::byteswap<u32>(data);
 }
 // Reads 8 Bytes of memory.
 u64 PPCInterpreter::MMURead64(PPU_STATE *ppuState, u64 EA) {
@@ -1409,12 +1409,12 @@ void PPCInterpreter::MMUWrite8(PPU_STATE *ppuState, u64 EA, u8 data) {
 }
 // Writes 2 Bytes to memory.
 void PPCInterpreter::MMUWrite16(PPU_STATE *ppuState, u64 EA, u16 data) {
-  u16 dataBS = _byteswap_ushort(data);
+  u16 dataBS = std::byteswap<u16>(data);
   MMUWrite(intXCPUContext, ppuState, dataBS, EA, 2);
 }
 // Writes 4 Bytes to memory.
 void PPCInterpreter::MMUWrite32(PPU_STATE *ppuState, u64 EA, u32 data) {
-  u32 dataBS = _byteswap_ulong(data);
+  u32 dataBS = std::byteswap<u32>(data);
   MMUWrite(intXCPUContext, ppuState, dataBS, EA, 4);
 }
 // Writes 8 Bytes to memory.

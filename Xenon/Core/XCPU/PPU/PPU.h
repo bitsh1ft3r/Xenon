@@ -8,9 +8,7 @@
 
 class PPU {
 public:
-  PPU();
-
-  void Initialize(XENON_CONTEXT *inXenonContext, RootBus *mainBus, u32 PVR,
+  PPU(XENON_CONTEXT *inXenonContext, RootBus *mainBus, u32 PVR,
                   u32 PIR, const char *ppuName);
 
   void StartExecution();
@@ -19,6 +17,9 @@ public:
   PPU_THREAD_REGISTERS *GetPPUThread(u8 thrdID);
 
 private:
+  // Thread handle
+  std::thread ppuThread;
+
   // PPU running?
   bool ppuRunning = false;
 
