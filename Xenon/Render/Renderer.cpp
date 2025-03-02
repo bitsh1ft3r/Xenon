@@ -196,7 +196,8 @@ void Render::Renderer::Thread() {
 
   // Framebuffer pointer from main memory.
   fbPointer = ramPointer->getPointerToAddress(XE_FB_BASE);
-  bool rendering = true;
+  // Should we render?
+  bool rendering = Config::gpuThreadEnabled();
   while (rendering) {
     // Process events.
     while (SDL_PollEvent(&windowEvent)) {
