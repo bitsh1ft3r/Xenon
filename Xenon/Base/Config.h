@@ -2,6 +2,7 @@
 
 #pragma once
 
+#include <cstdlib>
 #include <filesystem>
 
 #include "Types.h"
@@ -34,10 +35,18 @@ inline s32 internalHeight = 720;
 // inline s32 gpuId = -1; // Vulkan physical device index. Set to negative for auto select
 
 // Filepaths.
+#ifdef __WIN32__
 inline std::string fusesTxtPath = "C:/Xbox/fuses.txt";
 inline std::string oneBlBinPath = "C:/Xbox/1bl.bin";
 inline std::string nandBinPath = "C:/Xbox/nand.bin";
 inline std::string oddDiscImagePath = "C:/Xbox/xenon.iso";
+#elif defined __linux__
+inline std::string home = getenv("HOME") ? getenv("HOME") : "";
+inline std::string fusesTxtPath = home + "/Xbox/fuses.txt";
+inline std::string oneBlBinPath = home + "/Xbox/1bl.bin";
+inline std::string nandBinPath = home + "/Xbox/nand.bin";
+inline std::string oddDiscImagePath = home + "/Xbox/xenon.iso";
+#endif
 
 // Highly experimental.
 inline int ticksPerInstruction = 1;
