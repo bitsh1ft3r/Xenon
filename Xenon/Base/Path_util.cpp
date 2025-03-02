@@ -19,7 +19,7 @@ static auto UserPaths = [] {
   // What do you think happens if the files directory is Xenon, and the output is also Xenon?
   // Very confusing errors, that I do not wish to deal with
 
-  if (!fs::exists(userDir)) {
+  if (!fs::exists(userDir) || !fs::is_directory(userDir)) {
     userDir = fs::current_path();
     // If we have xenon_config in the root of our directory, then just use it and create files there instead.
     std::ifstream f(userDir / "xenon_config.toml");

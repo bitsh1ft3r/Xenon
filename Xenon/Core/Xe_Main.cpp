@@ -7,7 +7,8 @@ XeMain::XeMain() {
   Config::loadConfig(userDirectory / "xenon_config.toml");
   Base::Log::Initialize();
   Base::Log::Start();
-  logFilter = std::make_unique<STRIP_UNIQUE(logFilter)>(Config::getCurrentLogLevel());
+  auto logLevel = Config::getCurrentLogLevel();
+  logFilter = std::make_unique<STRIP_UNIQUE(logFilter)>(logLevel);
   Base::Log::SetGlobalFilter(*logFilter);
   pciBridge = std::make_unique<STRIP_UNIQUE(pciBridge)>();
   createPCIDevices();

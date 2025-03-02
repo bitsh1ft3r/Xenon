@@ -11,7 +11,8 @@
 
 class RootBus {
 public:
-  void Init();
+  RootBus();
+  ~RootBus();
 
   void AddHostBridge(HostBridge *newHostBridge);
 
@@ -25,9 +26,9 @@ public:
   void ConfigWrite(u64 writeAddress, u64 data, u8 byteCount);
 
 private:
-  HostBridge *hostBridge;
+  HostBridge *hostBridge{};
   u32 deviceCount;
-  std::vector<SystemDevice *> conectedDevices;
+  std::vector<SystemDevice*> conectedDevices;
 
-  u8 *biuData = new u8[0x10000];
+  std::unique_ptr<u8> biuData{ std::make_unique<STRIP_UNIQUE(biuData)>(0x10000) };
 };

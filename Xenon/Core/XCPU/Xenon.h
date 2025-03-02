@@ -14,7 +14,9 @@
 // - 768 bits of IBM's eFuse technology.
 
 #include "Core/RootBus/RootBus.h"
-#include "Core/XCPU/PPU/PPU.h"
+#include "Core/XCPU/PPU/PPU.h" 
+
+#include <filesystem>
 
 class Xenon {
 public:
@@ -32,10 +34,7 @@ private:
 
   // Power Processing Units, the effective execution units inside the XBox
   // 360 CPU.
-  PPU ppu0;
-  PPU ppu1;
-  PPU ppu2;
-  std::thread ppu0Thread;
-  std::thread ppu1Thread;
-  std::thread ppu2Thread;
+  std::unique_ptr<PPU> ppu0;
+  std::unique_ptr<PPU> ppu1;
+  std::unique_ptr<PPU> ppu2;
 };

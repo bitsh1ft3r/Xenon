@@ -87,8 +87,8 @@ void ODD::processSCSICommand() {
   memcpy(&readOffset, &atapiState.scsiCBD.CDB12.LogicalBlock, 4);
   u32 sectorCount = 0;
   memcpy(&sectorCount, &atapiState.scsiCBD.CDB12.TransferLength, 4);
-  readOffset = _byteswap_ulong((u32)readOffset);
-  sectorCount = _byteswap_ulong((u32)sectorCount);
+  readOffset = std::byteswap<u32>((u32)readOffset);
+  sectorCount = std::byteswap<u32>((u32)sectorCount);
 
   switch (atapiState.scsiCBD.CDB12.OperationCode) {
   case SCSIOP_INQUIRY:

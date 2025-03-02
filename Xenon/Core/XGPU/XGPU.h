@@ -2,6 +2,7 @@
 
 #pragma once
 
+#include <mutex>
 #include <thread>
 #include <vector>
 #include <fstream>
@@ -109,6 +110,8 @@ public:
   bool isAddressMappedInBAR(u32 address);
 
 private:
+  // Mutex handle
+  std::mutex mutex{};
   // XGPU Config Space Data at address 0xD0010000.
   GENRAL_PCI_DEVICE_CONFIG_SPACE xgpuConfigSpace{};
   // PCI Device Size, using when determining PCI device size of each BAR in Linux.

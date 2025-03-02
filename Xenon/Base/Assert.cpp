@@ -1,6 +1,7 @@
 // Copyright 2025 Xenon Emulator Project
 
 #include "Assert.h"
+#include "Arch.h"
 
 #include "Logging/Backend.h"
 

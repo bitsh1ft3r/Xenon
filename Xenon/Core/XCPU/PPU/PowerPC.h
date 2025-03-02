@@ -90,7 +90,7 @@ can be the implicit result of an integer instruction. • CR1 can be the implici
 result of a floating-point instruction. • A specified CR field can indicate the
 result of either an integer or floating-point compare instruction
 */
-union CR {
+union CRegister {
   u32 CR_Hex;
   struct {
     u32 CR7 : 4;
@@ -107,7 +107,7 @@ union CR {
 /*
 Floating-Point Status and Control Register (FPSCR)
 */
-union FPSCR {
+union FPSCRegister {
   u32 FPSCR_Hex;
   struct {
     u32 RN : 2;
@@ -143,7 +143,7 @@ union FPSCR {
 /*
  XER Register (XER)
 */
-union XER {
+union XERegister {
   u32 XER_Hex;
   struct {
     u32 ByteCount : 7;
@@ -168,7 +168,7 @@ union TB {
 /*
 Machine State Register (MSR)
 */
-union MSR {
+union MSRegister {
   u64 MSR_Hex;
   struct {
     u64 LE : 1;
@@ -200,7 +200,7 @@ union MSR {
 /*
 Processor Version Register (PVR)
 */
-union PVR {
+union PVRegister {
   u32 PVR_Hex;
   struct {
     u32 Revision : 16;
@@ -242,7 +242,7 @@ struct TLB_Reg {
 // This SPR's are duplicated for every thread.
 struct PPU_THREAD_SPRS {
   // Fixed Point Exception Register (XER)
-  XER XER;
+  XERegister XER;
   // Link Register
   u64 LR;
   // Count Register
@@ -288,7 +288,7 @@ struct PPU_THREAD_SPRS {
   // Data Address Breakpoint Extension
   u64 DABRX;
   // Machine-State Register
-  MSR MSR;
+  MSRegister MSR;
   // Processor Identification Register
   u32 PIR;
 };
@@ -301,7 +301,7 @@ struct PPU_STATE_SPRS {
   // Time Base
   u64 TB;
   // Processor Version Register
-  PVR PVR;
+  PVRegister PVR;
   // Hypervisor Decrementer
   u32 HDEC;
   // Real Mode Offset Register
@@ -442,13 +442,13 @@ typedef struct SOCSECENG_BLOCK {       // Addr = 80000200_00024000
 
 // Floating Point Register
 
-union SFPR // Single Precision
+union SFPRegister // Single Precision
 {
   float valueAsFloat;
   u32 valueAsU32;
 };
 
-union FPR // Double Precision
+union FPRegister // Double Precision
 {
   double valueAsDouble;
   u64 valueAsU64;
@@ -470,15 +470,15 @@ struct PPU_THREAD_REGISTERS {
   // Instruction fetch flag
   bool iFetch = false;
   // General-Purpose Registers (32)
-  u64 GPR[32] = {0};
+  u64 GPR[32]{};
   // Floating-Point Registers (32)
-  FPR FPR[32] = {0};
+  FPRegister FPR[32]{};
   // Condition Register
-  CR CR;
+  CRegister CR;
   // Floating-Point Status Control Register
-  FPSCR FPSCR;
+  FPSCRegister FPSCR;
   // Segment Lookaside Buffer
-  SLBEntry SLB[64] = {0};
+  SLBEntry SLB[64]{};
 
   // Interrupt Register
   u16 exceptReg = 0;
@@ -507,9 +507,9 @@ struct PPU_STATE {
   // Current executing thread.
   PPU_THREAD currentThread;
   // Shared Special Purpose Registers.
-  PPU_STATE_SPRS SPR = {0};
+  PPU_STATE_SPRS SPR{};
   // Translation Lookaside Buffer
-  TLB_Reg TLB = {0};
+  TLB_Reg TLB{};
   // Address Traslation Flag
   bool traslationInProgress = false;
   // Current PPU Name, for ease of debugging.
@@ -522,7 +522,7 @@ struct XENON_CONTEXT {
   // 64 Kb SRAM
   u8 *SRAM = new u8[XE_SRAM_SIZE];
   // 768 bits eFuse
-  eFuses fuseSet = {0};
+  eFuses fuseSet{};
 
   // Xenon IIC.
   Xe::XCPU::IIC::XenonIIC xenonIIC;

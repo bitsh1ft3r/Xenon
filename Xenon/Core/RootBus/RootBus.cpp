@@ -10,9 +10,13 @@
 #define PCI_BRIDGE_START_ADDR 0xEA000000
 #define PCI_BRIDGE_END_ADDR 0xEA010000
 
-void RootBus::Init() {
+RootBus::RootBus() {
   deviceCount = 0;
   conectedDevices.resize(deviceCount);
+}
+
+RootBus::~RootBus() {
+  biuData.reset();
 }
 
 void RootBus::AddHostBridge(HostBridge *newHostBridge) {

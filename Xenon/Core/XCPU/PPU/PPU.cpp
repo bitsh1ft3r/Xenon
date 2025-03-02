@@ -11,7 +11,10 @@
 #include "Base/Logging/Log.h"
 #include "Core/XCPU/Interpreter/PPCInterpreter.h"
 
-PPU::PPU() {
+#define TPI_FORMULA(ips) ((ips) / 500000)
+
+PPU::PPU(XENON_CONTEXT *inXenonContext, RootBus *mainBus, u32 PVR,
+                  u32 PIR, const char *ppuName) {
   //
   // Set evrything as in POR. See CELL-BE Programming Handbook.
   //
@@ -29,11 +32,7 @@ PPU::PPU() {
 
   // Set Thread Timeout Register.
   ppuState->SPR.TTR = 0x1000; // Execute 4096 instructions.
-}
 
-#define TPI_FORMULA(ips) ((ips) / 500000)
-void PPU::Initialize(XENON_CONTEXT *inXenonContext, RootBus *mainBus, u32 PVR,
-                     u32 PIR, const char *ppuName) {
   // Asign global Xenon context.
   xenonContext = inXenonContext;
 
@@ -91,6 +90,9 @@ void PPU::Initialize(XENON_CONTEXT *inXenonContext, RootBus *mainBus, u32 PVR,
     ppuState->SPR.HRMOR = 0x0000020000000000;
     ppuState->ppuThread[PPU_THREAD_0].NIA = 0x20000000100;
   }
+
+  ppuThread = std::thread(&PPU::StartExecution, this);
+  ppuThread.detach();
 }
 
 // PPU Entry Point.
