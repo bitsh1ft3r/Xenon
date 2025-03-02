@@ -54,3 +54,47 @@ jobs:
       with:
         name: Xenon-win64
         path: ${{github.workspace}}/build/Xenon.exe
+
+
+  Linux:
+    runs-on: ubuntu-24.04
+    steps:
+    - uses: actions/checkout@main
+      with:
+        submodules: recursive
+
+    - name: Install Dependencies
+      run: |
+        sudo apt update
+        sudo apt install -y ninja-build clang lld cmake ccache
+
+    - name: Cache CMake Configuration
+      uses: actions/cache@main
+      env:
+          cache-name: ${{ runner.os }}-xenon-cache-config
+      with:
+          path: | 
+            ${{github.workspace}}/build
+          key: ${{ env.cache-name }}-${{ hashFiles('**/CMakeLists.txt', 'cmake/**') }}
+          restore-keys: |
+            ${{ env.cache-name }}-
+
+    - name: Cache CMake Build
+      uses: hendrikmuhs/ccache-action@v1.2.17
+      env:
+          cache-name: ${{ runner.os }}-xenon-cache-build
+      with:
+        append-timestamp: false
+        key: ${{ env.cache-name }}-${{ hashFiles('**/CMakeLists.txt', 'cmake/**') }}
+
+    - name: Configure CMake
+      run: cmake --fresh -G Ninja -B ${{github.workspace}}/build -DCMAKE_BUILD_TYPE=${{env.BUILD_TYPE}} -DCMAKE_C_COMPILER=clang -DCMAKE_CXX_COMPILER=clang++ -DCMAKE_C_COMPILER_LAUNCHER=ccache -DCMAKE_CXX_COMPILER_LAUNCHER=ccache
+
+    - name: Build
+      run: cmake --build ${{github.workspace}}/build --config ${{env.BUILD_TYPE}} --parallel $(nproc)
+
+    - name: Upload Linux Artifact
+      uses: actions/upload-artifact@main
+      with:
+        name: Xenon-linux64
+        path: ${{github.workspace}}/build/Xenon
