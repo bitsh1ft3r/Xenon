@@ -68,17 +68,19 @@ public:
   void ConfigWrite(u64 writeAddress, u64 data, u8 byteCount);
 
 private:
-  GENRAL_PCI_DEVICE_CONFIG_SPACE hostBridgeConfigSpace = {};
+  std::mutex mutex{};
+
+  GENRAL_PCI_DEVICE_CONFIG_SPACE hostBridgeConfigSpace{};
 
   // Pointer to the registered XCGPU.
-  Xe::Xenos::XGPU *xGPU;
+  Xe::Xenos::XGPU *xGPU{};
 
   // Pointer to the registered PCI Bridge.
-  PCIBridge *pciBridge;
+  PCIBridge *pciBridge{};
 
   // Helpers
   bool isAddressMappedinBAR(u32 address);
 
-  HOSTBRIDGE_REGS hostBridgeRegs = {0};
-  BIU_REGS biuRegs = {0};
+  HOSTBRIDGE_REGS hostBridgeRegs{};
+  BIU_REGS biuRegs{};
 };

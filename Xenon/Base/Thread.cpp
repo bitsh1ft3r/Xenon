@@ -1,6 +1,8 @@
 // Copyright 2025 Xenon Emulator Project
 
-#include "Thread.h"
+#include "Thread.h" 
+#include "Error.h"
+#include "Logging/Log.h"
 
 #include "ntapi.h"
 
@@ -9,7 +11,7 @@
 #include <mach/mach_time.h>
 #include <pthread.h>
 #elif defined(_WIN32)
-#include <Windows.h>
+#include <windows.h>
 #include "String_util.h"
 #else
 
@@ -23,6 +25,7 @@
 #ifndef _WIN32
 #include <unistd.h>
 #endif
+#include <thread>
 
 #ifdef __FreeBSD__
 #define cpu_set_t cpuset_t

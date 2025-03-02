@@ -174,7 +174,6 @@ void saveConfig(const std::filesystem::path &path) {
 
   data["General"]["GPURenderThreadEnabled"].comments().push_back("# Enable the GPU Render thread and main window.");
   data["General"]["GPURenderThreadEnabled"] = gpuRenderThreadEnabled;
-  data["General"]["GPURenderThreadEnabled"].comments().push_back("");
   data["General"]["Fullscreen"] = isFullscreen;
   data["General"]["VSync"] = vsyncEnabled;
   data["General"]["QuitOnWindowClosure"] = shouldQuitOnWindowClosure;

@@ -14,14 +14,22 @@ HostBridge::HostBridge() {
   hostBridgeConfigSpace.configSpaceHeader.reg1.hexData = 0x06000010;
 }
 
-void HostBridge::RegisterXGPU(Xe::Xenos::XGPU *newXGPU) { xGPU = newXGPU; }
+void HostBridge::RegisterXGPU(Xe::Xenos::XGPU *newXGPU) {
+  std::lock_guard lck(mutex);
+
+  xGPU = newXGPU;
+}
 
 void HostBridge::RegisterPCIBridge(PCIBridge *newPCIBridge) {
+  std::lock_guard lck(mutex);
+
   pciBridge = newPCIBridge;
   return;
 }
 
 bool HostBridge::Read(u64 readAddress, u64 *data, u8 byteCount) {
+  std::lock_guard lck(mutex);
+
   // Reading from host bridge registers?
   if (isAddressMappedinBAR(static_cast<u32>(readAddress))) {
     switch (readAddress) {
@@ -74,6 +82,8 @@ bool HostBridge::Read(u64 readAddress, u64 *data, u8 byteCount) {
 }
 
 bool HostBridge::Write(u64 writeAddress, u64 data, u8 byteCount) {
+  std::lock_guard lck(mutex);
+
   // Writing to host bridge registers?
   if (isAddressMappedinBAR(static_cast<u32>(writeAddress))) {
     switch (writeAddress) {
@@ -168,6 +178,8 @@ bool HostBridge::Write(u64 writeAddress, u64 data, u8 byteCount) {
 }
 
 void HostBridge::ConfigRead(u64 readAddress, u64 *data, u8 byteCount) {
+  std::lock_guard lck(mutex);
+
   PCIE_CONFIG_ADDR configAddress = {};
   configAddress.hexData = static_cast<u32>(readAddress);
 
@@ -197,6 +209,8 @@ void HostBridge::ConfigRead(u64 readAddress, u64 *data, u8 byteCount) {
 }
 
 void HostBridge::ConfigWrite(u64 writeAddress, u64 data, u8 byteCount) {
+  std::lock_guard lck(mutex);
+
   PCIE_CONFIG_ADDR configAddress = {};
   configAddress.hexData = static_cast<u32>(writeAddress);
 
@@ -226,19 +240,14 @@ void HostBridge::ConfigWrite(u64 writeAddress, u64 data, u8 byteCount) {
 }
 
 bool HostBridge::isAddressMappedinBAR(u32 address) {
-  u32 bar0 = hostBridgeConfigSpace.configSpaceHeader.BAR0;
-  u32 bar1 = hostBridgeConfigSpace.configSpaceHeader.BAR1;
-  u32 bar2 = hostBridgeConfigSpace.configSpaceHeader.BAR2;
-  u32 bar3 = hostBridgeConfigSpace.configSpaceHeader.BAR3;
-  u32 bar4 = hostBridgeConfigSpace.configSpaceHeader.BAR4;
-  u32 bar5 = hostBridgeConfigSpace.configSpaceHeader.BAR5;
+  #define ADDRESS_BOUNDS_CHECK(a, b) (address >= a && address <= (a + b))
 
-  if (address >= bar0 && address <= bar0 + HOST_BRIDGE_SIZE ||
-      address >= bar1 && address <= bar1 + HOST_BRIDGE_SIZE ||
-      address >= bar2 && address <= bar2 + HOST_BRIDGE_SIZE ||
-      address >= bar3 && address <= bar3 + HOST_BRIDGE_SIZE ||
-      address >= bar4 && address <= bar4 + HOST_BRIDGE_SIZE ||
-      address >= bar5 && address <= bar5 + HOST_BRIDGE_SIZE) {
+  if (ADDRESS_BOUNDS_CHECK(hostBridgeConfigSpace.configSpaceHeader.BAR0, XGPU_DEVICE_SIZE) ||
+      ADDRESS_BOUNDS_CHECK(hostBridgeConfigSpace.configSpaceHeader.BAR1, XGPU_DEVICE_SIZE) ||
+      ADDRESS_BOUNDS_CHECK(hostBridgeConfigSpace.configSpaceHeader.BAR2, XGPU_DEVICE_SIZE) ||
+      ADDRESS_BOUNDS_CHECK(hostBridgeConfigSpace.configSpaceHeader.BAR3, XGPU_DEVICE_SIZE) ||
+      ADDRESS_BOUNDS_CHECK(hostBridgeConfigSpace.configSpaceHeader.BAR4, XGPU_DEVICE_SIZE) ||
+      ADDRESS_BOUNDS_CHECK(hostBridgeConfigSpace.configSpaceHeader.BAR5, XGPU_DEVICE_SIZE)) {
     return true;
   }
 

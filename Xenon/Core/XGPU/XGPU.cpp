@@ -14,8 +14,7 @@
 
 #define XE_DEBUG
 
-Xe::Xenos::XGPU::XGPU(RAM* ram)
-{
+Xe::Xenos::XGPU::XGPU(RAM *ram) {
   // Assign RAM Pointer
   ramPtr = ram;
 
@@ -23,8 +22,7 @@ Xe::Xenos::XGPU::XGPU(RAM* ram)
   // Setup config space as per dump taken from a Jasper console.
   // Located at config address 0xD0010000.
   u8 i = 0;
-  for (u16 idx = 0; idx < 256; idx += 4)
-  {
+  for (u16 idx = 0; idx < 256; idx += 4) {
     memcpy(&xgpuConfigSpace.data[idx], &xgpuConfigMap[i], 4);
     i++;
   }
@@ -45,10 +43,9 @@ Xe::Xenos::XGPU::XGPU(RAM* ram)
   memcpy(&xenosState.Regs[REG_MEM_CLK], &reg, 4);
 }
 
-bool Xe::Xenos::XGPU::Read(u64 readAddress, u64* data, u8 byteCount)
-{
-  if (isAddressMappedInBAR(static_cast<u32>(readAddress)))
-  {
+bool Xe::Xenos::XGPU::Read(u64 readAddress, u64 *data, u8 byteCount) {
+  std::lock_guard lck(mutex);
+  if (isAddressMappedInBAR(static_cast<u32>(readAddress))) {
     const u32 regIndex = (readAddress & 0xFFFFF) / 4;
 
 #ifdef XE_DEBUG
@@ -63,8 +60,7 @@ bool Xe::Xenos::XGPU::Read(u64 readAddress, u64* data, u8 byteCount)
     memcpy(&regData, &xenosState.Regs[regIndex * 4], 4);
 
     // Switch for properly return the requested amount of data.
-    switch (byteCount)
-    {
+    switch (byteCount) {
       case 2:
         regData = regData >> 16;
         break;
@@ -92,32 +88,29 @@ bool Xe::Xenos::XGPU::Read(u64 readAddress, u64* data, u8 byteCount)
   return false;
 }
 
-bool Xe::Xenos::XGPU::Write(u64 writeAddress, u64 data, u8 byteCount)
-{
-  if (isAddressMappedInBAR(static_cast<u32>(writeAddress)))
-  {
+bool Xe::Xenos::XGPU::Write(u64 writeAddress, u64 data, u8 byteCount) {
+  std::lock_guard lck(mutex);
+  if (isAddressMappedInBAR(static_cast<u32>(writeAddress))) {
     const u32 regIndex = (writeAddress & 0xFFFFF) / 4;
 
 #ifdef XE_DEBUG
     LOG_DEBUG(Xenos, "Write to {}, index {:#x}, data = {:#x}", GetRegisterNameById(regIndex), regIndex,
-      _byteswap_ulong(static_cast<u32>(data)));
+      std::byteswap<u32>(static_cast<u32>(data)));
 #endif
 
     LOG_TRACE(Xenos, "Write Addr = {:#x}, reg: {:#x}, data = {:#x}.", writeAddress, regIndex,
-      _byteswap_ulong(static_cast<u32>(data)));
+      std::byteswap<u32>(static_cast<u32>(data)));
 
     XeRegister reg = static_cast<XeRegister>(regIndex);
 
     // Set our internal width.
-    if (reg == XeRegister::D1GRPH_X_END)
-    {
-      Xe_Main->renderer->internalWidth = _byteswap_ulong(static_cast<u32>(data));
+    if (reg == XeRegister::D1GRPH_X_END) {
+      Xe_Main->renderer->internalWidth = std::byteswap<u32>(static_cast<u32>(data));
       LOG_INFO(Xenos, "Setting new Internal Width: {:#x}", Xe_Main->renderer->internalWidth);
     }
     // Set our internal height.
-    if (reg == XeRegister::D1GRPH_Y_END)
-    {
-      Xe_Main->renderer->internalHeight = _byteswap_ulong(static_cast<u32>(data));
+    if (reg == XeRegister::D1GRPH_Y_END) {
+      Xe_Main->renderer->internalHeight = std::byteswap<u32>(static_cast<u32>(data));
       LOG_INFO(Xenos, "Setting new Internal Height: {:#x}", Xe_Main->renderer->internalHeight);
     }
 
@@ -128,37 +121,32 @@ bool Xe::Xenos::XGPU::Write(u64 writeAddress, u64 data, u8 byteCount)
   return false;
 }
 
-void Xe::Xenos::XGPU::ConfigRead(u64 readAddress, u64* data, u8 byteCount)
-{
+void Xe::Xenos::XGPU::ConfigRead(u64 readAddress, u64* data, u8 byteCount) {
+  std::lock_guard lck(mutex);
   memcpy(data, &xgpuConfigSpace.data[readAddress & 0xFF], byteCount);
   return;
 }
 
-void Xe::Xenos::XGPU::ConfigWrite(u64 writeAddress, u64 data, u8 byteCount)
-{
+void Xe::Xenos::XGPU::ConfigWrite(u64 writeAddress, u64 data, u8 byteCount) {
+  std::lock_guard lck(mutex);
   // Check if we're being scanned.
-  if (static_cast<u8>(writeAddress) >= 0x10 && static_cast<u8>(writeAddress) < 0x34)
-  {
+  if (static_cast<u8>(writeAddress) >= 0x10 && static_cast<u8>(writeAddress) < 0x34) {
     const u32 regOffset = (static_cast<u8>(writeAddress) - 0x10) >> 2;
     if (pciDevSizes[regOffset] != 0)
     {
-      if (data == 0xFFFFFFFF)
-      { // PCI BAR Size discovery.
+      if (data == 0xFFFFFFFF) { // PCI BAR Size discovery.
         u64 x = 2;
-        for (int idx = 2; idx < 31; idx++)
-        {
+        for (int idx = 2; idx < 31; idx++) {
           data &= ~x;
           x <<= 1;
-          if (x >= pciDevSizes[regOffset])
-          {
+          if (x >= pciDevSizes[regOffset]) {
             break;
           }
         }
         data &= ~0x3;
       }
     }
-    if (static_cast<u8>(writeAddress) == 0x30)
-    { // Expansion ROM Base Address.
+    if (static_cast<u8>(writeAddress) == 0x30) { // Expansion ROM Base Address.
       data = 0; // Register not implemented.
     }
   }
@@ -167,10 +155,8 @@ void Xe::Xenos::XGPU::ConfigWrite(u64 writeAddress, u64 data, u8 byteCount)
   return;
 }
 
-bool Xe::Xenos::XGPU::isAddressMappedInBAR(u32 address)
-{
-#define ADDRESS_BOUNDS_CHECK(a, b) (address >= a && address <= (a + b))
-
+bool Xe::Xenos::XGPU::isAddressMappedInBAR(u32 address) {
+  #define ADDRESS_BOUNDS_CHECK(a, b) (address >= a && address <= (a + b))
   if (ADDRESS_BOUNDS_CHECK(xgpuConfigSpace.configSpaceHeader.BAR0, XGPU_DEVICE_SIZE) ||
     ADDRESS_BOUNDS_CHECK(xgpuConfigSpace.configSpaceHeader.BAR1, XGPU_DEVICE_SIZE) ||
     ADDRESS_BOUNDS_CHECK(xgpuConfigSpace.configSpaceHeader.BAR2, XGPU_DEVICE_SIZE) ||

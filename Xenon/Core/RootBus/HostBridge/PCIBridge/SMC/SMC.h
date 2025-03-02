@@ -5,6 +5,8 @@
 #ifdef _WIN32
 #include <windows.h>
 #endif
+#include <condition_variable>
+#include <thread>
 
 #include "Core/RootBus/HostBridge/PCIBridge/PCIBridge.h"
 #include "Core/RootBus/HostBridge/PCIBridge/PCIDevice.h"
@@ -227,12 +229,13 @@ struct SMC_CORE_STATE {
   u8 fifoBufferPos = 0;
 
   // Default COM Port for opening.
-  LPCSTR currentCOMPort;
+  const char* currentCOMPort;
   // UART Initialized.
   bool uartInitialized;
   // UART Present. Used to do a one time check on UART COM Port on the host
   // system.
   bool uartPresent;
+#ifdef _WIN32
   // Current COM Port Device Control Block.
   // See
   // https://learn.microsoft.com/en-us/windows/win32/api/winbase/ns-winbase-dcb
@@ -247,6 +250,13 @@ struct SMC_CORE_STATE {
   DWORD currentBytesWrittenCount = 0;
   // Bytes Read from the COM Port.
   DWORD currentBytesReadCount = 0;
+#else
+  std::queue<u8> uartTxBuffer;
+  std::queue<u8> uartRxBuffer;
+  std::mutex uartMutex;
+  std::condition_variable uartConditionVar;
+  bool uartThreadRunning;
+#endif
   // Read/Write Return Status Values
   bool retVal = false;
 };
@@ -277,8 +287,18 @@ private:
   // SMC Thread object
   std::thread smcThread;
 
+#ifndef _WIN32
+  // UART Thread object
+  std::thread uartThread;
+#endif
+
   // SMC Main Thread
   void smcMainThread();
+
+#ifndef _WIN32
+  // UART Thread
+  void uartMainThread();
+#endif
 
   // UART/COM Port Setup
   void setupUART(u32 uartConfig);

@@ -2,6 +2,10 @@
 
 #pragma once
 
+#include <fstream>
+#include <filesystem>
+#include <vector>
+
 #include "Base/SystemDevice.h"
 
 #define NAND_START_ADDR 0xC8000000
@@ -21,15 +25,16 @@ public:
   NAND(const char *deviceName, const std::string filePath,
     u64 startAddress, u64 endAddress,
     bool isSOCDevice);
+  ~NAND();
 
   void Read(u64 readAddress, u64 *data, u8 byteCount) override;
   void Write(u64 writeAddress, u64 data, u8 byteCount) override;
 
 private:
-  FILE *inputFile;
+  std::ifstream inputFile;
 
   // 64 Mb NAND Data
-  u8 *rawNANDData = new (u8[0x4000000]);
+  std::vector<u8> rawNANDData{};
 
   bool CheckMagic();
   void CheckSpare();

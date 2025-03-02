@@ -109,15 +109,31 @@ void Xe::PCIDev::SMC::SMCCore::Read(u64 readAddress, u64 *data, u8 byteCount) {
   case UART_CONFIG_REG: // UART Config Register
     memcpy(data, &smcPCIState->uartConfigReg, byteCount);
     break;
-  case UART_BYTE_OUT_REG: // UART Data Out Register
+  case UART_BYTE_OUT_REG: // UART Data Out Register  
+#ifdef _WIN32
     smcCoreState->retVal =
         ReadFile(smcCoreState->comPortHandle, &smcPCIState->uartOutReg, 1,
                  &smcCoreState->currentBytesReadCount, nullptr);
-    memcpy(data, &smcPCIState->uartOutReg, byteCount);
+#else    
+    smcCoreState->retVal = false;
+    {
+      // We love mutexes
+      std::lock_guard<std::mutex> lock(smcCoreState->uartMutex);
+      if (!smcCoreState->uartRxBuffer.empty()) {
+        smcPCIState->uartOutReg = smcCoreState->uartRxBuffer.front();
+        smcCoreState->uartRxBuffer.pop();
+        smcCoreState->retVal = true;
+      }
+    }
+#endif                 
+    if (smcCoreState->retVal) {
+      memcpy(data, &smcPCIState->uartOutReg, byteCount);
+    }
     break;
   case UART_STATUS_REG: // UART Status Register
     // First lets check if the UART has already been setup, if so, proceed to do
-    // the TX/RX.
+    // the TX/RX.                   
+#ifdef _WIN32
     if (smcCoreState->uartInitialized) {
       // Get current COM Port Status
       ClearCommError(smcCoreState->comPortHandle, &smcCoreState->comPortError,
@@ -137,6 +153,16 @@ void Xe::PCIDev::SMC::SMCCore::Read(u64 readAddress, u64 *data, u8 byteCount) {
       // it first then.
       setupUART(0x1e6); // 115200,8,N,1.
     }
+#else
+    if (smcCoreState->uartInitialized) {
+      smcPCIState->uartStatusReg = smcCoreState->uartRxBuffer.empty() ? UART_STATUS_EMPTY : UART_STATUS_DATA_PRES;
+    } else if (smcCoreState->uartPresent) // Init UART if this is our first try.
+    {
+      // XeLL doesn't initialize UART before sending data trough it. Initialize
+      // it first then.
+      setupUART(0x1e6); // 115200,8,N,1.
+    }
+#endif
     memcpy(data, &smcPCIState->uartStatusReg, byteCount);
     break;
   case SMI_INT_STATUS_REG: // SMI INT Status Register
@@ -188,10 +214,20 @@ void Xe::PCIDev::SMC::SMCCore::Write(u64 writeAddress, u64 data, u8 byteCount) {
     break;
   case UART_BYTE_IN_REG: // UART Data In Register
     memcpy(&smcPCIState->uartInReg, &data, byteCount);
+#ifdef _WIN32
     // Write the data out.
     smcCoreState->retVal =
         WriteFile(smcCoreState->comPortHandle, &data, 1,
                   &smcCoreState->currentBytesWrittenCount, nullptr);
+#else
+    {
+      // We love mutexes
+      std::lock_guard<std::mutex> lock(smcCoreState->uartMutex);
+      smcCoreState->uartTxBuffer.push(data);
+      smcCoreState->uartConditionVar.notify_one();
+    }
+    smcCoreState->retVal = true;
+#endif
     break;
   case SMI_INT_STATUS_REG: // SMI INT Status Register
     memcpy(&smcPCIState->smiIntPendingReg, &data, byteCount);
@@ -210,8 +246,7 @@ void Xe::PCIDev::SMC::SMCCore::Write(u64 writeAddress, u64 data, u8 byteCount) {
     break;
   case FIFO_IN_STATUS_REG: // FIFO In Status Register
     smcPCIState->fifoInStatusReg = static_cast<u32>(data);
-    if (data == FIFO_STATUS_READY) // We're about to receive a message.
-    {
+    if (data == FIFO_STATUS_READY) { // We're about to receive a message.
       // Reset our input buffer and buffer pointer.
       memset(&smcCoreState->fifoDataBuffer, 0, 16);
       smcCoreState->fifoBufferPos = 0;
@@ -327,10 +362,36 @@ void Xe::PCIDev::SMC::SMCCore::setupUART(u32 uartConfig) {
   // Everything OK.
   smcCoreState->uartInitialized = true;
 
-#elif
-    LOG_ERROR(SMC, "UART Initialization is not supported on this platform!");
+#else
+  smcCoreState->uartThreadRunning = true;
+  uartThread = std::thread(&SMCCore::uartMainThread, this);
+
+  smcCoreState->uartPresent = true;
+  smcCoreState->uartInitialized = true;
+
+  uartThread.detach();
+
+  LOG_ERROR(SMC, "UART Initialization is fully supported on this platform! User beware.");
 #endif // _WIN32
 }
+
+#ifndef _WIN32
+// UART Thread
+void Xe::PCIDev::SMC::SMCCore::uartMainThread() {
+  smcCoreState->uartInitialized = true;
+  while (smcCoreState->uartThreadRunning)
+  {
+    std::unique_lock<std::mutex> lock(smcCoreState->uartMutex);
+    if (!smcCoreState->uartTxBuffer.empty())
+    {
+      printf("%c", smcCoreState->uartTxBuffer.front());
+      smcCoreState->uartTxBuffer.pop();
+    }
+    // We need to do *something* for rx
+    lock.unlock();
+  }
+}
+#endif
 
 // SMC Main Thread
 void Xe::PCIDev::SMC::SMCCore::smcMainThread() {
