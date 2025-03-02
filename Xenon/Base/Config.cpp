@@ -95,7 +95,7 @@ void loadConfig(const std::filesystem::path &path) {
     vsyncEnabled = toml::find_or<bool>(general, "VSync", false);
     shouldQuitOnWindowClosure =
         toml::find_or<bool>(general, "QuitOnWindowClosure", false);
-    currentLogLevel = (Base::Log::Level)find_or<int>(general, "Loglevel", false);
+    currentLogLevel = (Base::Log::Level)find_or<int>(general, "LogLevel", false);
     islogAdvanced = toml::find_or<bool>(general, "logAdvanced", false);
   }
 
