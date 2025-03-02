@@ -697,7 +697,7 @@ bool PPCInterpreter::MMUTranslateAddress(u64 *EA, PPU_STATE *hCoreState,
       } else {
         // Mode Fault. LPAR Interrupt.
         LOG_CRITICAL(Xenon_MMU, "LPAR Interrupt unimplemented.");
-        system("PAUSE");
+        SYSTEM_PAUSE();
       }
     }
   }

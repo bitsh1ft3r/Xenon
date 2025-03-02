@@ -39,11 +39,15 @@ Xe::Xenos::XGPU::XGPU(RAM *ram) {
   memcpy(&xenosState.Regs[REG_FSB_CLK], &reg, 4);
   reg = 0x19100000;
   memcpy(&xenosState.Regs[REG_MEM_CLK], &reg, 4);
+}
 
+void Xe::Xenos::XGPU::StartThread() {
   if (Config::gpuThreadEnabled()) {
     renderThread = std::thread(&XGPU::XenosThread, this);
-  } else {
-    LOG_WARNING(Xenos, "Xenos Render thread disabled in config.");
+    renderThread.detach();
+  }
+  else {
+    LOG_WARNING(Xenos, "Xenos Render thread disbaled in config.");
   }
 }
 
@@ -74,7 +78,7 @@ bool Xe::Xenos::XGPU::Read(u64 readAddress, u64 *data, u8 byteCount) {
       break;
   }
 
-*data = regData;
+    *data = regData;
     
     if (regIndex == 0x00000a07)
       *data = 0x2000000;
@@ -129,44 +133,40 @@ void Xe::Xenos::XGPU::ConfigRead(u64 readAddress, u64 *data, u8 byteCount) {
 }
 
 void Xe::Xenos::XGPU::ConfigWrite(u64 writeAddress, u64 data, u8 byteCount) {
-    // Check if we're being scanned.
-    if (static_cast<u8>(writeAddress) >= 0x10 && static_cast<u8>(writeAddress) < 0x34) {
-        const u32 regOffset = (static_cast<u8>(writeAddress) - 0x10) >> 2;
-        if (pciDevSizes[regOffset] != 0) {
-            if (data == 0xFFFFFFFF) { // PCI BAR Size discovery.
-                u64 x = 2;
-                for (int idx = 2; idx < 31; idx++) {
-                    data &= ~x;
-                    x <<= 1;
-                    if (x >= pciDevSizes[regOffset]) {
-                        break;
-                    }
-                }
-                data &= ~0x3;
-            }
+  // Check if we're being scanned.
+  if (static_cast<u8>(writeAddress) >= 0x10 && static_cast<u8>(writeAddress) < 0x34) {
+    const u32 regOffset = (static_cast<u8>(writeAddress) - 0x10) >> 2;
+    if (pciDevSizes[regOffset] != 0) {
+      if (data == 0xFFFFFFFF) { // PCI BAR Size discovery.
+        u64 x = 2;
+        for (int idx = 2; idx < 31; idx++) {
+          data &= ~x;
+          x <<= 1;
+          if (x >= pciDevSizes[regOffset]) {
+            break;
+          }
         }
-        if (static_cast<u8>(writeAddress) == 0x30) { // Expansion ROM Base Address.
-            data = 0; // Register not implemented.
-        }
+        data &= ~0x3;
+      }
     }
+    if (static_cast<u8>(writeAddress) == 0x30) { // Expansion ROM Base Address.
+      data = 0; // Register not implemented.
+    }
+  }
+
   memcpy(&xgpuConfigSpace.data[writeAddress & 0xFF], &data, byteCount);
   return;
 }
 
 bool Xe::Xenos::XGPU::isAddressMappedInBAR(u32 address) {
-  u32 bar0 = xgpuConfigSpace.configSpaceHeader.BAR0;
-  u32 bar1 = xgpuConfigSpace.configSpaceHeader.BAR1;
-  u32 bar2 = xgpuConfigSpace.configSpaceHeader.BAR2;
-  u32 bar3 = xgpuConfigSpace.configSpaceHeader.BAR3;
-  u32 bar4 = xgpuConfigSpace.configSpaceHeader.BAR4;
-  u32 bar5 = xgpuConfigSpace.configSpaceHeader.BAR5;
+  #define ADDRESS_BOUNDS_CHECK(a, b) (address >= a && address <= (a + b))
 
-  if (address >= bar0 && address <= bar0 + XGPU_DEVICE_SIZE ||
-      address >= bar1 && address <= bar1 + XGPU_DEVICE_SIZE ||
-      address >= bar2 && address <= bar2 + XGPU_DEVICE_SIZE ||
-      address >= bar3 && address <= bar3 + XGPU_DEVICE_SIZE ||
-      address >= bar4 && address <= bar4 + XGPU_DEVICE_SIZE ||
-      address >= bar5 && address <= bar5 + XGPU_DEVICE_SIZE) {
+  if (ADDRESS_BOUNDS_CHECK(xgpuConfigSpace.configSpaceHeader.BAR0, XGPU_DEVICE_SIZE) ||
+      ADDRESS_BOUNDS_CHECK(xgpuConfigSpace.configSpaceHeader.BAR1, XGPU_DEVICE_SIZE) ||
+      ADDRESS_BOUNDS_CHECK(xgpuConfigSpace.configSpaceHeader.BAR2, XGPU_DEVICE_SIZE) ||
+      ADDRESS_BOUNDS_CHECK(xgpuConfigSpace.configSpaceHeader.BAR3, XGPU_DEVICE_SIZE) ||
+      ADDRESS_BOUNDS_CHECK(xgpuConfigSpace.configSpaceHeader.BAR4, XGPU_DEVICE_SIZE) ||
+      ADDRESS_BOUNDS_CHECK(xgpuConfigSpace.configSpaceHeader.BAR5, XGPU_DEVICE_SIZE)) {
     return true;
   }
 
@@ -416,7 +416,7 @@ void Xe::Xenos::XGPU::XenosThread() {
   // Rendering Mode.
   bool rendering = true;
   // VSYNC Mode.
-  bool VSYNC = true;
+  bool VSYNC = Config::vsync();
   // Set VSYNC mode to default.
   SDL_GL_SetSwapInterval((int)VSYNC);
   // Fullscreen Mode.

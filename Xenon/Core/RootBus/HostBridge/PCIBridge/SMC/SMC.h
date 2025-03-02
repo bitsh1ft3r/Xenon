@@ -2,7 +2,9 @@
 
 #pragma once
 
-#include <Windows.h>
+#ifdef _WIN32
+#include <windows.h>
+#endif
 
 #include "Core/RootBus/HostBridge/PCIBridge/PCIBridge.h"
 #include "Core/RootBus/HostBridge/PCIBridge/PCIDevice.h"
@@ -252,7 +254,8 @@ struct SMC_CORE_STATE {
 // SMC Core Object.
 class SMCCore : public PCIDevice {
 public:
-  SMCCore(PCIBridge *parentPCIBridge, SMC_CORE_STATE *newSMCCoreState);
+  SMCCore(const char* deviceName, u64 size,
+    PCIBridge* parentPCIBridge, SMC_CORE_STATE* newSMCCoreState);
   ~SMCCore();
 
   // Read/Write functions.

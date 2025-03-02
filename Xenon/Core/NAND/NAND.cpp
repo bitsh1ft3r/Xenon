@@ -5,12 +5,14 @@
 #include "Base/Logging/Log.h"
 
 /********************Responsible for loading the NAND file********************/
-bool NAND::Load(const std::string filePath) {
+NAND::NAND(const char* deviceName, const std::string filePath,
+  u64 startAddress, u64 endAddress,
+  bool isSOCDevice) : SystemDevice(deviceName, startAddress, endAddress, isSOCDevice) {
   LOG_INFO(System, "NAND: Loading file {}", filePath.c_str());
 
   if (fopen_s(&inputFile, filePath.c_str(), "rb") != 0) {
     LOG_CRITICAL(System, "NAND: Unable to load file!");
-    return false;
+    SYSTEM_PAUSE();
   }
 
   fseek(inputFile, 0, SEEK_END);
@@ -23,7 +25,7 @@ bool NAND::Load(const std::string filePath) {
 
   if (!CheckMagic()) {
     LOG_ERROR(System, "NAND: Wrong magic found, Xbox 360 Retail NAND magic is 0xFF4F and Devkit NAND magic 0x0F4F.");
-    return false;
+    SYSTEM_PAUSE();
   }
 
   const u32 blockSize = 0x4000;
@@ -45,8 +47,6 @@ bool NAND::Load(const std::string filePath) {
   }
 
   fclose(inputFile);
-
-  return true;
 }
 
 /************Responsible for reading the NAND************/
@@ -122,7 +122,7 @@ bool NAND::CheckMagic() {
 
 //*Checks Spare.
 void NAND::CheckSpare() {
-  u8 data[0x630] = {0};
+  u8 data[0x630]{};
   fseek(inputFile, 0, SEEK_SET);
   fread(data, 1, 0x630, inputFile);
   hasSpare = true;
@@ -147,9 +147,8 @@ MetaType NAND::DetectSpareType(bool firstTry) {
     fseek(inputFile, (u32)rawFileSize - 0x4400, SEEK_SET);
   }
 
-  u8 tmp[0x10];
+  u8 tmp[0x10]{};
   fread(tmp, 1, 0x10, inputFile);
 
-  u8 a = 0;
   return metaTypeNone;
 }

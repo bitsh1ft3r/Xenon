@@ -99,6 +99,8 @@ class XGPU {
 public:
   XGPU(RAM *ram);
 
+  void StartThread();
+
   // Memory Read/Write methods.
   bool Read(u64 readAddress, u64 *data, u8 byteCount);
   bool Write(u64 writeAddress, u64 data, u8 byteCount);

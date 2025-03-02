@@ -4,7 +4,8 @@
 
 #include "Base/Logging/Log.h"
 
-HDD::HDD(PCIBridge *parentPCIBridge) {
+HDD::HDD(const char *deviceName, u64 size, PCIBridge *parentPCIBridge) :
+  PCIDevice(deviceName, size) {
   // Note:
    // The ATA/ATAPI Controller in the Xenon Southbridge contain two BAR's:
    // The first is for the Command Block (Regs 0-7) + DevCtrl/AltStatus reg at offset 0xA.

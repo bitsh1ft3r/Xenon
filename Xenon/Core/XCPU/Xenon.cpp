@@ -32,7 +32,7 @@ Xenon::Xenon(RootBus *inBus, const std::string blPath, eFuses inFuseSet) {
 
   if (!inputFile) {
     LOG_CRITICAL(Xenon, "Unable to open file: {} for reading. Check your file path. System Stopped!", blPath);
-    system("PAUSE");
+    SYSTEM_PAUSE();
   } else {
     fseek(inputFile, 0, SEEK_END);
     size_t fileSize = ftell(inputFile);
@@ -50,10 +50,13 @@ Xenon::~Xenon() {}
 void Xenon::Start(u64 resetVector) {
   // Start execution on every thread.
   ppu0Thread = std::thread(&PPU::StartExecution, PPU(ppu0));
+  ppu0Thread.detach();
 
   ppu1Thread = std::thread(&PPU::StartExecution, PPU(ppu1));
+  ppu1Thread.detach();
 
   ppu2Thread = std::thread(&PPU::StartExecution, PPU(ppu2));
+  ppu2Thread.detach();
 
   while (true) {
     std::this_thread::sleep_for(std::chrono::seconds(60));

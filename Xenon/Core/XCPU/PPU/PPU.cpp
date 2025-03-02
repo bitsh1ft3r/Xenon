@@ -17,10 +17,7 @@ PPU::PPU() {
   //
 
   // Allocate memory for our PPU state.
-  ppuState = new PPU_STATE;
-
-  // Zero out PPU state.
-  memset(ppuState, 0, sizeof(PPU_STATE));
+  ppuState = std::make_shared<STRIP_UNIQUE(ppuState)>();
 
   // Initialize Both threads as in a Reset.
   for (u8 thrdNum = 0; thrdNum < 2; thrdNum++) {
@@ -118,7 +115,7 @@ void PPU::StartExecution() {
           // Read next intruction from Memory.
           if (ppuReadNextInstruction()) {
             // Execute next intrucrtion.
-            PPCInterpreter::ppcExecuteSingleInstruction(ppuState);
+            PPCInterpreter::ppcExecuteSingleInstruction(ppuState.get());
           }
 
           // Increase Time Base Counter
@@ -160,7 +157,7 @@ void PPU::StartExecution() {
           // Read next intruction from Memory.
           if (ppuReadNextInstruction()) {
             // Execute next intrucrtion.
-            PPCInterpreter::ppcExecuteSingleInstruction(ppuState);
+            PPCInterpreter::ppcExecuteSingleInstruction(ppuState.get());
           }
 
           // Check if time base is active.
@@ -235,7 +232,7 @@ u32 PPU::getIPS() {
 
   // Write the calibration code to main memory.
   for (int i = 0; i < 4; i++) {
-    PPCInterpreter::MMUWrite32(ppuState, 4 + (i * 4), ipsCalibrationCode[i]);
+    PPCInterpreter::MMUWrite32(ppuState.get(), 4 + (i * 4), ipsCalibrationCode[i]);
   }
 
   // Set our NIP to our calibration code address.
@@ -251,7 +248,7 @@ u32 PPU::getIPS() {
   while (auto timerEnd = std::chrono::steady_clock::now() <=
                          timerStart + std::chrono::seconds(1)) {
     ppuReadNextInstruction();
-    PPCInterpreter::ppcExecuteSingleInstruction(ppuState);
+    PPCInterpreter::ppcExecuteSingleInstruction(ppuState.get());
     instrCount++;
   }
 
@@ -259,7 +256,7 @@ u32 PPU::getIPS() {
 
   // Set the main memory to 0.
   for (int i = 0; i < 4; i++) {
-    PPCInterpreter::MMUWrite32(ppuState, 4 + (i * 4), 0x00000000);
+    PPCInterpreter::MMUWrite32(ppuState.get(), 4 + (i * 4), 0x00000000);
   }
 
   // Set the NIP back to default.
@@ -283,7 +280,7 @@ bool PPU::ppuReadNextInstruction() {
   ppuState->ppuThread[ppuState->currentThread].iFetch = true;
   // Fetch the instruction from memory.
   ppuState->ppuThread[ppuState->currentThread].CI.opcode = PPCInterpreter::MMURead32(
-      ppuState, ppuState->ppuThread[ppuState->currentThread].CIA);
+      ppuState.get(), ppuState->ppuThread[ppuState->currentThread].CIA);
   if (ppuState->ppuThread[ppuState->currentThread].exceptReg & PPU_EX_INSSTOR ||
       ppuState->ppuThread[ppuState->currentThread].exceptReg &
           PPU_EX_INSTSEGM) {
@@ -304,7 +301,7 @@ void PPU::ppuCheckExceptions() {
     // 1. System Reset
     //
     if (exceptions & PPU_EX_RESET) {
-      PPCInterpreter::ppcResetException(ppuState);
+      PPCInterpreter::ppcResetException(ppuState.get());
       exceptions &= ~PPU_EX_RESET;
       goto end;
     }
@@ -314,7 +311,7 @@ void PPU::ppuCheckExceptions() {
     //
     if (exceptions & PPU_EX_MC) {
       if (ppuState->ppuThread[ppuState->currentThread].SPR.MSR.ME) {
-        PPCInterpreter::ppcResetException(ppuState);
+        PPCInterpreter::ppcResetException(ppuState.get());
         exceptions &= ~PPU_EX_MC;
         goto end;
       } else {
@@ -323,7 +320,7 @@ void PPU::ppuCheckExceptions() {
         // TODO: Properly end execution.
         // A checkstop is a full - stop of the processor that requires a System
         // Reset to recover.
-        system("PAUSE");
+        SYSTEM_PAUSE();
       }
     }
 
@@ -351,13 +348,13 @@ void PPU::ppuCheckExceptions() {
     // C. Data Storage, Data Segment, or Alignment
     // Data Storage
     if (exceptions & PPU_EX_DATASTOR) {
-      PPCInterpreter::ppcDataStorageException(ppuState);
+      PPCInterpreter::ppcDataStorageException(ppuState.get());
       exceptions &= ~PPU_EX_DATASTOR;
       goto end;
     }
     // Data Segment
     if (exceptions & PPU_EX_DATASEGM) {
-      PPCInterpreter::ppcDataSegmentException(ppuState);
+      PPCInterpreter::ppcDataSegmentException(ppuState.get());
       exceptions &= ~PPU_EX_DATASEGM;
       goto end;
     }
@@ -379,13 +376,13 @@ void PPU::ppuCheckExceptions() {
     // Program Trap
     if (exceptions & PPU_EX_PROG &&
         ppuState->ppuThread[ppuState->currentThread].exceptTrapType == 46) {
-      PPCInterpreter::ppcProgramException(ppuState);
+      PPCInterpreter::ppcProgramException(ppuState.get());
       exceptions &= ~PPU_EX_PROG;
       goto end;
     }
     // System Call
     if (exceptions & PPU_EX_SC) {
-      PPCInterpreter::ppcSystemCallException(ppuState);
+      PPCInterpreter::ppcSystemCallException(ppuState.get());
       exceptions &= ~PPU_EX_SC;
       goto end;
     }
@@ -400,13 +397,13 @@ void PPU::ppuCheckExceptions() {
     // F. Instruction Storage and Instruction Segment
     // Instruction Storage
     if (exceptions & PPU_EX_INSSTOR) {
-      PPCInterpreter::ppcInstStorageException(ppuState);
+      PPCInterpreter::ppcInstStorageException(ppuState.get());
       exceptions &= ~PPU_EX_INSSTOR;
       goto end;
     }
     // Instruction Segment
     if (exceptions & PPU_EX_INSTSEGM) {
-      PPCInterpreter::ppcInstSegmentException(ppuState);
+      PPCInterpreter::ppcInstSegmentException(ppuState.get());
       exceptions &= ~PPU_EX_INSTSEGM;
       goto end;
     }
@@ -429,7 +426,7 @@ void PPU::ppuCheckExceptions() {
     // External
     if (exceptions & PPU_EX_EXT &&
         ppuState->ppuThread[ppuState->currentThread].SPR.MSR.EE) {
-      PPCInterpreter::ppcExternalException(ppuState);
+      PPCInterpreter::ppcExternalException(ppuState.get());
       exceptions &= ~PPU_EX_EXT;
       goto end;
     }
@@ -437,7 +434,7 @@ void PPU::ppuCheckExceptions() {
     // the EE bit of MSR is set.
     if (exceptions & PPU_EX_DEC &&
         ppuState->ppuThread[ppuState->currentThread].SPR.MSR.EE) {
-      PPCInterpreter::ppcDecrementerException(ppuState);
+      PPCInterpreter::ppcDecrementerException(ppuState.get());
       exceptions &= ~PPU_EX_DEC;
       goto end;
     }

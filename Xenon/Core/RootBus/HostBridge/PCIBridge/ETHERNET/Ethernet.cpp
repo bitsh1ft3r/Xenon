@@ -6,7 +6,7 @@
 
 #define XE_NET_STATUS_INT 0x0000004C
 
-Xe::PCIDev::ETHERNET::ETHERNET::ETHERNET() {
+Xe::PCIDev::ETHERNET::ETHERNET::ETHERNET(const char *deviceName, u64 size) : PCIDevice(deviceName, size) {
   // Set PCI Properties.
   pciConfigSpace.configSpaceHeader.reg0.hexData = 0x580A1414;
   pciConfigSpace.configSpaceHeader.reg1.hexData = 0x02100006;
@@ -17,7 +17,7 @@ Xe::PCIDev::ETHERNET::ETHERNET::ETHERNET() {
 
 void Xe::PCIDev::ETHERNET::ETHERNET::Read(u64 readAddress, u64 *data,
                                           u8 byteCount) {
-  const u8 offset = readAddress & 0xFF;
+  u8 offset = readAddress & 0xFF;
 
   return; // For now.
 
@@ -90,7 +90,7 @@ void Xe::PCIDev::ETHERNET::ETHERNET::ConfigRead(u64 readAddress, u64 *data,
 
 void Xe::PCIDev::ETHERNET::ETHERNET::Write(u64 writeAddress, u64 data,
                                            u8 byteCount) {
-  const u8 offset = writeAddress & 0xFF;
+  u8 offset = writeAddress & 0xFF;
 
   switch (offset) {
   case Xe::PCIDev::ETHERNET::TX_CONFIG:

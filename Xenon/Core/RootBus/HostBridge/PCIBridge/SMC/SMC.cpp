@@ -59,8 +59,9 @@
 #define CLCK_INT_TAKEN 0x3
 
 // Class Constructor.
-Xe::PCIDev::SMC::SMCCore::SMCCore(PCIBridge *parentPCIBridge,
-                                  SMC_CORE_STATE *newSMCCoreState) {
+Xe::PCIDev::SMC::SMCCore::SMCCore(const char *deviceName, u64 size,
+  PCIBridge *parentPCIBridge, SMC_CORE_STATE *newSMCCoreState) :
+  PCIDevice(deviceName, size) {
   LOG_INFO(SMC, "Core: Initializing...");
 
   // Assign our parent PCI Bus Ptr.
@@ -92,6 +93,7 @@ Xe::PCIDev::SMC::SMCCore::SMCCore(PCIBridge *parentPCIBridge,
 
   // Enter main execution thread.
   smcThread = std::thread(&SMCCore::smcMainThread, this);
+  smcThread.detach();
 }
 
 // Class Destructor.

@@ -2,11 +2,11 @@
 
 #include "XMA.h"
 
-XMA::XMA() {
+XMA::XMA(const char *deviceName, u64 size) :
+  PCIDevice(deviceName, size) {
   // Set PCI Properties.
   pciConfigSpace.configSpaceHeader.reg0.hexData = 0x58011414;
   pciConfigSpace.configSpaceHeader.reg1.hexData = 0x02000002;
-
   // Set our PCI Dev Sizes.
   pciDevSizes[0] = 0x400; // BAR0
 }

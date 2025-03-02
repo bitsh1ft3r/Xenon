@@ -169,12 +169,14 @@ set(Core
     ${RootBus}
     ${XCPU}
     ${XGPU}
+    Xenon/Core/Xe_Main.cpp
+    Xenon/Core/Xe_Main.h
 )
 
 add_executable(Xenon
     ${Base}
     ${Core}
-    Xenon/Xe_Main.cpp
+    Xenon/Main.cpp
 )
 
 create_target_directory_groups(Xenon)
