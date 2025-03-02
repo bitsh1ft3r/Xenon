@@ -23,8 +23,7 @@ void ODD::atapiReset() {
   atapiState.mountedCDImage = new Storage(Config::oddImagePath());
 }
 
-void ODD::atapiIdentifyPacketDeviceCommand()
-{
+void ODD::atapiIdentifyPacketDeviceCommand() {
   // This command is only for ATAPI devices.
 
   // TODO(bitsh1ft3r): Fill out the struct with data from an actual drive.
@@ -166,9 +165,9 @@ void ODD::doDMA() {
     }
   }
 }
-
-ODD::ODD(PCIBridge *parentPCIBridge, RAM *ram) {
-
+                                                 
+ODD::ODD(const char* deviceName, u64 size,
+  PCIBridge *parentPCIBridge, RAM *ram) : PCIDevice(deviceName, size) {
   // Note:
   // The ATA/ATAPI Controller in the Xenon Southbridge contain two BAR's:
   // The first is for the Command Block (Regs 0-7) + DevCtrl/AltStatus reg at offset 0xA.

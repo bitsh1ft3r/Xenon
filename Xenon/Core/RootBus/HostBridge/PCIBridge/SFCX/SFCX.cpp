@@ -3,8 +3,9 @@
 #include "SFCX.h"
 
 #include "Base/Logging/Log.h"
-
-SFCX::SFCX(const std::string nandLoadPath, PCIBridge *parentPCIBridge) {
+                                                                          
+SFCX::SFCX(const char* deviceName, const std::string nandLoadPath, u64 size,
+  PCIBridge *parentPCIBridge) : PCIDevice(deviceName, size) {
   // Asign parent PCI Bridge pointer.
   parentBus = parentPCIBridge;
 
@@ -45,13 +46,13 @@ SFCX::SFCX(const std::string nandLoadPath, PCIBridge *parentPCIBridge) {
 
   if (!nandFile) {
     LOG_CRITICAL(SFCX, "Fatal error, check your nand dump path!");
-    system("PAUSE");
+    SYSTEM_PAUSE();
   }
 
   // Check file magic.
   if (!checkMagic()) {
     LOG_CRITICAL(SFCX, "Fatal error, loaded faile magic does'nt correspond to Xbox 360 NAND.");
-    system("PAUSE");
+    SYSTEM_PAUSE();
   }
 
   // Load NAND header and display info about it.
@@ -121,6 +122,7 @@ SFCX::SFCX(const std::string nandLoadPath, PCIBridge *parentPCIBridge) {
 
   // Enter SFCX Thread.
   sfcxThread = std::thread(&SFCX::sfcxMainLoop, this);
+  sfcxThread.detach();
 }
 
 void SFCX::Read(u64 readAddress, u64 *data, u8 byteCount) {

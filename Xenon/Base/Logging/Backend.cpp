@@ -29,26 +29,26 @@ namespace {
  */
 class ColorConsoleBackend {
 public:
-    explicit ColorConsoleBackend() = default;
+  explicit ColorConsoleBackend() = default;
 
-    ~ColorConsoleBackend() = default;
+  ~ColorConsoleBackend() = default;
 
-    void Write(const Entry& entry) {
-        if (enabled.load(std::memory_order_relaxed)) {
-            PrintColoredMessage(entry);
-        }
+  void Write(const Entry& entry) {
+    if (enabled.load(std::memory_order_relaxed)) {
+      PrintColoredMessage(entry);
     }
+  }
 
-    void Flush() {
-        // stderr shouldn't be buffered
-    }
+  void Flush() {
+    // stderr shouldn't be buffered
+  }
 
-    void SetEnabled(bool enabled_) {
-        enabled = enabled_;
-    }
+  void SetEnabled(bool enabled_) {
+    enabled = enabled_;
+  }
 
 private:
-    std::atomic_bool enabled{true};
+  std::atomic_bool enabled{true};
 };
 
 /*
@@ -56,39 +56,39 @@ private:
  */
 class FileBackend {
 public:
-    explicit FileBackend(const std::filesystem::path& filename)
-        : file{filename, FS::FileAccessMode::Write, FS::FileType::TextFile} {}
+  explicit FileBackend(const std::filesystem::path& filename)
+    : file{filename, FS::FileAccessMode::Write, FS::FileType::TextFile} {}
 
-    ~FileBackend() = default;
+  ~FileBackend() = default;
 
-    void Write(const Entry& entry) {
-        if (!enabled) {
-            return;
-        }
-
-        bytes_written += file.WriteString(FormatLogMessage(entry).append(1, '\n'));
-
-        // Prevent logs from exceeding a set maximum size in the event that log entries are spammed.
-        const auto write_limit = 100_MB;
-        const bool write_limit_exceeded = bytes_written > write_limit;
-        if (entry.log_level >= Level::Error || write_limit_exceeded) {
-            if (write_limit_exceeded) {
-                // Stop writing after the write limit is exceeded.
-                // Don't close the file so we can print a stacktrace if necessary
-                enabled = false;
-            }
-            file.Flush();
-        }
+  void Write(const Entry& entry) {
+    if (!enabled) {
+      return;
     }
 
-    void Flush() {
-        file.Flush();
+    bytes_written += file.WriteString(FormatLogMessage(entry).append(1, '\n'));
+
+    // Prevent logs from exceeding a set maximum size in the event that log entries are spammed.
+    const auto write_limit = 100_MB;
+    const bool write_limit_exceeded = bytes_written > write_limit;
+    if (entry.log_level >= Level::Error || write_limit_exceeded) {
+      if (write_limit_exceeded) {
+        // Stop writing after the write limit is exceeded.
+        // Don't close the file so we can print a stacktrace if necessary
+        enabled = false;
+      }
+      file.Flush();
     }
+  }
+
+  void Flush() {
+    file.Flush();
+  }
 
 private:
-    Base::FS::IOFile file;
-    bool enabled = true;
-    size_t bytes_written = 0;
+  Base::FS::IOFile file;
+  bool enabled = true;
+  size_t bytes_written = 0;
 };
 
 /*
@@ -96,19 +96,19 @@ private:
  */
 class DebuggerBackend {
 public:
-    explicit DebuggerBackend() = default;
+  explicit DebuggerBackend() = default;
 
-    ~DebuggerBackend() = default;
+  ~DebuggerBackend() = default;
 
-    void Write(const Entry& entry) {
+  void Write(const Entry& entry) {
 #ifdef _WIN32
-        ::OutputDebugStringW(UTF8ToUTF16W(FormatLogMessage(entry).append(1, '\n')).c_str());
+    ::OutputDebugStringW(UTF8ToUTF16W(FormatLogMessage(entry).append(1, '\n')).c_str());
 #endif
-    }
+  }
 
-    void Flush() {}
+  void Flush() {}
 
-    void EnableForStacktrace() {}
+  void EnableForStacktrace() {}
 };
 
 bool initialization_in_progress_suppress_logging = true;
@@ -118,171 +118,181 @@ bool initialization_in_progress_suppress_logging = true;
  */
 class Impl {
 public:
-    static Impl& Instance() {
-        if (!instance) {
-            throw std::runtime_error("Using Logging instance before its initialization");
-        }
-        return *instance;
+  static Impl& Instance() {
+    if (!instance) {
+      throw std::runtime_error("Using Logging instance before its initialization");
+    }
+    return *instance;
+  }
+
+  static void Initialize(std::string_view log_file) {
+    if (instance) {
+      LOG_WARNING(Log, "Reinitializing logging backend");
+      return;
+    }
+    const auto& log_dir = GetUserPath(PathType::LogDir);
+    std::filesystem::create_directory(log_dir);
+    Filter filter;
+    // filter.ParseFilterString(/*Config::getLogFilter()*/);
+    instance = std::unique_ptr<Impl, decltype(&Deleter)>(new Impl(log_dir / log_file, filter),
+                               Deleter);
+    initialization_in_progress_suppress_logging = false;
+  }
+
+  static bool IsActive() {
+    return instance != nullptr;
+  }
+
+  static void Start() {
+    instance->StartBackendThread();
+  }
+
+  static void Stop() {
+    instance->StopBackendThread();
+  }
+
+  Impl(const Impl&) = delete;
+  Impl& operator=(const Impl&) = delete;
+
+  Impl(Impl&&) = delete;
+  Impl& operator=(Impl&&) = delete;
+
+  void SetGlobalFilter(const Filter& f) {
+    filter = f;
+  }
+
+  void SetColorConsoleBackendEnabled(bool enabled) {
+    color_console_backend.SetEnabled(enabled);
+  }
+
+  void PushEntry(Class log_class, Level log_level, const char* filename, unsigned int line_num,
+           const char* function, std::string message) {
+
+    if (!filter.CheckMessage(log_class, log_level)) {
+      return;
     }
 
-    static void Initialize(std::string_view log_file) {
-        if (instance) {
-            LOG_WARNING(Log, "Reinitializing logging backend");
-            return;
-        }
-        const auto& log_dir = GetUserPath(PathType::LogDir);
-        std::filesystem::create_directory(log_dir);
-        Filter filter;
-        // filter.ParseFilterString(/*Config::getLogFilter()*/);
-        instance = std::unique_ptr<Impl, decltype(&Deleter)>(new Impl(log_dir / LOG_FILE, filter),
-                                                             Deleter);
-        initialization_in_progress_suppress_logging = false;
-    }
+    using std::chrono::duration_cast;
+    using std::chrono::microseconds;
+    using std::chrono::steady_clock;
 
-    static bool IsActive() {
-        return instance != nullptr;
-    }
-
-    static void Start() {
-        instance->StartBackendThread();
-    }
-
-    static void Stop() {
-        instance->StopBackendThread();
-    }
-
-    Impl(const Impl&) = delete;
-    Impl& operator=(const Impl&) = delete;
-
-    Impl(Impl&&) = delete;
-    Impl& operator=(Impl&&) = delete;
-
-    void SetGlobalFilter(const Filter& f) {
-        filter = f;
-    }
-
-    void SetColorConsoleBackendEnabled(bool enabled) {
-        color_console_backend.SetEnabled(enabled);
-    }
-
-    void PushEntry(Class log_class, Level log_level, const char* filename, unsigned int line_num,
-                   const char* function, std::string message) {
-
-        if (!filter.CheckMessage(log_class, log_level)) {
-            return;
-        }
-
-        using std::chrono::duration_cast;
-        using std::chrono::microseconds;
-        using std::chrono::steady_clock;
-
-        const Entry entry = {
-            .timestamp = duration_cast<microseconds>(steady_clock::now() - time_origin),
-            .log_class = log_class,
-            .log_level = log_level,
-            .filename = filename,
-            .line_num = line_num,
-            .function = function,
-            .message = std::move(message),
-        };
-//        if (Config::getLogType() == "async") {
-//            message_queue.EmplaceWait(entry);
-//        } else {
-            ForEachBackend([&entry](auto& backend) { backend.Write(entry); });
-            std::fflush(stdout);
-//        }
-    }
+    const Entry entry = {
+      .timestamp = duration_cast<microseconds>(steady_clock::now() - time_origin),
+      .log_class = log_class,
+      .log_level = log_level,
+      .filename = filename,
+      .line_num = line_num,
+      .function = function,
+      .message = std::move(message),
+    };
+//    if (Config::getLogType() == "async") {
+//      message_queue.EmplaceWait(entry);
+//    } else {
+      ForEachBackend([&entry](auto& backend) { backend.Write(entry); });
+      std::fflush(stdout);
+//    }
+  }
 
 private:
-    Impl(const std::filesystem::path& file_backend_filename, const Filter& filter_)
-        : filter{filter_}, file_backend{file_backend_filename} {}
+  Impl(const std::filesystem::path& file_backend_filename, const Filter& filter_)
+    : filter{filter_}, file_backend{file_backend_filename} {}
 
-    ~Impl() = default;
+  ~Impl() = default;
 
-    void StartBackendThread() {
-        backend_thread = std::jthread([this](std::stop_token stop_token) {
-            Base::SetCurrentThreadName("Xenon:Log");
-            Entry entry;
-            const auto write_logs = [this, &entry]() {
-                ForEachBackend([&entry](auto& backend) { backend.Write(entry); });
-            };
-            while (!stop_token.stop_requested()) {
-                message_queue.PopWait(entry, stop_token);
-                if (entry.filename != nullptr) {
-                    write_logs();
-                }
-            }
-            // Drain the logging queue. Only writes out up to MAX_LOGS_TO_WRITE to prevent a
-            // case where a system is repeatedly spamming logs even on close.
-            int max_logs_to_write = filter.IsDebug() ? std::numeric_limits<s32>::max() : 100;
-            while (max_logs_to_write-- && message_queue.TryPop(entry)) {
-                write_logs();
-            }
-        });
-    }
-
-    void StopBackendThread() {
-        backend_thread.request_stop();
-        if (backend_thread.joinable()) {
-            backend_thread.join();
+  void StartBackendThread() {
+    backend_thread = std::jthread([this](std::stop_token stop_token) {
+      Base::SetCurrentThreadName("Xenon:Log");
+      Entry entry;
+      const auto write_logs = [this, &entry]() {
+        ForEachBackend([&entry](auto& backend) { backend.Write(entry); });
+      };
+      while (!stop_token.stop_requested()) {
+        message_queue.PopWait(entry, stop_token);
+        if (entry.filename != nullptr) {
+          write_logs();
         }
+      }
+      // Drain the logging queue. Only writes out up to MAX_LOGS_TO_WRITE to prevent a
+      // case where a system is repeatedly spamming logs even on close.
+      int max_logs_to_write = filter.IsDebug() ? std::numeric_limits<s32>::max() : 100;
+      while (max_logs_to_write-- && message_queue.TryPop(entry)) {
+        write_logs();
+      }
+    });
+  }
 
-        ForEachBackend([](auto& backend) { backend.Flush(); });
+  void StopBackendThread() {
+    backend_thread.request_stop();
+    if (backend_thread.joinable()) {
+      backend_thread.join();
     }
 
-    void ForEachBackend(auto lambda) {
-        // lambda(debugger_backend);
-        lambda(color_console_backend);
-        lambda(file_backend);
-    }
+    ForEachBackend([](auto& backend) { backend.Flush(); });
+  }
 
-    static void Deleter(Impl* ptr) {
-        delete ptr;
-    }
+  void ForEachBackend(auto lambda) {
+    // lambda(debugger_backend);
+    lambda(color_console_backend);
+    lambda(file_backend);
+  }
 
-    static inline std::unique_ptr<Impl, decltype(&Deleter)> instance{nullptr, Deleter};
+  static void Deleter(Impl* ptr) {
+    delete ptr;
+  }
 
-    Filter filter;
-    DebuggerBackend debugger_backend{};
-    ColorConsoleBackend color_console_backend{};
-    FileBackend file_backend;
+  static inline std::unique_ptr<Impl, decltype(&Deleter)> instance{nullptr, Deleter};
 
-    MPSCQueue<Entry> message_queue{};
-    std::chrono::steady_clock::time_point time_origin{std::chrono::steady_clock::now()};
-    std::jthread backend_thread;
+  Filter filter;
+  DebuggerBackend debugger_backend{};
+  ColorConsoleBackend color_console_backend{};
+  FileBackend file_backend;
+
+  MPSCQueue<Entry> message_queue{};
+  std::chrono::steady_clock::time_point time_origin{std::chrono::steady_clock::now()};
+  std::jthread backend_thread;
 };
 } // namespace
 
 void Initialize(std::string_view log_file) {
-    Impl::Initialize(log_file.empty() ? LOG_FILE : log_file);
+  // Create directory vars to so we can use std::filesystem::path::stem
+  const auto LogDir = Base::FS::GetUserPath(Base::FS::PathType::LogDir);
+  const auto LogFilePath = LogDir / LOG_FILE;
+  // Setup filename
+  const auto Now = std::chrono::system_clock::now();
+  const auto TimeNow = std::chrono::system_clock::to_time_t(Now);
+  const auto Time = std::localtime(&TimeNow);
+  std::string CurrentTime = fmt::format("{}-{}-{}", Time->tm_hour, Time->tm_min, Time->tm_sec);
+  std::string CurrentDate = fmt::format("{}-{}-{}", Time->tm_mon, Time->tm_mday, 1900 + Time->tm_year);
+  std::string Filename = fmt::format("{}_{}_{}.txt", LogFilePath.stem().string(), CurrentDate, CurrentTime);
+  Impl::Initialize(log_file.empty() ? Filename : log_file);
 }
 
 bool IsActive() {
-    return Impl::IsActive();
+  return Impl::IsActive();
 }
 
 void Start() {
-    Impl::Start();
+  Impl::Start();
 }
 
 void Stop() {
-    Impl::Stop();
+  Impl::Stop();
 }
 
 void SetGlobalFilter(const Filter& filter) {
-    Impl::Instance().SetGlobalFilter(filter);
+  Impl::Instance().SetGlobalFilter(filter);
 }
 
 void SetColorConsoleBackendEnabled(bool enabled) {
-    Impl::Instance().SetColorConsoleBackendEnabled(enabled);
+  Impl::Instance().SetColorConsoleBackendEnabled(enabled);
 }
 
 void FmtLogMessageImpl(Class log_class, Level log_level, const char* filename,
-                       unsigned int line_num, const char* function, const char* format,
-                       const fmt::format_args& args) {
-    if (!initialization_in_progress_suppress_logging) [[likely]] {
-        Impl::Instance().PushEntry(log_class, log_level, filename, line_num, function,
-                                   fmt::vformat(format, args));
-    }
+             unsigned int line_num, const char* function, const char* format,
+             const fmt::format_args& args) {
+  if (!initialization_in_progress_suppress_logging) [[likely]] {
+    Impl::Instance().PushEntry(log_class, log_level, filename, line_num, function,
+                   fmt::vformat(format, args));
+  }
 }
 } // namespace Base::Log

@@ -335,7 +335,9 @@ struct XE_ATAPI_DEV_STATE {
 
 class ODD : public PCIDevice {
 public:
-  ODD(PCIBridge *parentPCIBridge, RAM *ram);
+  ODD(const char* deviceName, u64 size,
+    PCIBridge *parentPCIBridge, RAM *ram);
+
   void Read(u64 readAddress, u64 *data, u8 u8Count) override;
   void ConfigRead(u64 readAddress, u64 *data, u8 u8Count) override;
   void Write(u64 writeAddress, u64 data, u8 u8Count) override;

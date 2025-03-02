@@ -26,7 +26,7 @@ private:
   bool systemReset = false;
 
   // Execution threads inside this PPU.
-  PPU_STATE *ppuState;
+  std::shared_ptr<PPU_STATE> ppuState;
 
   // Main CPU Context.
   XENON_CONTEXT *xenonContext = nullptr;

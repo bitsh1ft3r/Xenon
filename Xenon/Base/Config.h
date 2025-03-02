@@ -8,6 +8,39 @@
 #include "Logging/Backend.h"
 
 namespace Config {
+// General.
+inline bool gpuRenderThreadEnabled = true;
+inline bool isFullscreen = false;
+inline bool vsyncEnabled = true;
+inline bool shouldQuitOnWindowClosure = false;
+inline Base::Log::Level currentLogLevel = Base::Log::Level::Warning;
+inline bool islogAdvanced = false;
+
+// SMC.
+inline int smcPowerOnReason = 0x11; // SMC_PWR_REAS_EJECT   
+inline int smcAvPackType = 31; // Set to HDMI_NO_AUDIO. See SMC.cpp for a list of values.
+inline int comPort = 2;
+inline std::string com = "";
+
+// PowerPC.
+inline u64 SKIP_HW_INIT_1 = 0;
+inline u64 SKIP_HW_INIT_2 = 0;
+
+// GPU.
+inline s32 screenWidth = 1280;
+inline s32 screenHeight = 720;
+inline s32 internalWidth = 1280;
+inline s32 internalHeight = 720;
+// inline s32 gpuId = -1; // Vulkan physical device index. Set to negative for auto select
+
+// Filepaths.
+inline std::string fusesTxtPath = "C:/Xbox/fuses.txt";
+inline std::string oneBlBinPath = "C:/Xbox/1bl.bin";
+inline std::string nandBinPath = "C:/Xbox/nand.bin";
+inline std::string oddDiscImagePath = "C:/Xbox/xenon.iso";
+
+// Highly experimental.
+inline int ticksPerInstruction = 1;
 
 void loadConfig(const std::filesystem::path &path);
 void saveConfig(const std::filesystem::path &path);
@@ -19,7 +52,9 @@ void saveConfig(const std::filesystem::path &path);
 // Selected COM Port.
 std::string* COMPort();
 // Show in fullscreen.
-bool fullscreenMode();
+bool fullscreenMode(); 
+// Enable VSync.
+bool vsync();
 // Enable GPU Render thread.
 bool gpuThreadEnabled();
 // Should we quit when our rendering window is closed?
@@ -53,7 +88,10 @@ u64 HW_INIT_SKIP2();
 
 // Screen Size.
 s32 windowWidth();
-s32 windowHeight();
+s32 windowHeight(); 
+// Intermal Size.
+s32 internalWindowWidth();
+s32 internalWindowHeight();
 // GPU ID Selection (Only for Vulkan)
 // s32 getGpuId();
 

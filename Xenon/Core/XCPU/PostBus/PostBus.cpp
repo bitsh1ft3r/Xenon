@@ -4,9 +4,6 @@
 
 #include "Base/Logging/Log.h"
 
-// Text colored output (for now)
-HANDLE hConsole;
-
 void Xe::XCPU::POSTBUS::POST(u64 postCode) {
   /* 1BL */
   if (postCode >= 0x10 && postCode <= 0x1e) {
@@ -136,7 +133,7 @@ void Xe::XCPU::POSTBUS::POST(u64 postCode) {
       break;
     }
     // Pause the system.
-    system("PAUSE");
+    SYSTEM_PAUSE();
   }
   /* CB */
   else if (postCode >= 0x20 && postCode <= 0x3b) {
@@ -297,7 +294,7 @@ void Xe::XCPU::POSTBUS::POST(u64 postCode) {
         LOG_ERROR(Xenon_PostBus, "CB > Unrecognized PANIC code {:#x}", postCode);
       break;
     }
-    system("PAUSE");
+    SYSTEM_PAUSE();
   }
   /* CB_A */
   else if (postCode >= 0xD0 && postCode <= 0xDB) {
@@ -360,7 +357,7 @@ void Xe::XCPU::POSTBUS::POST(u64 postCode) {
                    "(must be less than 0xC000).");
       break;
     }
-    system("PAUSE");
+    SYSTEM_PAUSE();
   }
   /* CD */
   else if (postCode >= 0x40 && postCode <= 0x53) {
@@ -459,7 +456,7 @@ void Xe::XCPU::POSTBUS::POST(u64 postCode) {
        LOG_ERROR(Xenon_PostBus, "PANIC - CF_HASH_AUTH - CF hash auth failed.");
       break;
     }
-    system("PAUSE");
+    SYSTEM_PAUSE();
   }
   /* CE/CF PANICS */
   else if (postCode >= 0xC1 && postCode <= 0xC8) {
@@ -489,7 +486,7 @@ void Xe::XCPU::POSTBUS::POST(u64 postCode) {
        LOG_ERROR(Xenon_PostBus, "PANIC - SHA_VERIFY - 7BL Signature Verify.");
       break;
     }
-    system("PAUSE");
+    SYSTEM_PAUSE();
   }
   /* HYPERVISOR */
   else if (postCode >= 0x58 && postCode <= 0x5E) {
