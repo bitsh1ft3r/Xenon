@@ -23,7 +23,9 @@
 #include "Core/RootBus/HostBridge/PCIBridge/XMA/XMA.h"
 #include "Core/RootBus/RootBus.h"
 #include "Core/XCPU/Xenon.h"
-#include "Core/XGPU/XGPU.h"
+#include "Core/XGPU/XGPU.h" 
+
+#include "Render/Renderer.h"
 
 class XeMain {
 public:
@@ -65,6 +67,9 @@ private:
   std::unique_ptr<PCIBridge> pciBridge; // PCIBridge Object
 
 public:
+  // Render thread
+  std::shared_ptr<Render::Renderer> renderer;
+
   // PCI Devices
   //  SMC
   std::shared_ptr<Xe::PCIDev::SMC::SMC_CORE_STATE> smcCoreState; // SMCCore State for setting diffrent SMC settings.

@@ -13,14 +13,10 @@ XeMain::XeMain() {
   createPCIDevices();
   addPCIDevices();
   getFuses();
+  renderer = std::make_shared<STRIP_UNIQUE(renderer)>(ram.get());
   xenos = std::make_shared<STRIP_UNIQUE(xenos)>(ram.get());
   createHostBridge();
   createRootBus();
-  // Rendering needs to start a bit later as the console isn't fully init'd
-  // 
-  // Why? Because some of our code uses the pointer for SMC before the CPU is
-  // finished intializing.
-  xenos->StartThread();
   xenonCPU = std::make_shared<STRIP_UNIQUE(xenonCPU)>(rootBus.get(), Config::oneBlPath(), cpuFuses);
   pciBridge->RegisterIIC(xenonCPU->GetIICPointer());
 }
@@ -53,6 +49,8 @@ XeMain::~XeMain() {
   xma.reset();
   odd.reset();
   hdd.reset();
+
+  renderer.reset();
 
   // CPU last as we will need to shutdown the threads.
   xenonCPU.reset();

@@ -2,7 +2,9 @@
 
 cmake_minimum_required(VERSION 3.22)
 
+set(CMAKE_C_STANDARD 17)
 set(CMAKE_CXX_STANDARD 23)
+set(CMAKE_C_STANDARD_REQUIRED True)
 set(CMAKE_CXX_STANDARD_REQUIRED True)
 
 if (NOT CMAKE_BUILD_TYPE)
@@ -155,8 +157,16 @@ set(OPENGL
     third_party/glad/src/glad.c
 )
 
-set(XGPU
+set(RENDER
     ${OPENGL}
+    Xenon/Render/Abstractions/Texture.h
+    Xenon/Render/Implementations/OGLTexture.cpp
+    Xenon/Render/Implementations/OGLTexture.h
+    Xenon/Render/Renderer.cpp
+    Xenon/Render/Renderer.h
+)
+
+set(XGPU
     Xenon/Core/XGPU/XGPU.cpp
     Xenon/Core/XGPU/XenosRegisters.h
     Xenon/Core/XGPU/XGPU.h
@@ -166,6 +176,7 @@ set(XGPU
 set(Core
     ${NAND}
     ${RAM}
+    ${RENDER}
     ${RootBus}
     ${XCPU}
     ${XGPU}
@@ -181,6 +192,15 @@ add_executable(Xenon
 
 create_target_directory_groups(Xenon)
 
+# Test compiler ID
+if (CMAKE_CXX_COMPILER_ID STREQUAL "MSVC")
+    set(MSVC True)
+elseif (CMAKE_CXX_COMPILER_ID STREQUAL "GNU")
+    set(GCC True)
+elseif (CMAKE_CXX_COMPILER_ID STREQUAL "Clang")
+    set(Clang True)
+endif()
+
 # Include OPENGL Directory
 include_directories(Xenon third_party/glad/include)
 
@@ -189,6 +209,12 @@ target_link_libraries(Xenon PRIVATE fmt::fmt SDL3::SDL3 toml11::toml11)
 
 add_definitions(-DNTDDI_VERSION=0x0A000006 -D_WIN32_WINNT=0x0A00 -DWINVER=0x0A00)
 add_definitions(-DNOMINMAX -DWIN32_LEAN_AND_MEAN)
+
+if (MSVC)
+    set(CMAKE_GENERATOR_PLATFORM x64)
+    set(CMAKE_SYSTEM_VERSION 10.0.19041.0)
+    set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} /MP")
+endif()
 
 if (WIN32)
     target_sources(Xenon PRIVATE Xenon/Xenon.rc)

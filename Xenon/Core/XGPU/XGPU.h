@@ -99,8 +99,6 @@ class XGPU {
 public:
   XGPU(RAM *ram);
 
-  void StartThread();
-
   // Memory Read/Write methods.
   bool Read(u64 readAddress, u64 *data, u8 byteCount);
   bool Write(u64 writeAddress, u64 data, u8 byteCount);
@@ -112,34 +110,13 @@ public:
 
 private:
   // XGPU Config Space Data at address 0xD0010000.
-  GENRAL_PCI_DEVICE_CONFIG_SPACE xgpuConfigSpace = {0};
+  GENRAL_PCI_DEVICE_CONFIG_SPACE xgpuConfigSpace{};
   // PCI Device Size, using when determining PCI device size of each BAR in Linux.
-  u32 pciDevSizes[6] = {};
+  u32 pciDevSizes[6]{};
 
-  RAM *ramPtr = nullptr;
+  RAM *ramPtr{};
 
-  XenosState xenosState = {0};
-
-  std::thread renderThread;
-
-  // Initial Internal rendering width/height.
-  u32 internalWidth = 640;
-  u32 internalHeight = 480;
-
-  void XenosResize(int x, int y);
-  void XenosThreadShutdown();
-  void XenosThread();
-
-  // Pixel buffer
-  int pitch = 0;
-  std::vector<u32> pixels{};
-  // SDL Window data
-  SDL_Window *mainWindow{};
-  SDL_GLContext context;
-  SDL_Event windowEvent;
-  // GL Handles
-  GLuint texture, dummyVAO, shaderProgram, pixelBuffer;
-  GLuint renderShaderProgram;
+  XenosState xenosState{};
 };
 } // namespace Xenos
 } // namespace Xe
