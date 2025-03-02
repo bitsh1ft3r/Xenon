@@ -302,7 +302,7 @@ void PPCInterpreter::PPCInterpreter_stdcx(PPU_STATE *hCore) {
     if (hCore->ppuThread[hCore->currentThread].ppuRes->V) {
       if (hCore->ppuThread[hCore->currentThread].ppuRes->resAddr == (RA & ~7)) {
         u64 data =
-            _byteswap_uint64(hCore->ppuThread[hCore->currentThread].GPR[rS]);
+            std::byteswap<u64>(hCore->ppuThread[hCore->currentThread].GPR[rS]);
         bool soc = false;
         RA = mmuContructEndAddressFromSecEngAddr(RA, &soc);
         sysBus->Write(RA, data, 8);
@@ -851,7 +851,7 @@ void PPCInterpreter::PPCInterpreter_lfs(PPU_STATE *hCore) {
 
   u64 EA = (rA ? hCore->ppuThread[hCore->currentThread].GPR[rA] : 0) + D;
 
-  SFPR singlePresFP;
+  SFPRegister singlePresFP;
   singlePresFP.valueAsU32 = MMURead32(hCore, EA);
   hCore->ppuThread[hCore->currentThread].FPR[FrD].valueAsDouble =
       (double)singlePresFP.valueAsFloat;

@@ -4,7 +4,14 @@
 
 #ifdef _WIN32
 #include <windows.h>
+#else
+#include <fcntl.h>
+#include <unistd.h>
+#include <sys/types.h>
+#include <sys/stat.h>
 #endif
+#include <cstring>
+#include <string>
 
 #include "Core/RAM/RAM.h"
 #include "Core/RootBus/HostBridge/PCIBridge/SATA.h"
@@ -58,6 +65,7 @@ private:
 //
 // Read Only Storage
 //
+#ifdef _WIN32
 class Storage {
 public:
   Storage(std::string Filename) {
@@ -71,7 +79,7 @@ public:
     hFile = INVALID_HANDLE_VALUE;
   }
 
-  u32 Size(void) {
+  u32 Size() {
     u32 cb;
     cb = GetFileSize(hFile, nullptr);
     return (cb == INVALID_FILE_SIZE) ? 0 : cb;
@@ -81,8 +89,8 @@ public:
     DWORD cbRead;
     OVERLAPPED Over;
 
-#define HIDW(qw) (((u64)(qw)) >> 32)
-#define LODW(qw) ((u32)(qw))
+    #define HIDW(qw) (((u64)(qw)) >> 32)
+    #define LODW(qw) ((u32)(qw))
     memset(&Over, 0, sizeof Over);
     Over.Offset = LODW(Offset);
     Over.OffsetHigh = HIDW(Offset);
@@ -93,6 +101,36 @@ public:
 private:
   HANDLE hFile;
 };
+#else
+class Storage {
+public:
+  Storage(std::string Filename) {
+    fd = open(Filename.c_str(), O_RDONLY);
+  }
+  ~Storage() {
+    if (fd != -1)
+      close(fd);
+    fd = -1;
+  }
+
+  uint32_t Size() {
+    struct stat st;
+    if (fstat(fd, &st) != 0)
+      return 0;
+    return static_cast<uint32_t>(st.st_size);
+  }
+
+  bool Read(uint64_t Offset, uint8_t* Destination, uint32_t cu8s) {
+    if (lseek(fd, Offset, SEEK_SET) == (off_t)-1)
+      return false;
+    ssize_t bytesRead = read(fd, Destination, cu8s);
+    return bytesRead == static_cast<ssize_t>(cu8s);
+  }
+
+private:
+  int fd;
+};
+#endif
 
 //
 // SCSI Inquiry Data Structure

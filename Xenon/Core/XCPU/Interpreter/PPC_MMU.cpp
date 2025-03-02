@@ -638,7 +638,7 @@ bool PPCInterpreter::MMUTranslateAddress(u64 *EA, PPU_STATE *hCoreState,
   //
 
   // Machine State Register.
-  MSR _msr = hCoreState->ppuThread[hCoreState->currentThread].SPR.MSR;
+  MSRegister _msr = hCoreState->ppuThread[hCoreState->currentThread].SPR.MSR;
   // Logical Partition Control Register.
   u64 LPCR = hCoreState->SPR.LPCR;
   // Hypervisor Real Mode Offset Register.
@@ -1206,7 +1206,7 @@ u64 PPCInterpreter::MMURead(XENON_CONTEXT *cpuContext, PPU_STATE *ppuState,
       break;
     }
 
-    return _byteswap_uint64(data);
+    return std::byteswap<u64>(data);
   }
 
   // Integrated Interrupt Controller in real mode, used when the HV wants to
@@ -1231,7 +1231,7 @@ u64 PPCInterpreter::MMURead(XENON_CONTEXT *cpuContext, PPU_STATE *ppuState,
   // CPU VID Register
   if (socRead && EA == 0x61188) {
     data = 0x382c00000000b001;
-    return _byteswap_uint64(data);
+    return std::byteswap<u64>(data);
   }
 
   bool nand = false;
@@ -1401,7 +1401,7 @@ u32 PPCInterpreter::MMURead32(PPU_STATE *ppuState, u64 EA) {
 u64 PPCInterpreter::MMURead64(PPU_STATE *ppuState, u64 EA) {
   u64 data = 0;
   data = MMURead(intXCPUContext, ppuState, EA, 8);
-  return _byteswap_uint64(data);
+  return std::byteswap<u64>(data);
 }
 // Writes 1 Byte to memory.
 void PPCInterpreter::MMUWrite8(PPU_STATE *ppuState, u64 EA, u8 data) {
@@ -1419,6 +1419,6 @@ void PPCInterpreter::MMUWrite32(PPU_STATE *ppuState, u64 EA, u32 data) {
 }
 // Writes 8 Bytes to memory.
 void PPCInterpreter::MMUWrite64(PPU_STATE *ppuState, u64 EA, u64 data) {
-  u64 dataBS = _byteswap_uint64(data);
+  u64 dataBS = std::byteswap<u64>(data);
   MMUWrite(intXCPUContext, ppuState, dataBS, EA, 8);
 }

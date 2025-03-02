@@ -2,6 +2,8 @@
 
 #pragma once
 
+#include <memory>
+
 #include "PowerPC.h"
 
 #include "Core/RootBus/RootBus.h"

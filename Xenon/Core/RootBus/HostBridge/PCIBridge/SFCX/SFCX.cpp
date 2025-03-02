@@ -42,9 +42,9 @@ SFCX::SFCX(const char* deviceName, const std::string nandLoadPath, u64 size,
   // Load the NAND dump.
   LOG_INFO(SFCX, "Loading NAND from path: {}", nandLoadPath);
 
-  fopen_s(&nandFile, nandLoadPath.c_str(), "rb");
-
-  if (!nandFile) {
+  nandFile.open(nandLoadPath, std::ios_base::in | std::ios_base::binary);
+                  
+  if (!nandFile.is_open()) {
     LOG_CRITICAL(SFCX, "Fatal error, check your nand dump path!");
     SYSTEM_PAUSE();
   }
@@ -56,9 +56,8 @@ SFCX::SFCX(const char* deviceName, const std::string nandLoadPath, u64 size,
   }
 
   // Load NAND header and display info about it.
-  fseek(nandFile, 0, SEEK_SET);
-  fread_s(&sfcxState.nandHeader, sizeof(NAND_HEADER), sizeof(NAND_HEADER), 1,
-          nandFile);
+  nandFile.seekg(0, std::ios::beg);
+  nandFile.read(reinterpret_cast<char*>(&sfcxState.nandHeader), sizeof(sfcxState.nandHeader));
   // Fix Endiannes
   sfcxState.nandHeader.nandMagic =
       std::byteswap<u16>(sfcxState.nandHeader.nandMagic);
@@ -113,10 +112,7 @@ SFCX::SFCX(const char* deviceName, const std::string nandLoadPath, u64 size,
   LOG_INFO(SFCX, " * SMC Boot Addr: ", sfcxState.nandHeader.smcBootAddr);
 
   // Check Image size and Meta type.
-  size_t imageSize = 0;
-  fseek(nandFile, 0, SEEK_END);
-  imageSize = ftell(nandFile);
-  fseek(nandFile, 0, SEEK_SET);
+  size_t imageSize = std::filesystem::file_size(nandLoadPath);
 
   // There are two SFCX Versions, original (Pre Jasper) and Jasper+.
 
@@ -262,9 +258,9 @@ void SFCX::sfcxMainLoop() {
       case PHY_PAGE_TO_BUF:
         // Read Phyisical page into page buffer.
         // Physical pages are 0x210 bytes long, logical page (0x200) + meta data
-        // (0x10).
-        fseek(nandFile, sfcxState.addressReg, SEEK_SET);
-        fread_s(&sfcxState.pageBuffer, 0x210, 1, 0x210, nandFile);
+        // (0x10).                                                
+        nandFile.seekg(sfcxState.addressReg);
+        nandFile.read(reinterpret_cast<char*>(sfcxState.pageBuffer), sizeof(sfcxState.pageBuffer));
         // Issue Interrupt.
         if (sfcxState.configReg & CONFIG_INT_EN) {
           // Set a delay for our interrupt?
@@ -306,7 +302,7 @@ void SFCX::sfcxMainLoop() {
 bool SFCX::checkMagic() {
   char magic[2];
 
-  fread(&magic, 1, 2, nandFile);
+  nandFile.read(reinterpret_cast<char*>(magic), sizeof(magic));
 
   // Retail Nand Magic is 0xFF4F.
   // Devkit Nand Magic is 0x0F4F.
