@@ -41,12 +41,13 @@ GLuint createShaderPrograms(const char* vertex, const char* fragment) {
 
 Render::Renderer::Renderer(RAM* ram) :
   ramPointer(ram),
+  internalWidth(Config::internalWindowWidth()),
+  internalHeight(Config::internalWindowHeight()),
+  width(TILE(Config::windowWidth())),
+  height(TILE(Config::windowHeight())),
   VSYNC(Config::vsync()),
   fullscreen(Config::fullscreenMode())
 {
-  width = TILE(Config::windowWidth());
-  height = TILE(Config::windowHeight());
-
   thread = std::thread(&Render::Renderer::Thread, this);
   thread.detach();
 }       

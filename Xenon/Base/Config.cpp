@@ -54,6 +54,10 @@ s32 windowWidth() { return screenWidth; }
 
 s32 windowHeight() { return screenHeight; }
 
+s32 internalWindowWidth() { return internalWidth; }
+
+s32 internalWindowHeight() { return internalHeight; }
+
 std::string fusesPath() { return fusesTxtPath; }
 
 std::string oneBlPath() { return oneBlBinPath; }
@@ -116,6 +120,8 @@ void loadConfig(const std::filesystem::path &path) {
     const toml::value &gpu = data.at("GPU");
     screenWidth = toml::find_or<int>(gpu, "screenWidth", screenWidth);
     screenHeight = toml::find_or<int>(gpu, "screenHeight", screenHeight);
+    internalWidth = toml::find_or<int>(gpu, "internalWidth", internalWidth);
+    internalHeight = toml::find_or<int>(gpu, "internalHeight", internalHeight);
     // gpuId = toml::find_or<int>(gpu, "gpuId", -1);
   }
 
@@ -204,12 +210,20 @@ void saveConfig(const std::filesystem::path &path) {
   data["PowerPC"]["HW_INIT_SKIP2"].comments().push_back("# Hardware Init Skip address 2");
   data["PowerPC"]["HW_INIT_SKIP2"] = SKIP_HW_INIT_2;
 
-  // GPU. 
-  data["GPU"].comments().clear();
+  // GPU.                                        
+  data["GPU"]["screenWidth"].comments().clear();
+  data["GPU"]["screenHeight"].comments().clear(); 
+  data["GPU"]["internalWidth"].comments().clear();
+  data["GPU"]["internalHeight"].comments().clear();
 
-  data["GPU"].comments().push_back("# Window Size (Not the Internal Resolution!)");
+  data["GPU"]["screenWidth"].comments().push_back("# Window Width");
   data["GPU"]["screenWidth"] = screenWidth;
+  data["GPU"]["screenHeight"].comments().push_back("# Window Height");
   data["GPU"]["screenHeight"] = screenHeight;
+  data["GPU"]["internalHeight"].comments().push_back("# Internal Width (The width of what XeLL uses, do not modify)");
+  data["GPU"]["internalWidth"] = internalWidth;
+  data["GPU"]["internalHeight"].comments().push_back("# Internal Height (The height of what XeLL uses, do not modify)");
+  data["GPU"]["internalHeight"] = internalHeight;
   //data["GPU"]["gpuId"] = gpuId;
 
   // Paths.

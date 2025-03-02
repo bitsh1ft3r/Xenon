@@ -29,6 +29,8 @@ inline u64 SKIP_HW_INIT_2 = 0;
 // GPU.
 inline s32 screenWidth = 1280;
 inline s32 screenHeight = 720;
+inline s32 internalWidth = 1280;
+inline s32 internalHeight = 720;
 // inline s32 gpuId = -1; // Vulkan physical device index. Set to negative for auto select
 
 // Filepaths.
@@ -86,7 +88,10 @@ u64 HW_INIT_SKIP2();
 
 // Screen Size.
 s32 windowWidth();
-s32 windowHeight();
+s32 windowHeight(); 
+// Intermal Size.
+s32 internalWindowWidth();
+s32 internalWindowHeight();
 // GPU ID Selection (Only for Vulkan)
 // s32 getGpuId();
 
