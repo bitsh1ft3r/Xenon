@@ -22,7 +22,7 @@ jobs:
     - name: Cache CMake Configuration
       uses: actions/cache@main
       env:
-          cache-name: ${{ runner.os }}-xenon-cache-config
+          cache-name: ${{ runner.os }}-xenon-cache-config-windows
       with:
           path: | 
             ${{github.workspace}}/build
@@ -74,7 +74,7 @@ jobs:
     - name: Cache CMake Configuration
       uses: actions/cache@main
       env:
-          cache-name: ${{ runner.os }}-xenon-cache-config
+          cache-name: ${{ runner.os }}-xenon-cache-config-linux
       with:
           path: | 
             ${{github.workspace}}/build
