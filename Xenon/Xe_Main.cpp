@@ -61,6 +61,15 @@ eFuses getFuses(const std::filesystem::path& path) {
 
 int main(int argc, char *argv[]) {
 
+  // Renaming xenon_log.txt to xenon_log.old.txt when booting.
+  const auto LogDir = Base::FS::GetUserPath(Base::FS::PathType::LogDir);
+  const auto NewLog = LogDir / "xenon_log.txt";
+  const auto OldLog = LogDir / "xenon_log.old.txt";
+  // Avoid crash due to xenon_log.txt not existing.
+  if (std::filesystem::exists(NewLog)) {
+      rename(NewLog, OldLog);
+  }
+
   // First initialize the logging backend.
   Base::Log::Initialize();
   Base::Log::Start();
